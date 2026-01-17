@@ -7,7 +7,7 @@ local WindUI = loadstring(game:HttpGet(
 local Window = WindUI:CreateWindow({
     Title = "ENAN All Map",
     Icon = "monitor",
-    Author = "อีแนน",
+    Author = "หี",
 
     OpenButton = {
         Title = "ENAN HUB",
@@ -24,6 +24,9 @@ local MainTab = Window:CreateTab({
     Icon = "home"
 })
 
+-- ⭐ สำคัญมาก (บังคับให้แสดง Tab แรก)
+Window:SelectTab(MainTab)
+
 MainTab:CreateSection({
     Title = "Hack Speed"
 })
@@ -32,7 +35,6 @@ local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 local SPEED = 50
 
---// Function apply speed
 local function ApplySpeed(value)
     local char = LocalPlayer.Character
     if char then
@@ -43,7 +45,7 @@ local function ApplySpeed(value)
     end
 end
 
---// Toggle
+--// Toggle Hack Speed 50 (NO LOOP)
 MainTab:CreateToggle({
     Name = "Enable Hack Speed (50)",
     Default = false,
@@ -55,9 +57,3 @@ MainTab:CreateToggle({
         end
     end
 })
-
---// Re-apply when respawn (no loop)
-LocalPlayer.CharacterAdded:Connect(function()
-    task.wait(0.1)
-    -- ถ้าอยากให้จำสถานะ toggle บอก เดี๋ยวเพิ่ม
-end)
