@@ -18,11 +18,15 @@ local Window = WindUI:CreateWindow({
         Draggable = true,
     }
 })
-
 --// Main Tab
 local MainTab = Window:CreateTab({
     Name = "Main",
     Icon = "home"
+})
+
+-- 🔧 FIX สำคัญ
+MainTab:CreateButton({
+    Name = " "
 })
 
 MainTab:CreateSection({
@@ -43,7 +47,6 @@ local function ApplySpeed(value)
     end
 end
 
---// Toggle Hack Speed (NO LOOP)
 MainTab:CreateToggle({
     Name = "Enable Hack Speed (50)",
     Default = false,
