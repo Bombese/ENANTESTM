@@ -1,1 +1,92 @@
-หี
+--// WindUI - UI ONLY (NO TAB)
+local WindUI = loadstring(game:HttpGet(
+    "https://github.com/Footagesus/WindUI/releases/latest/download/main.lua"
+))()
+
+--// Create Window
+local Window = WindUI:CreateWindow({
+    Title = "BomHUB",
+    Icon = "monitor",
+    Author = "UI Only",
+
+    OpenButton = {
+        Title = "Open UI",
+        Icon = "menu",
+        CornerRadius = UDim.new(0,16),
+        StrokeThickness = 2,
+        Enabled = true,
+        Draggable = true,
+    }
+})
+
+--// Main Section (ไม่มี Tab)
+local MainSection = Window:CreateSection({
+    Title = "Main Menu"
+})
+
+--// UI Elements (ไม่มีฟังก์ชัน)
+Window:CreateButton({
+    Name = "Button Example"
+})
+
+Window:CreateToggle({
+    Name = "Toggle Example",
+    Default = false
+})
+
+Window:CreateButton({
+    Name = "Close UI",
+    Callback = function()
+        WindUI:Destroy()
+    end
+})
+--// Main Tab
+local MainTab = Window:CreateTab({
+    Name = "Main",
+    Icon = "home"
+})
+
+MainTab:CreateSection({
+    Title = "Hack Speed"
+})
+
+--// Variables
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local SpeedValue = 16
+local Enabled = false
+
+--// Input ความเร็ว
+MainTab:CreateInput({
+    Name = "Speed Value",
+    PlaceholderText = "เช่น 50",
+    Callback = function(v)
+        local n = tonumber(v)
+        if n then
+            SpeedValue = n
+        end
+    end
+})
+
+--// Toggle เปิด / ปิด
+MainTab:CreateToggle({
+    Name = "Enable Hack Speed",
+    Default = false,
+    Callback = function(v)
+        Enabled = v
+        if not v and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
+            LocalPlayer.Character.Humanoid.WalkSpeed = 16
+        end
+    end
+})
+
+--// Loop ทำงาน
+task.spawn(function()
+    while task.wait(0.1) do
+        if Enabled
+        and LocalPlayer.Character
+        and LocalPlayer.Character:FindFirstChild("Humanoid") then
+            LocalPlayer.Character.Humanoid.WalkSpeed = SpeedValue
+        end
+    end
+end)
