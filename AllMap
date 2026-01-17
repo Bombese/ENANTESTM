@@ -18,28 +18,6 @@ local Window = WindUI:CreateWindow({
         Draggable = true,
     }
 })
-
---// Main Section (ไม่มี Tab)
-local MainSection = Window:CreateSection({
-    Title = "Main Menu"
-})
-
---// UI Elements (ไม่มีฟังก์ชัน)
-Window:CreateButton({
-    Name = "Button Example"
-})
-
-Window:CreateToggle({
-    Name = "Toggle Example",
-    Default = false
-})
-
-Window:CreateButton({
-    Name = "Close UI",
-    Callback = function()
-        WindUI:Destroy()
-    end
-})
 --// Main Tab
 local MainTab = Window:CreateTab({
     Name = "Main",
