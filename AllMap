@@ -7,7 +7,7 @@ local WindUI = loadstring(game:HttpGet(
 local Window = WindUI:CreateWindow({
     Title = "ENAN All Map",
     Icon = "monitor",
-    Author = "ENAN",
+    Author = "อีแนน",
 
     OpenButton = {
         Title = "ENAN HUB",
@@ -28,43 +28,36 @@ MainTab:CreateSection({
     Title = "Hack Speed"
 })
 
---// Variables
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
-local SpeedValue = 16
-local Enabled = false
+local SPEED = 50
 
---// Input ความเร็ว
-MainTab:CreateInput({
-    Name = "Speed Value",
-    PlaceholderText = "เช่น 50",
-    Callback = function(v)
-        local n = tonumber(v)
-        if n then
-            SpeedValue = n
+--// Function apply speed
+local function ApplySpeed(value)
+    local char = LocalPlayer.Character
+    if char then
+        local hum = char:FindFirstChildOfClass("Humanoid")
+        if hum then
+            hum.WalkSpeed = value
         end
     end
-})
+end
 
---// Toggle เปิด / ปิด
+--// Toggle
 MainTab:CreateToggle({
-    Name = "Enable Hack Speed",
+    Name = "Enable Hack Speed (50)",
     Default = false,
     Callback = function(v)
-        Enabled = v
-        if not v and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
-            LocalPlayer.Character.Humanoid.WalkSpeed = 16
+        if v then
+            ApplySpeed(SPEED)
+        else
+            ApplySpeed(16)
         end
     end
 })
 
---// Loop ทำงาน
-task.spawn(function()
-    while task.wait(0.1) do
-        if Enabled
-        and LocalPlayer.Character
-        and LocalPlayer.Character:FindFirstChild("Humanoid") then
-            LocalPlayer.Character.Humanoid.WalkSpeed = SpeedValue
-        end
-    end
+--// Re-apply when respawn (no loop)
+LocalPlayer.CharacterAdded:Connect(function()
+    task.wait(0.1)
+    -- ถ้าอยากให้จำสถานะ toggle บอก เดี๋ยวเพิ่ม
 end)
