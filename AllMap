@@ -1,4 +1,4 @@
---// WindUI - UI ONLY (NO TAB)
+--// WindUI
 local WindUI = loadstring(game:HttpGet(
     "https://github.com/Footagesus/WindUI/releases/latest/download/main.lua"
 ))()
@@ -7,7 +7,7 @@ local WindUI = loadstring(game:HttpGet(
 local Window = WindUI:CreateWindow({
     Title = "ENAN All Map",
     Icon = "monitor",
-    Author = "หี",
+    Author = "ENAN",
 
     OpenButton = {
         Title = "ENAN HUB",
@@ -18,14 +18,12 @@ local Window = WindUI:CreateWindow({
         Draggable = true,
     }
 })
+
 --// Main Tab
 local MainTab = Window:CreateTab({
     Name = "Main",
     Icon = "home"
 })
-
--- ⭐ สำคัญมาก (บังคับให้แสดง Tab แรก)
-Window:SelectTab(MainTab)
 
 MainTab:CreateSection({
     Title = "Hack Speed"
@@ -45,7 +43,7 @@ local function ApplySpeed(value)
     end
 end
 
---// Toggle Hack Speed 50 (NO LOOP)
+--// Toggle Hack Speed (NO LOOP)
 MainTab:CreateToggle({
     Name = "Enable Hack Speed (50)",
     Default = false,
