@@ -5,12 +5,12 @@ local WindUI = loadstring(game:HttpGet(
 
 --// Create Window
 local Window = WindUI:CreateWindow({
-    Title = "BomHUB",
+    Title = "ENAN All Map",
     Icon = "monitor",
-    Author = "UI Only",
+    Author = "ENAN",
 
     OpenButton = {
-        Title = "Open UI",
+        Title = "ENAN HUB",
         Icon = "menu",
         CornerRadius = UDim.new(0,16),
         StrokeThickness = 2,
