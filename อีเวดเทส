@@ -706,3 +706,132 @@ AdditionalsTab:Button({
         end
     end
 })
+local ESPBotTab = Window:Tab({
+    Title = "ESP Bot",
+    Icon = "eye"
+})ESPBotTab:Button({
+    Title = "มองเน็กบอท",
+    Desc = "เปิด / ปิด ESP Nextbot",
+    Callback = function()
+        local Players = game:GetService("Players")
+        local LocalPlayer = Players.LocalPlayer
+
+        _G.NextbotESPEnabled = _G.NextbotESPEnabled or false
+
+        if _G.NextbotESPEnabled then
+            -- =====================
+            -- ปิด ESP
+            -- =====================
+            _G.NextbotESPEnabled = false
+
+            if _G.NextbotESPThread and coroutine.status(_G.NextbotESPThread) ~= "dead" then
+                coroutine.close(_G.NextbotESPThread)
+                _G.NextbotESPThread = nil
+            end
+
+            -- ลบ ESP ทั้งหมด
+            local folder = workspace:FindFirstChild("Game")
+                and workspace.Game:FindFirstChild("Players")
+
+            if folder then
+                for _, npc in ipairs(folder:GetChildren()) do
+                    if npc:IsA("Model") then
+                        local part =
+                            npc:FindFirstChild("Root")
+                            or npc:FindFirstChild("Head")
+                            or npc:FindFirstChild("HumanoidRootPart")
+                            or npc:FindFirstChildWhichIsA("BasePart")
+
+                        if part then
+                            local esp = part:FindFirstChild("NextbotESP")
+                            if esp then esp:Destroy() end
+                        end
+                    end
+                end
+            end
+
+            print("🛑 ESP Nextbot ปิดแล้ว")
+
+        else
+            -- =====================
+            -- เปิด ESP
+            -- =====================
+            _G.NextbotESPEnabled = true
+
+            _G.NextbotESPThread = coroutine.create(function()
+                while _G.NextbotESPEnabled do
+                    local folder = workspace:FindFirstChild("Game")
+                        and workspace.Game:FindFirstChild("Players")
+
+                    if folder then
+                        for _, npc in ipairs(folder:GetChildren()) do
+                            if npc:GetAttribute("Team") == "Nextbot" then
+                                local part =
+                                    npc:FindFirstChild("Root")
+                                    or npc:FindFirstChild("Head")
+                                    or npc:FindFirstChild("HumanoidRootPart")
+                                    or npc:FindFirstChildWhichIsA("BasePart")
+
+                                if part then
+                                    local billboard = part:FindFirstChild("NextbotESP")
+
+                                    if not billboard then
+                                        billboard = Instance.new("BillboardGui")
+                                        billboard.Name = "NextbotESP"
+                                        billboard.Adornee = part
+                                        billboard.Size = UDim2.new(0, 180, 0, 25)
+                                        billboard.StudsOffset = Vector3.new(0, 3.2, 0)
+                                        billboard.AlwaysOnTop = true
+                                        billboard.LightInfluence = 0
+                                        billboard.Parent = part
+
+                                        local label = Instance.new("TextLabel")
+                                        label.Name = "Label"
+                                        label.Size = UDim2.new(1, 0, 1, 0)
+                                        label.BackgroundTransparency = 1
+                                        label.TextStrokeTransparency = 0.25
+                                        label.TextScaled = true
+                                        label.Font = Enum.Font.GothamSemibold
+                                        label.TextColor3 = Color3.fromRGB(255, 255, 255)
+                                        label.Parent = billboard
+                                    end
+
+                                    local label = billboard:FindFirstChild("Label")
+                                    if label then
+                                        local hrp = LocalPlayer.Character
+                                            and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+
+                                        if hrp then
+                                            local dist = (part.Position - hrp.Position).Magnitude
+                                            label.Text = string.format("%s\n%.0f studs", npc.Name, dist)
+
+                                            if dist <= 12 then
+                                                label.TextColor3 = Color3.fromRGB(50, 50, 50)
+                                            elseif dist <= 60 then
+                                                local t = math.clamp((dist - 12) / 48, 0, 1)
+                                                label.TextColor3 = Color3.fromRGB(
+                                                    255,
+                                                    120 + (255 - 120) * t,
+                                                    120
+                                                )
+                                            else
+                                                label.TextColor3 = Color3.fromRGB(200, 150, 255)
+                                            end
+                                        else
+                                            label.Text = npc.Name
+                                            label.TextColor3 = Color3.fromRGB(255, 255, 255)
+                                        end
+                                    end
+                                end
+                            end
+                        end
+                    end
+                    task.wait(0.5)
+                end
+            end)
+
+            coroutine.resume(_G.NextbotESPThread)
+            print("✅ ESP Nextbot เปิดแล้ว")
+        end
+    end
+})
