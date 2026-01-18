@@ -1324,3 +1324,116 @@ TeleportTab:Toggle({
         end
     end
 })
+-- =========================
+-- CREATE SETTINGS TAB
+-- =========================
+local SettingsTab = Window:CreateTab("Settings", "settings")
+-- =========================
+-- SERVICES
+-- =========================
+local Players = game:GetService("Players")
+local TeleportService = game:GetService("TeleportService")
+local HttpService = game:GetService("HttpService")
+local RunService = game:GetService("RunService")
+
+local player = Players.LocalPlayer
+local PlayerGui = player:WaitForChild("PlayerGui")
+SettingsTab:Button({
+    Title = "Rejoin Server",
+    Desc = "ออกแล้วเข้าเซิร์ฟเดิมใหม่",
+    Callback = function()
+        TeleportService:Teleport(game.PlaceId, player)
+    end
+})
+SettingsTab:Button({
+    Title = "Server Hop",
+    Desc = "สุ่มเปลี่ยนเซิร์ฟเวอร์ใหม่",
+    Callback = function()
+        local placeId = game.PlaceId
+        local servers = {}
+        local cursor = ""
+
+        repeat
+            local url = "https://games.roblox.com/v1/games/"..placeId..
+                "/servers/Public?sortOrder=Asc&limit=100"..
+                (cursor ~= "" and "&cursor="..cursor or "")
+
+            local data = HttpService:JSONDecode(game:HttpGet(url))
+
+            for _, s in ipairs(data.data) do
+                if s.playing < s.maxPlayers then
+                    table.insert(servers, s.id)
+                end
+            end
+
+            cursor = data.nextPageCursor
+        until not cursor or #servers > 0
+
+        if #servers > 0 then
+            TeleportService:TeleportToPlaceInstance(
+                placeId,
+                servers[math.random(#servers)],
+                player
+            )
+        end
+    end
+})
+-- =========================
+-- FPS COUNTER
+-- =========================
+local fpsGui
+local fpsLabel
+local fpsConn
+
+local function enableFPS()
+    if fpsGui then return end
+
+    fpsGui = Instance.new("ScreenGui")
+    fpsGui.Name = "FPSGui"
+    fpsGui.ResetOnSpawn = false
+    fpsGui.Parent = PlayerGui
+
+    fpsLabel = Instance.new("TextLabel")
+    fpsLabel.Size = UDim2.new(0,140,0,40)
+    fpsLabel.Position = UDim2.new(0,10,0,10)
+    fpsLabel.BackgroundColor3 = Color3.fromRGB(0,0,0)
+    fpsLabel.BackgroundTransparency = 0.35
+    fpsLabel.TextColor3 = Color3.fromRGB(0,255,100)
+    fpsLabel.TextScaled = true
+    fpsLabel.Font = Enum.Font.GothamBold
+    fpsLabel.Text = "FPS: 0"
+    fpsLabel.Parent = fpsGui
+
+    Instance.new("UICorner", fpsLabel).CornerRadius = UDim.new(0,12)
+    Instance.new("UIStroke", fpsLabel).Thickness = 2
+
+    local frames = 0
+    local last = tick()
+
+    fpsConn = RunService.RenderStepped:Connect(function()
+        frames += 1
+        if tick() - last >= 1 then
+            fpsLabel.Text = "FPS: "..frames
+            frames = 0
+            last = tick()
+        end
+    end)
+end
+
+local function disableFPS()
+    if fpsConn then fpsConn:Disconnect() fpsConn = nil end
+    if fpsGui then fpsGui:Destroy() fpsGui = nil fpsLabel = nil end
+end
+
+SettingsTab:Toggle({
+    Title = "Show FPS",
+    Desc = "แสดงค่า FPS บนหน้าจอ",
+    Value = false,
+    Callback = function(state)
+        if state then
+            enableFPS()
+        else
+            disableFPS()
+        end
+    end
+})
