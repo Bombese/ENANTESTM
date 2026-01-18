@@ -835,3 +835,151 @@ local ESPBotTab = Window:Tab({
         end
     end
 })
+local CarryTab = Window:Tab({
+    Title = "Carry",
+    Icon = "hand"
+})
+getgenv().autoCarryEnabled = false
+getgenv().autoCarryConnection = nil
+getgenv().floatingCarryButton = nil
+
+-- =========================
+-- SERVICES
+-- =========================
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local RunService = game:GetService("RunService")
+local Players = game:GetService("Players")
+local localPlayer = Players.LocalPlayer
+
+-- =========================
+-- AUTO CARRY CORE
+-- =========================
+local function startAutoCarry()
+    if getgenv().autoCarryConnection then return end
+
+    getgenv().autoCarryConnection = RunService.Heartbeat:Connect(function()
+        if not getgenv().autoCarryEnabled then return end
+
+        local char = localPlayer.Character
+        local hrp = char and char:FindFirstChild("HumanoidRootPart")
+        if not hrp then return end
+
+        for _, plr in ipairs(Players:GetPlayers()) do
+            if plr ~= localPlayer and plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
+                local otherHRP = plr.Character.HumanoidRootPart
+                local dist = (hrp.Position - otherHRP.Position).Magnitude
+
+                if dist <= 20 then
+                    pcall(function()
+                        ReplicatedStorage.Events.Character.Interact
+                            :FireServer("Carry", nil, plr.Name)
+                    end)
+                    task.wait(0.05)
+                end
+            end
+        end
+    end)
+end
+
+local function stopAutoCarry()
+    if getgenv().autoCarryConnection then
+        getgenv().autoCarryConnection:Disconnect()
+        getgenv().autoCarryConnection = nil
+    end
+end
+
+-- =========================
+-- UI : TOGGLE AUTO CARRY
+-- =========================
+CarryTab:Toggle({
+    Title = "Auto Carry",
+    Desc = "เปิด / ปิดการอุ้มผู้เล่นอัตโนมัติ",
+    Value = false,
+    Callback = function(state)
+        getgenv().autoCarryEnabled = state
+
+        if state then
+            startAutoCarry()
+        else
+            stopAutoCarry()
+        end
+
+        -- sync ปุ่มลอย
+        if getgenv().floatingCarryButton then
+            getgenv().floatingCarryButton.Text = state and "Auto Carry: ON" or "Auto Carry: OFF"
+            getgenv().floatingCarryButton.BackgroundColor3 =
+                state and Color3.fromRGB(0,200,0) or Color3.fromRGB(200,0,0)
+        end
+    end
+})
+
+-- =========================
+-- FLOATING BUTTON
+-- =========================
+local PlayerGui = localPlayer:WaitForChild("PlayerGui")
+
+local FloatingGui = PlayerGui:FindFirstChild("EvadeFloatingGui")
+if not FloatingGui then
+    FloatingGui = Instance.new("ScreenGui")
+    FloatingGui.Name = "EvadeFloatingGui"
+    FloatingGui.ResetOnSpawn = false
+    FloatingGui.Parent = PlayerGui
+end
+
+local function createCarryFloatingButton()
+    if getgenv().floatingCarryButton then
+        getgenv().floatingCarryButton:Destroy()
+        getgenv().floatingCarryButton = nil
+        return
+    end
+
+    local btn = Instance.new("TextButton")
+    btn.Size = UDim2.new(0,150,0,50)
+    btn.Position = UDim2.new(0.25,0,0.3,0)
+    btn.BackgroundColor3 =
+        getgenv().autoCarryEnabled and Color3.fromRGB(0,200,0)
+        or Color3.fromRGB(200,0,0)
+    btn.TextColor3 = Color3.new(1,1,1)
+    btn.TextScaled = true
+    btn.Text =
+        getgenv().autoCarryEnabled and "Auto Carry: ON"
+        or "Auto Carry: OFF"
+    btn.Parent = FloatingGui
+    btn.Active = true
+    btn.Draggable = true
+
+    Instance.new("UICorner", btn).CornerRadius = UDim.new(0,12)
+
+    local stroke = Instance.new("UIStroke", btn)
+    stroke.Thickness = 3
+    stroke.Color = Color3.new(1,1,1)
+
+    getgenv().floatingCarryButton = btn
+
+    btn.MouseButton1Click:Connect(function()
+        getgenv().autoCarryEnabled = not getgenv().autoCarryEnabled
+
+        if getgenv().autoCarryEnabled then
+            startAutoCarry()
+        else
+            stopAutoCarry()
+        end
+
+        btn.Text =
+            getgenv().autoCarryEnabled and "Auto Carry: ON"
+            or "Auto Carry: OFF"
+
+        btn.BackgroundColor3 =
+            getgenv().autoCarryEnabled and Color3.fromRGB(0,200,0)
+            or Color3.fromRGB(200,0,0)
+    end)
+end
+
+-- =========================
+-- UI : CREATE FLOATING BTN
+-- =========================
+CarryTab:Button({
+    Title = "ดึงปุ่ม Auto Carry",
+    Desc = "สร้าง / ลบปุ่มลอยอุ้มผู้เล่น",
+    Callback = createCarryFloatingButton
+})
