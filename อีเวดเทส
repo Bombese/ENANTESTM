@@ -1243,3 +1243,84 @@ TPPlayerTab:Toggle({
         end
     end
 })
+-- =========================
+-- Services & Player
+-- =========================
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local VirtualUser = game:GetService("VirtualUser")
+
+local player = Players.LocalPlayer
+local camera = workspace.CurrentCamera
+
+-- =========================
+-- Teleport Tab (ใช้ Tab เดียว)
+-- =========================
+local TeleportTab = Window:Tab({
+    Title = "Teleport",
+    Icon = "map"
+})
+
+-- =========================
+-- Variables
+-- =========================
+local floatingTPButton
+
+-- =========================
+-- TP Roof Function
+-- =========================
+local function teleportRoof()
+    local char = player.Character
+    local root = char and char:FindFirstChild("HumanoidRootPart")
+    if root then
+        root.CFrame = root.CFrame + Vector3.new(0, 500, 0)
+    end
+end
+
+-- =========================
+-- Floating Button
+-- =========================
+local function createTPFloatingButton()
+    if floatingTPButton then return end
+
+    floatingTPButton = Instance.new("TextButton")
+    floatingTPButton.Size = UDim2.new(0,120,0,50)
+    floatingTPButton.Position = UDim2.new(0.5,-60,0.6,0)
+    floatingTPButton.AnchorPoint = Vector2.new(0.5,0)
+    floatingTPButton.BackgroundColor3 = Color3.fromRGB(0,255,120)
+    floatingTPButton.TextColor3 = Color3.fromRGB(0,0,0)
+    floatingTPButton.TextScaled = true
+    floatingTPButton.Text = "TP Roof"
+    floatingTPButton.Parent = FloatingGui
+    floatingTPButton.Active = true
+    floatingTPButton.Draggable = true
+
+    Instance.new("UICorner", floatingTPButton).CornerRadius = UDim.new(0,12)
+
+    floatingTPButton.MouseButton1Click:Connect(teleportRoof)
+end
+
+-- =========================
+-- Buttons in TeleportTab
+-- =========================
+TeleportTab:Button({
+    Title = "Teleport Roof",
+    Desc = "เทเลพอร์ตขึ้นด้านบน / หลังคา",
+    Callback = teleportRoof
+})
+
+TeleportTab:Toggle({
+    Title = "Teleport Roof (Floating)",
+    Desc = "แสดงปุ่มลอย TP Roof บนหน้าจอ",
+    Value = false,
+    Callback = function(state)
+        if state then
+            createTPFloatingButton()
+        else
+            if floatingTPButton then
+                floatingTPButton:Destroy()
+                floatingTPButton = nil
+            end
+        end
+    end
+})
