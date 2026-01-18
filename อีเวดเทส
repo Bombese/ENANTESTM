@@ -584,3 +584,125 @@ HackTab:Toggle({
         end
     end
 })
+local AdditionalsTab = Window:Tab({
+    Title = "Additionals",
+    Icon = "plus"
+})
+local player = game.Players.LocalPlayer
+
+-- =============================
+-- STATUS
+-- =============================
+local extraStatus = {
+    Korblox = false,
+    Headless = false,
+}
+
+-- =============================
+-- APPLY BODY MOD
+-- =============================
+local function applyBodyMod()
+    getgenv().Setting = {
+        ["Body"] = {
+            ["Korblox"] = extraStatus.Korblox,
+            ["Headless"] = extraStatus.Headless,
+        },
+    }
+
+    loadstring(game:HttpGet(
+        "https://raw.githubusercontent.com/khen791/script-khen/refs/heads/main/KorbloxAndHeadless.txt",
+        true
+    ))()
+end
+
+-- รันซ้ำตอนเกิดใหม่
+player.CharacterAdded:Connect(function()
+    task.wait(1)
+    applyBodyMod()
+end)
+
+-- =============================
+-- KORBLOX
+-- =============================
+AdditionalsTab:Toggle({
+    Title = "ขากุด (Korblox)",
+    Desc = "เปิด/ปิด ขากุด โดยใช้สคริปต์จากลิงก์",
+    Value = false,
+    Callback = function(state)
+        extraStatus.Korblox = state
+        applyBodyMod()
+    end
+})
+
+-- =============================
+-- HEADLESS
+-- =============================
+AdditionalsTab:Toggle({
+    Title = "หัวล่องหน (Headless)",
+    Desc = "เปิด/ปิด หัวล่องหน โดยใช้สคริปต์จากลิงก์",
+    Value = false,
+    Callback = function(state)
+        extraStatus.Headless = state
+        applyBodyMod()
+    end
+})
+
+-- =========================
+-- REMOVE DARK / FULL BRIGHT
+-- =========================
+AdditionalsTab:Button({
+    Title = "ลบความมืดออก",
+    Desc = "ทำให้ Map สว่าง และตัดเงาออกทั้งหมด",
+    Callback = function()
+        local Lighting = game:GetService("Lighting")
+
+        Lighting.Ambient = Color3.new(1,1,1)
+        Lighting.OutdoorAmbient = Color3.new(1,1,1)
+        Lighting.Brightness = 3
+        Lighting.ExposureCompensation = 1
+        Lighting.GlobalShadows = false
+
+        for _, v in pairs(Lighting:GetChildren()) do
+            if v:IsA("ColorCorrectionEffect")
+            or v:IsA("DepthOfFieldEffect")
+            or v:IsA("BloomEffect")
+            or v:IsA("SunRaysEffect")
+            or v:IsA("Atmosphere")
+            or v:IsA("Sky") then
+                v:Destroy()
+            end
+        end
+    end
+})
+
+-- =============================
+-- FAKE EDASH
+-- =============================
+local fakeEdashRunning = false
+local fakeEdashThread
+
+AdditionalsTab:Button({
+    Title = "เสกท่าเวล100 ของปลอม ❌",
+    Desc = "เปิด / ปิด Fake Edash (ของคนอื่น)",
+    Callback = function()
+        if not fakeEdashRunning then
+            fakeEdashRunning = true
+            print("Fake Edash เริ่มทำงาน")
+
+            task.spawn(function()
+                local success, err = pcall(function()
+                    loadstring(game:HttpGet(
+                        "https://raw.githubusercontent.com/G4V3S/S/refs/heads/main/fake%20edash.lua"
+                    ))()
+                end)
+
+                if not success then
+                    warn("Fake Edash Error:", err)
+                end
+            end)
+        else
+            fakeEdashRunning = false
+            print("Fake Edash ถูกปิดแล้ว (ต้องรีเซ็ตเกมเพื่อหยุดทั้งหมด)")
+        end
+    end
+})
