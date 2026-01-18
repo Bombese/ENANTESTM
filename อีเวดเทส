@@ -15,3 +15,216 @@ local Window = WindUI:CreateWindow({
         Draggable = true,
     }
 })
+local HackTab = Window:Tab({
+    Title = "Hack",
+    Icon = "zap",
+})
+HackTab:Select()
+
+-- WalkSpeed Slider
+HackTab:Slider({
+    Title = "Walk Speed",
+    Desc = "ปรับความเร็วการเดิน",
+    Step = 1,
+    Value = {
+        Min = 16,
+        Max = 200,
+        Default = getgenv().WalkSpeedValue
+    },
+    Callback = function(v)
+        getgenv().WalkSpeedValue = v
+    end
+})
+
+-- Infinite Jump Toggle
+HackTab:Toggle({
+    Title = "Infinite Jump",
+    Desc = "กระโดดไม่จำกัด",
+    Value = false,
+    Callback = function(v)
+        getgenv().InfJump = v
+    end
+})
+
+-- Noclip Toggle
+HackTab:Toggle({
+    Title = "Noclip",
+    Desc = "เดินทะลุกำแพง",
+    Value = false,
+    Callback = function(v)
+        getgenv().Noclip = v
+    end
+})
+-- ===== SEMI INVISIBLE MODE =====
+
+getgenv().SemiInvisible = false
+
+local Players = game:GetService("Players")
+local player = Players.LocalPlayer
+
+local function SetSemiInvisible(state)
+    local char = player.Character
+    if not char then return end
+
+    for _,v in pairs(char:GetDescendants()) do
+        -- ส่วนร่างกาย
+        if v:IsA("BasePart") then
+            if v.Name ~= "HumanoidRootPart" then
+                v.Transparency = state and 0.75 or 0
+                v.CanCollide = not state
+            end
+        end
+
+        -- หน้าตัวละคร
+        if v:IsA("Decal") then
+            v.Transparency = state and 0.9 or 0
+        end
+
+        -- ชื่อบนหัว
+        if v:IsA("BillboardGui") then
+            v.Enabled = not state
+        end
+    end
+end
+
+-- กันตายแล้วโหมดหาย
+player.CharacterAdded:Connect(function()
+    task.wait(1)
+    if getgenv().SemiInvisible then
+        SetSemiInvisible(true)
+    end
+end)
+
+-- ===== UI : ADD TO HACK TAB =====
+HackTab:Toggle({
+    Title = "Semi Invisible",
+    Desc = "โปร่งใส (คนอื่นเห็นยาก)",
+    Value = false,
+    Callback = function(v)
+        getgenv().SemiInvisible = v
+        SetSemiInvisible(v)
+    end
+})
+-- ===== SKELETON ESP (R6 + R15) =====
+
+getgenv().SkeletonESP = false
+
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local LocalPlayer = Players.LocalPlayer
+local Camera = workspace.CurrentCamera
+
+local Skeletons = {}
+
+-- ===== Bones =====
+
+local BonesR15 = {
+    {"Head","UpperTorso"},
+    {"UpperTorso","LowerTorso"},
+
+    {"UpperTorso","LeftUpperArm"},
+    {"LeftUpperArm","LeftLowerArm"},
+    {"LeftLowerArm","LeftHand"},
+
+    {"UpperTorso","RightUpperArm"},
+    {"RightUpperArm","RightLowerArm"},
+    {"RightLowerArm","RightHand"},
+
+    {"LowerTorso","LeftUpperLeg"},
+    {"LeftUpperLeg","LeftLowerLeg"},
+    {"LeftLowerLeg","LeftFoot"},
+
+    {"LowerTorso","RightUpperLeg"},
+    {"RightUpperLeg","RightLowerLeg"},
+    {"RightLowerLeg","RightFoot"},
+}
+
+local BonesR6 = {
+    {"Head","Torso"},
+
+    {"Torso","Left Arm"},
+    {"Torso","Right Arm"},
+
+    {"Torso","Left Leg"},
+    {"Torso","Right Leg"},
+}
+
+-- ===== Functions =====
+
+local function ClearSkeleton(plr)
+    if Skeletons[plr] then
+        for _,line in pairs(Skeletons[plr]) do
+            line:Remove()
+        end
+        Skeletons[plr] = nil
+    end
+end
+
+local function CreateSkeleton(plr, bones)
+    Skeletons[plr] = {}
+
+    for _ = 1,#bones do
+        local line = Drawing.new("Line")
+        line.Thickness = 1.5
+        line.Color = Color3.fromRGB(0,255,170)
+        line.Transparency = 1
+        line.Visible = false
+        table.insert(Skeletons[plr], line)
+    end
+end
+
+-- ===== Render =====
+
+RunService.RenderStepped:Connect(function()
+    if not getgenv().SkeletonESP then
+        for _,plr in pairs(Players:GetPlayers()) do
+            ClearSkeleton(plr)
+        end
+        return
+    end
+
+    for _,plr in pairs(Players:GetPlayers()) do
+        if plr ~= LocalPlayer and plr.Character then
+            local char = plr.Character
+            local humanoid = char:FindFirstChildOfClass("Humanoid")
+            if not humanoid then continue end
+
+            local bones = humanoid.RigType == Enum.HumanoidRigType.R15 and BonesR15 or BonesR6
+
+            if not Skeletons[plr] then
+                CreateSkeleton(plr, bones)
+            end
+
+            for i,bone in ipairs(bones) do
+                local p1 = char:FindFirstChild(bone[1])
+                local p2 = char:FindFirstChild(bone[2])
+                local line = Skeletons[plr][i]
+
+                if p1 and p2 then
+                    local s1,v1 = Camera:WorldToViewportPoint(p1.Position)
+                    local s2,v2 = Camera:WorldToViewportPoint(p2.Position)
+
+                    if v1 and v2 then
+                        line.From = Vector2.new(s1.X,s1.Y)
+                        line.To   = Vector2.new(s2.X,s2.Y)
+                        line.Visible = true
+                    else
+                        line.Visible = false
+                    end
+                else
+                    line.Visible = false
+                end
+            end
+        end
+    end
+end)
+
+-- ===== UI =====
+HackTab:Toggle({
+    Title = "Skeleton ESP (R6 / R15)",
+    Desc = "รองรับผู้เล่นทุก Rig",
+    Value = false,
+    Callback = function(v)
+        getgenv().SkeletonESP = v
+    end
+})
