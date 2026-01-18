@@ -21,31 +21,6 @@ local HackTab = Window:Tab({
 })
 HackTab:Select()
 
--- WalkSpeed Slider
-HackTab:Slider({
-    Title = "Walk Speed",
-    Desc = "ปรับความเร็วการเดิน",
-    Step = 1,
-    Value = {
-        Min = 16,
-        Max = 200,
-        Default = getgenv().WalkSpeedValue
-    },
-    Callback = function(v)
-        getgenv().WalkSpeedValue = v
-    end
-})
-
--- Infinite Jump Toggle
-HackTab:Toggle({
-    Title = "Infinite Jump",
-    Desc = "กระโดดไม่จำกัด",
-    Value = false,
-    Callback = function(v)
-        getgenv().InfJump = v
-    end
-})
-
 -- Noclip Toggle
 HackTab:Toggle({
     Title = "Noclip",
