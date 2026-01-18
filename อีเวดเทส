@@ -19,25 +19,41 @@ local HackTab = Window:Tab({
     Title = "Hack",
     Icon = "zap",
 })
-HackTab:Toggle({
-     Title = "Hack Speed
-     Desc = "วิ่งไวแบบเนียน"
-     Value = false,
-     Callback =function(v)
+
 local p = game.Players.LocalPlayer
 local RunService = game:GetService("RunService")
 
-local speed = 35 -- ปรับตรงนี้ (25–50)
+local speed = 35
+local tpwalkConn -- เก็บ connection ไว้เปิด/ปิด
 
-RunService.RenderStepped:Connect(function(dt)
-    local c = p.Character
-    if c and c:FindFirstChild("HumanoidRootPart") and c:FindFirstChild("Humanoid") then
-        local hum = c.Humanoid
-        if hum.MoveDirection.Magnitude > 0 then
-            c.HumanoidRootPart.CFrame += hum.MoveDirection * speed * dt
+HackTab:Toggle({
+    Title = "Hack Speed",
+    Desc = "วิ่งไวแบบเนียน",
+    Value = false,
+    Callback = function(v)
+        if v then
+            -- เปิด
+            tpwalkConn = RunService.RenderStepped:Connect(function(dt)
+                local c = p.Character
+                if not c then return end
+
+                local hrp = c:FindFirstChild("HumanoidRootPart")
+                local hum = c:FindFirstChild("Humanoid")
+                if not hrp or not hum then return end
+
+                if hum.MoveDirection.Magnitude > 0 then
+                    hrp.CFrame += hum.MoveDirection * speed * dt
+                end
+            end)
+        else
+            -- ปิด
+            if tpwalkConn then
+                tpwalkConn:Disconnect()
+                tpwalkConn = nil
+            end
         end
     end
-end)
+})
 HackTab:Select()
 
 -- Noclip Toggle
