@@ -1118,3 +1118,128 @@ WallHackTab:Toggle({
         end
     end
 })
+-- =========================
+-- Services & Player
+-- =========================
+local Players = game:GetService("Players")
+local player = Players.LocalPlayer
+local PlayerGui = player:WaitForChild("PlayerGui")
+
+-- =========================
+-- Tab TP to Player
+-- =========================
+local TPPlayerTab = Window:Tab({
+    Title = "TP to Player",
+    Icon = "map-pin"
+})
+
+-- =========================
+-- Variables
+-- =========================
+local floatingTPPlayerButton
+
+-- =========================
+-- Teleport Function
+-- =========================
+local function teleportToPlayer(targetPlayer)
+    local char = player.Character
+    local root = char and char:FindFirstChild("HumanoidRootPart")
+    if not root then return end
+
+    if targetPlayer
+    and targetPlayer.Character
+    and targetPlayer.Character:FindFirstChild("HumanoidRootPart") then
+        root.CFrame = targetPlayer.Character.HumanoidRootPart.CFrame * CFrame.new(0,0,-2)
+    end
+end
+
+-- =========================
+-- TP Player Menu
+-- =========================
+local function createTPPlayerMenu()
+    local oldGui = PlayerGui:FindFirstChild("TPPlayerMenu")
+    if oldGui then oldGui:Destroy() end
+
+    local menuGui = Instance.new("ScreenGui")
+    menuGui.Name = "TPPlayerMenu"
+    menuGui.ResetOnSpawn = false
+    menuGui.Parent = PlayerGui
+
+    local frame = Instance.new("Frame")
+    frame.Size = UDim2.new(0,220,0,320)
+    frame.Position = UDim2.new(0.5,-110,0.3,0)
+    frame.BackgroundColor3 = Color3.fromRGB(40,40,40)
+    frame.Parent = menuGui
+
+    Instance.new("UICorner", frame).CornerRadius = UDim.new(0,12)
+
+    local layout = Instance.new("UIListLayout")
+    layout.Padding = UDim.new(0,6)
+    layout.Parent = frame
+
+    for _, plr in ipairs(Players:GetPlayers()) do
+        if plr ~= player then
+            local btn = Instance.new("TextButton")
+            btn.Size = UDim2.new(1,-10,0,32)
+            btn.Text = plr.Name
+            btn.BackgroundColor3 = Color3.fromRGB(120,80,255)
+            btn.TextColor3 = Color3.new(1,1,1)
+            btn.TextScaled = true
+            btn.Parent = frame
+
+            Instance.new("UICorner", btn).CornerRadius = UDim.new(0,8)
+
+            btn.MouseButton1Click:Connect(function()
+                teleportToPlayer(plr)
+                menuGui:Destroy()
+            end)
+        end
+    end
+end
+
+-- =========================
+-- Floating Button
+-- =========================
+local function createFloatingTPPlayerButton()
+    if floatingTPPlayerButton then return end
+
+    floatingTPPlayerButton = Instance.new("TextButton")
+    floatingTPPlayerButton.Size = UDim2.new(0,150,0,50)
+    floatingTPPlayerButton.Position = UDim2.new(0.5,-75,0.75,0)
+    floatingTPPlayerButton.BackgroundColor3 = Color3.fromRGB(150,0,255)
+    floatingTPPlayerButton.TextColor3 = Color3.new(1,1,1)
+    floatingTPPlayerButton.TextScaled = true
+    floatingTPPlayerButton.Text = "TP to Player"
+    floatingTPPlayerButton.Parent = FloatingGui
+    floatingTPPlayerButton.Active = true
+    floatingTPPlayerButton.Draggable = true
+
+    Instance.new("UICorner", floatingTPPlayerButton).CornerRadius = UDim.new(0,12)
+
+    floatingTPPlayerButton.MouseButton1Click:Connect(createTPPlayerMenu)
+end
+
+-- =========================
+-- Buttons in TPPlayerTab
+-- =========================
+TPPlayerTab:Button({
+    Title = "TP to Player",
+    Desc = "เลือกผู้เล่นแล้วเทเลพอร์ตไปหา",
+    Callback = createTPPlayerMenu
+})
+
+TPPlayerTab:Toggle({
+    Title = "Floating Button",
+    Desc = "แสดงปุ่มลอย TP to Player",
+    Value = false,
+    Callback = function(state)
+        if state then
+            createFloatingTPPlayerButton()
+        else
+            if floatingTPPlayerButton then
+                floatingTPPlayerButton:Destroy()
+                floatingTPPlayerButton = nil
+            end
+        end
+    end
+})
