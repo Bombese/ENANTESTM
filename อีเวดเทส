@@ -7,7 +7,7 @@ local WindUI = loadstring(game:HttpGet(
 local Window = WindUI:CreateWindow({
     Title = "ENAN อีเวด",
     Icon = "user",
-    Author = "Beta 1",
+    Author = "Beta 2",
     OpenButton = {
         Title = "ENAN HUB",
         Icon = "monitor",
@@ -226,5 +226,131 @@ HackTab:Toggle({
     Value = false,
     Callback = function(v)
         getgenv().SkeletonESP = v
+    end
+})
+local FlyConnection
+local ReframeThread
+local bp, bv, bg
+
+TabHack:Toggle({
+    Title = "Fly Bypass",
+    Desc = "Anti-Ban Fly",
+    Default = false,
+    Callback = function(state)
+        local Players = game:GetService("Players")
+        local RunService = game:GetService("RunService")
+        local UIS = game:GetService("UserInputService")
+        local plr = Players.LocalPlayer
+        local char = plr.Character or plr.CharacterAdded:Wait()
+        local hum = char:WaitForChild("Humanoid")
+        local hrp = char:WaitForChild("HumanoidRootPart")
+        local cam = workspace.CurrentCamera
+
+        if state then
+            getgenv().Fly = true
+            local MOVE_SPEED = 40
+            local Y_POWER = 0.8
+            local DEADZONE = 0.25
+            local MAX_Y_STEP = 1
+            local SMOOTH = 0.1
+
+            local gameSettings = UserSettings():GetService("UserGameSettings")
+            local oldControl = gameSettings.ControlMode
+            local oldMouse = UIS.MouseBehavior
+
+            local hoverY = hrp.Position.Y
+            local smoothY = hoverY
+
+            local highlight = Instance.new("Highlight")
+            highlight.Adornee = char
+            highlight.FillTransparency = 1
+            highlight.OutlineTransparency = 0.2
+            highlight.OutlineColor = Color3.fromRGB(120,200,255)
+            highlight.Parent = char
+
+            local function startFly()
+                if bp then bp:Destroy() end
+                if bv then bv:Destroy() end
+                if bg then bg:Destroy() end
+
+                hum.PlatformStand = true
+
+                bp = Instance.new("BodyPosition", hrp)
+                bp.MaxForce = Vector3.new(0,1e9,0)
+                bp.P = 80000
+                bp.D = 3000
+                bp.Position = hrp.Position
+
+                bv = Instance.new("BodyVelocity", hrp)
+                bv.MaxForce = Vector3.new(1e9,0,1e9)
+
+                bg = Instance.new("BodyGyro", hrp)
+                bg.MaxTorque = Vector3.new(1e9,1e9,1e9)
+                bg.P = 40000
+                bg.D = 1200
+                bg.CFrame = cam.CFrame
+            end
+
+            startFly()
+
+            ReframeThread = task.spawn(function()
+                while getgenv().Fly do
+                    if not (hrp:FindFirstChild("BodyPosition") and hrp:FindFirstChild("BodyVelocity") and hrp:FindFirstChild("BodyGyro")) then
+                        startFly()
+                    end
+                    task.wait(0.5)
+                end
+            end)
+
+            FlyConnection = RunService.RenderStepped:Connect(function()
+                if not getgenv().Fly then return end
+
+                gameSettings.ControlMode = Enum.ControlMode.MouseLockSwitch
+                UIS.MouseBehavior = Enum.MouseBehavior.LockCenter
+
+                for _,v in ipairs(char:GetDescendants()) do
+                    if v:IsA("BasePart") then
+                        v.CanCollide = false
+                    end
+                end
+
+                local dir = hum.MoveDirection
+                bv.Velocity = Vector3.new(dir.X * MOVE_SPEED, 0, dir.Z * MOVE_SPEED)
+
+                if dir.Magnitude > 0.01 then
+                    local lookY = cam.CFrame.LookVector.Y
+                    if math.abs(lookY) > DEADZONE then
+                        hoverY += math.clamp(lookY * Y_POWER, -MAX_Y_STEP, MAX_Y_STEP)
+                    end
+                end
+
+                smoothY += (hoverY - smoothY) * SMOOTH
+                bp.Position = Vector3.new(hrp.Position.X, smoothY, hrp.Position.Z)
+                bg.CFrame = cam.CFrame
+            end)
+
+        else
+            -- ปิด Fly แบบสมบูรณ์
+            getgenv().Fly = false
+            if FlyConnection then FlyConnection:Disconnect() end
+            if ReframeThread then task.cancel(ReframeThread) end
+
+            -- ลบ BodyPosition / BodyVelocity / BodyGyro
+            if bp then bp:Destroy() end
+            if bv then bv:Destroy() end
+            if bg then bg:Destroy() end
+
+            -- รีเซ็ตตัวละคร
+            for _,v in ipairs(char:GetDescendants()) do
+                if v:IsA("BasePart") then
+                    v.CanCollide = true
+                end
+                if v:IsA("Highlight") then
+                    v:Destroy()
+                end
+            end
+
+            if hum then hum.PlatformStand = false end
+        end
     end
 })
