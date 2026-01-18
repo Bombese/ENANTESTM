@@ -7,7 +7,7 @@ local WindUI = loadstring(game:HttpGet(
 local Window = WindUI:CreateWindow({
     Title = "ENAN อีเวด",
     Icon = "user",
-    Author = "Beta 5",
+    Author = "Beta 10",
     OpenButton = {
         Title = "ENAN HUB",
         Icon = "monitor",
@@ -19,6 +19,25 @@ local HackTab = Window:Tab({
     Title = "Hack",
     Icon = "zap",
 })
+HackTab:Toggle({
+     Title = "Hack Speed
+     Desc = "วิ่งไวแบบเนียน"
+     Value = false,
+     Callback =function(v)
+local p = game.Players.LocalPlayer
+local RunService = game:GetService("RunService")
+
+local speed = 35 -- ปรับตรงนี้ (25–50)
+
+RunService.RenderStepped:Connect(function(dt)
+    local c = p.Character
+    if c and c:FindFirstChild("HumanoidRootPart") and c:FindFirstChild("Humanoid") then
+        local hum = c.Humanoid
+        if hum.MoveDirection.Magnitude > 0 then
+            c.HumanoidRootPart.CFrame += hum.MoveDirection * speed * dt
+        end
+    end
+end)
 HackTab:Select()
 
 -- Noclip Toggle
