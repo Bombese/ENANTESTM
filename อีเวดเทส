@@ -5,7 +5,7 @@ local WindUI = loadstring(game:HttpGet(
 
 -- Window
 local Window = WindUI:CreateWindow({
-    Title = "ENAN อีเวด",
+    Title = "Evade Script ENAN HUB (Premium)",
     Icon = "user",
     Author = "Beta 10",
     OpenButton = {
