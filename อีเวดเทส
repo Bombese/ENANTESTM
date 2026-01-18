@@ -5,11 +5,11 @@ local WindUI = loadstring(game:HttpGet(
 
 -- Window
 local Window = WindUI:CreateWindow({
-    Title = "Bom HUB",
+    Title = "ENAN อีเวด",
     Icon = "user",
-    Author = "https://discord.gg/5d6W4wuTdR",
+    Author = "Beta 1",
     OpenButton = {
-        Title = "Bom Hack",
+        Title = "ENAN HUB",
         Icon = "monitor",
         Enabled = true,
         Draggable = true,
