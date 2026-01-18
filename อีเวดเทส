@@ -7,7 +7,7 @@ local WindUI = loadstring(game:HttpGet(
 local Window = WindUI:CreateWindow({
     Title = "ENAN อีเวด",
     Icon = "user",
-    Author = "Beta 3",
+    Author = "Beta 5",
     OpenButton = {
         Title = "ENAN HUB",
         Icon = "monitor",
@@ -203,16 +203,11 @@ HackTab:Toggle({
         getgenv().SkeletonESP = v
     end
 })
-local TabHack = Window:Tab({
-    Title = "Hack",
-    Icon = "zap"
-})
-
 local FlyConnection
 local ReframeThread
 local bp, bv, bg
 
-TabHack:Toggle({
+HackTab:Toggle({
     Title = "Fly Bypass",
     Desc = "Anti-Ban Fly",
     Default = false,
