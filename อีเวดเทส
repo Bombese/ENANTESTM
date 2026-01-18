@@ -1324,116 +1324,102 @@ TeleportTab:Toggle({
         end
     end
 })
--- =========================
--- CREATE SETTINGS TAB
--- =========================
-local SettingsTab = Window:CreateTab("Settings", "settings")
--- =========================
--- SERVICES
--- =========================
+--// Services
 local Players = game:GetService("Players")
 local TeleportService = game:GetService("TeleportService")
-local HttpService = game:GetService("HttpService")
 local RunService = game:GetService("RunService")
 
 local player = Players.LocalPlayer
-local PlayerGui = player:WaitForChild("PlayerGui")
+local placeId = game.PlaceId
+
+--// Settings Tab
+local SettingsTab = Window:Tab({
+    Title = "Settings",
+    Icon = "settings"
+})
+
+-------------------------------------------------
+-- Rejoin Server
+-------------------------------------------------
 SettingsTab:Button({
     Title = "Rejoin Server",
-    Desc = "ออกแล้วเข้าเซิร์ฟเดิมใหม่",
+    Desc = "เข้าเซิร์ฟเวอร์เดิมใหม่",
     Callback = function()
-        TeleportService:Teleport(game.PlaceId, player)
+        TeleportService:Teleport(placeId, player)
     end
 })
+
+-------------------------------------------------
+-- Server Hop
+-------------------------------------------------
 SettingsTab:Button({
     Title = "Server Hop",
-    Desc = "สุ่มเปลี่ยนเซิร์ฟเวอร์ใหม่",
+    Desc = "สุ่มเข้าเซิร์ฟเวอร์ใหม่",
     Callback = function()
-        local placeId = game.PlaceId
         local servers = {}
-        local cursor = ""
+        local req = syn and syn.request or http_request or request
 
-        repeat
-            local url = "https://games.roblox.com/v1/games/"..placeId..
-                "/servers/Public?sortOrder=Asc&limit=100"..
-                (cursor ~= "" and "&cursor="..cursor or "")
+        local url = "https://games.roblox.com/v1/games/" .. placeId .. "/servers/Public?sortOrder=Asc&limit=100"
+        local body = game:HttpGet(url)
+        local data = game:GetService("HttpService"):JSONDecode(body)
 
-            local data = HttpService:JSONDecode(game:HttpGet(url))
-
-            for _, s in ipairs(data.data) do
-                if s.playing < s.maxPlayers then
-                    table.insert(servers, s.id)
-                end
+        for _, v in pairs(data.data) do
+            if v.playing < v.maxPlayers then
+                table.insert(servers, v.id)
             end
-
-            cursor = data.nextPageCursor
-        until not cursor or #servers > 0
+        end
 
         if #servers > 0 then
-            TeleportService:TeleportToPlaceInstance(
-                placeId,
-                servers[math.random(#servers)],
-                player
-            )
+            TeleportService:TeleportToPlaceInstance(placeId, servers[math.random(1, #servers)], player)
         end
     end
 })
--- =========================
--- FPS COUNTER
--- =========================
-local fpsGui
+
+-------------------------------------------------
+-- FPS Counter
+-------------------------------------------------
 local fpsLabel
-local fpsConn
-
-local function enableFPS()
-    if fpsGui then return end
-
-    fpsGui = Instance.new("ScreenGui")
-    fpsGui.Name = "FPSGui"
-    fpsGui.ResetOnSpawn = false
-    fpsGui.Parent = PlayerGui
-
-    fpsLabel = Instance.new("TextLabel")
-    fpsLabel.Size = UDim2.new(0,140,0,40)
-    fpsLabel.Position = UDim2.new(0,10,0,10)
-    fpsLabel.BackgroundColor3 = Color3.fromRGB(0,0,0)
-    fpsLabel.BackgroundTransparency = 0.35
-    fpsLabel.TextColor3 = Color3.fromRGB(0,255,100)
-    fpsLabel.TextScaled = true
-    fpsLabel.Font = Enum.Font.GothamBold
-    fpsLabel.Text = "FPS: 0"
-    fpsLabel.Parent = fpsGui
-
-    Instance.new("UICorner", fpsLabel).CornerRadius = UDim.new(0,12)
-    Instance.new("UIStroke", fpsLabel).Thickness = 2
-
-    local frames = 0
-    local last = tick()
-
-    fpsConn = RunService.RenderStepped:Connect(function()
-        frames += 1
-        if tick() - last >= 1 then
-            fpsLabel.Text = "FPS: "..frames
-            frames = 0
-            last = tick()
-        end
-    end)
-end
-
-local function disableFPS()
-    if fpsConn then fpsConn:Disconnect() fpsConn = nil end
-    if fpsGui then fpsGui:Destroy() fpsGui = nil fpsLabel = nil end
-end
+local fpsConnection
 
 SettingsTab:Toggle({
     Title = "Show FPS",
-    Desc = "แสดงค่า FPS บนหน้าจอ",
+    Desc = "แสดง FPS บนหน้าจอ",
     Value = false,
     Callback = function(state)
         if state then
-            enableFPS()
+            if fpsLabel then return end
+
+            fpsLabel = Instance.new("TextLabel")
+            fpsLabel.Size = UDim2.new(0, 120, 0, 30)
+            fpsLabel.Position = UDim2.new(0, 10, 0, 10)
+            fpsLabel.BackgroundTransparency = 0.3
+            fpsLabel.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+            fpsLabel.TextColor3 = Color3.fromRGB(0, 255, 0)
+            fpsLabel.Font = Enum.Font.SourceSansBold
+            fpsLabel.TextSize = 18
+            fpsLabel.Text = "FPS: 0"
+            fpsLabel.Parent = player:WaitForChild("PlayerGui")
+
+            local last = tick()
+            local frames = 0
+
+            fpsConnection = RunService.RenderStepped:Connect(function()
+                frames += 1
+                if tick() - last >= 1 then
+                    fpsLabel.Text = "FPS: " .. frames
+                    frames = 0
+                    last = tick()
+                end
+            end)
         else
-            disableFPS()
+            if fpsConnection then
+                fpsConnection:Disconnect()
+                fpsConnection = nil
+            end
+            if fpsLabel then
+                fpsLabel:Destroy()
+                fpsLabel = nil
+            end
         end
     end
 })
