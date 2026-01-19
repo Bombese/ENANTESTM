@@ -88,6 +88,7 @@ HackTab:Toggle({
         end
     end
 })
+Window:SelectTab(MainTab)
 -- ===== SEMI INVISIBLE MODE =====
 
 getgenv().SemiInvisible = false
