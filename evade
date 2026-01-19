@@ -1,0 +1,209 @@
+-- Load WindUI
+local WindUI = loadstring(game:HttpGet(
+    "https://github.com/Footagesus/WindUI/releases/latest/download/main.lua"
+))()
+
+-- Window
+local Window = WindUI:CreateWindow({
+    Title = "Evade Script ENAN HUB (Premium)",
+    Icon = "user",
+    Author = "https://discord.gg/AXTKtmUvyf",
+    OpenButton = {
+        Title = "ENAN HUB",
+        Icon = "monitor",
+        Enabled = true,
+        Draggable = true,
+    }
+})
+local HackTab = Window:Tab({
+    Title = "Hack",
+    Icon = "zap",
+})
+
+local p = game.Players.LocalPlayer
+local RunService = game:GetService("RunService")
+
+local speed = 20
+local tpwalkConn -- เก็บ connection ไว้เปิด/ปิด
+
+HackTab:Toggle({
+    Title = "Hack Speed",
+    Desc = "วิ่งไวแบบเนียน",
+    Value = false,
+    Callback = function(v)
+        if v then
+            -- เปิด
+            tpwalkConn = RunService.RenderStepped:Connect(function(dt)
+                local c = p.Character
+                if not c then return end
+
+                local hrp = c:FindFirstChild("HumanoidRootPart")
+                local hum = c:FindFirstChild("Humanoid")
+                if not hrp or not hum then return end
+
+                if hum.MoveDirection.Magnitude > 0 then
+                    hrp.CFrame += hum.MoveDirection * speed * dt
+                end
+            end)
+        else
+            -- ปิด
+            if tpwalkConn then
+                tpwalkConn:Disconnect()
+                tpwalkConn = nil
+            end
+        end
+    end
+})
+local p = game.Players.LocalPlayer
+local RunService = game:GetService("RunService")
+
+local speed = 35
+local tpwalkConn -- เก็บ connection ไว้เปิด/ปิด
+
+HackTab:Toggle({
+    Title = "Hack Speed (Risk)",
+    Desc = "วิ่งไวมาก",
+    Value = false,
+    Callback = function(v)
+        if v then
+            -- เปิด
+            tpwalkConn = RunService.RenderStepped:Connect(function(dt)
+                local c = p.Character
+                if not c then return end
+
+                local hrp = c:FindFirstChild("HumanoidRootPart")
+                local hum = c:FindFirstChild("Humanoid")
+                if not hrp or not hum then return end
+
+                if hum.MoveDirection.Magnitude > 0 then
+                    hrp.CFrame += hum.MoveDirection * speed * dt
+                end
+            end)
+        else
+            -- ปิด
+            if tpwalkConn then
+                tpwalkConn:Disconnect()
+                tpwalkConn = nil
+            end
+        end
+    end
+})
+-- ===== SEMI INVISIBLE MODE =====
+
+getgenv().SemiInvisible = false
+
+local Players = game:GetService("Players")
+local player = Players.LocalPlayer
+
+local function SetSemiInvisible(state)
+    local char = player.Character
+    if not char then return end
+
+    for _,v in pairs(char:GetDescendants()) do
+        -- ส่วนร่างกาย
+        if v:IsA("BasePart") then
+            if v.Name ~= "HumanoidRootPart" then
+                v.Transparency = state and 0.75 or 0
+                v.CanCollide = not state
+            end
+        end
+
+        -- หน้าตัวละคร
+        if v:IsA("Decal") then
+            v.Transparency = state and 0.9 or 0
+        end
+
+        -- ชื่อบนหัว
+        if v:IsA("BillboardGui") then
+            v.Enabled = not state
+        end
+    end
+end
+
+-- กันตายแล้วโหมดหาย
+player.CharacterAdded:Connect(function()
+    task.wait(1)
+    if getgenv().SemiInvisible then
+        SetSemiInvisible(true)
+    end
+end)
+
+-- ===== UI : ADD TO HACK TAB =====
+HackTab:Toggle({
+    Title = "Semi Invisible",
+    Desc = "โปร่งใส (คนอื่นเห็นยาก)",
+    Value = false,
+    Callback = function(v)
+        getgenv().SemiInvisible = v
+        SetSemiInvisible(v)
+    end
+})
+-- ===== SKELETON ESP (R6 + R15) =====
+
+getgenv().SkeletonESP = false
+
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local LocalPlayer = Players.LocalPlayer
+local Camera = workspace.CurrentCamera
+
+local Skeletons = {}
+
+-- ===== Bones =====
+
+local BonesR15 = {
+    {"Head","UpperTorso"},
+    {"UpperTorso","LowerTorso"},
+
+    {"UpperTorso","LeftUpperArm"},
+    {"LeftUpperArm","LeftLowerArm"},
+    {"LeftLowerArm","LeftHand"},
+
+    {"UpperTorso","RightUpperArm"},
+    {"RightUpperArm","RightLowerArm"},
+    {"RightLowerArm","RightHand"},
+
+    {"LowerTorso","LeftUpperLeg"},
+    {"LeftUpperLeg","LeftLowerLeg"},
+    {"LeftLowerLeg","LeftFoot"},
+
+    {"LowerTorso","RightUpperLeg"},
+    {"RightUpperLeg","RightLowerLeg"},
+    {"RightLowerLeg","RightFoot"},
+}
+
+local BonesR6 = {
+    {"Head","Torso"},
+
+    {"Torso","Left Arm"},
+    {"Torso","Right Arm"},
+
+    {"Torso","Left Leg"},
+    {"Torso","Right Leg"},
+}
+
+-- ===== Functions =====
+
+local function ClearSkeleton(plr)
+    if Skeletons[plr] then
+        for _,line in pairs(Skeletons[plr]) do
+            line:Remove()
+        end
+        Skeletons[plr] = nil
+    end
+end
+
+local function CreateSkeleton(plr, bones)
+    Skeletons[plr] = {}
+
+    for _ = 1,#bones do
+        local line = Drawing.new("Line")
+        line.Thickness = 1.5
+        line.Color = Color3.fromRGB(0,255,170)
+        line.Transparency = 1
+        line.Visible = false
+        table.insert(Skeletons[plr], line)
+    end
+end
+
+-- ===== Render =====
