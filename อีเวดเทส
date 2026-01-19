@@ -88,17 +88,6 @@ HackTab:Toggle({
         end
     end
 })
-HackTab:Select()
-
--- Noclip Toggle
-HackTab:Toggle({
-    Title = "Noclip",
-    Desc = "เดินทะลุกำแพง",
-    Value = false,
-    Callback = function(v)
-        getgenv().Noclip = v
-    end
-})
 -- ===== SEMI INVISIBLE MODE =====
 
 getgenv().SemiInvisible = false
