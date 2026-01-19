@@ -998,3 +998,325 @@ WallHackTab:Toggle({
         setWallHack(state)
     end
 })
+
+WallHackTab:Toggle({
+    Title = "Floating Button",
+    Desc = "แสดงปุ่มลอย Wall Hack",
+    Value = false,
+    Callback = function(state)
+        if state then
+            createWallFloatingButton()
+        else
+            if floatingWallButton then
+                floatingWallButton:Destroy()
+                floatingWallButton = nil
+            end
+            setWallHack(false)
+        end
+    end
+})
+-- =========================
+-- Services & Player
+-- =========================
+local Players = game:GetService("Players")
+local player = Players.LocalPlayer
+local PlayerGui = player:WaitForChild("PlayerGui")
+
+-- =========================
+-- Tab TP to Player
+-- =========================
+local TPPlayerTab = Window:Tab({
+    Title = "TP to Player",
+    Icon = "map-pin"
+})
+
+-- =========================
+-- Variables
+-- =========================
+local floatingTPPlayerButton
+
+-- =========================
+-- Teleport Function
+-- =========================
+local function teleportToPlayer(targetPlayer)
+    local char = player.Character
+    local root = char and char:FindFirstChild("HumanoidRootPart")
+    if not root then return end
+
+    if targetPlayer
+    and targetPlayer.Character
+    and targetPlayer.Character:FindFirstChild("HumanoidRootPart") then
+        root.CFrame = targetPlayer.Character.HumanoidRootPart.CFrame * CFrame.new(0,0,-2)
+    end
+end
+
+-- =========================
+-- TP Player Menu
+-- =========================
+local function createTPPlayerMenu()
+    local oldGui = PlayerGui:FindFirstChild("TPPlayerMenu")
+    if oldGui then oldGui:Destroy() end
+
+    local menuGui = Instance.new("ScreenGui")
+    menuGui.Name = "TPPlayerMenu"
+    menuGui.ResetOnSpawn = false
+    menuGui.Parent = PlayerGui
+
+    local frame = Instance.new("Frame")
+    frame.Size = UDim2.new(0,220,0,320)
+    frame.Position = UDim2.new(0.5,-110,0.3,0)
+    frame.BackgroundColor3 = Color3.fromRGB(40,40,40)
+    frame.Parent = menuGui
+
+    Instance.new("UICorner", frame).CornerRadius = UDim.new(0,12)
+
+    local layout = Instance.new("UIListLayout")
+    layout.Padding = UDim.new(0,6)
+    layout.Parent = frame
+
+    for _, plr in ipairs(Players:GetPlayers()) do
+        if plr ~= player then
+            local btn = Instance.new("TextButton")
+            btn.Size = UDim2.new(1,-10,0,32)
+            btn.Text = plr.Name
+            btn.BackgroundColor3 = Color3.fromRGB(120,80,255)
+            btn.TextColor3 = Color3.new(1,1,1)
+            btn.TextScaled = true
+            btn.Parent = frame
+
+            Instance.new("UICorner", btn).CornerRadius = UDim.new(0,8)
+
+            btn.MouseButton1Click:Connect(function()
+                teleportToPlayer(plr)
+                menuGui:Destroy()
+            end)
+        end
+    end
+end
+
+-- =========================
+-- Floating Button
+-- =========================
+local function createFloatingTPPlayerButton()
+    if floatingTPPlayerButton then return end
+
+    floatingTPPlayerButton = Instance.new("TextButton")
+    floatingTPPlayerButton.Size = UDim2.new(0,150,0,50)
+    floatingTPPlayerButton.Position = UDim2.new(0.5,-75,0.75,0)
+    floatingTPPlayerButton.BackgroundColor3 = Color3.fromRGB(150,0,255)
+    floatingTPPlayerButton.TextColor3 = Color3.new(1,1,1)
+    floatingTPPlayerButton.TextScaled = true
+    floatingTPPlayerButton.Text = "TP to Player"
+    floatingTPPlayerButton.Parent = FloatingGui
+    floatingTPPlayerButton.Active = true
+    floatingTPPlayerButton.Draggable = true
+
+    Instance.new("UICorner", floatingTPPlayerButton).CornerRadius = UDim.new(0,12)
+
+    floatingTPPlayerButton.MouseButton1Click:Connect(createTPPlayerMenu)
+end
+
+-- =========================
+-- Buttons in TPPlayerTab
+-- =========================
+TPPlayerTab:Button({
+    Title = "TP to Player",
+    Desc = "เลือกผู้เล่นแล้วเทเลพอร์ตไปหา",
+    Callback = createTPPlayerMenu
+})
+
+TPPlayerTab:Toggle({
+    Title = "Floating Button",
+    Desc = "แสดงปุ่มลอย TP to Player",
+    Value = false,
+    Callback = function(state)
+        if state then
+            createFloatingTPPlayerButton()
+        else
+            if floatingTPPlayerButton then
+                floatingTPPlayerButton:Destroy()
+                floatingTPPlayerButton = nil
+            end
+        end
+    end
+})
+-- =========================
+-- Services & Player
+-- =========================
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local VirtualUser = game:GetService("VirtualUser")
+
+local player = Players.LocalPlayer
+local camera = workspace.CurrentCamera
+
+-- =========================
+-- Teleport Tab (ใช้ Tab เดียว)
+-- =========================
+local TeleportTab = Window:Tab({
+    Title = "Teleport",
+    Icon = "map"
+})
+
+-- =========================
+-- Variables
+-- =========================
+local floatingTPButton
+
+-- =========================
+-- TP Roof Function
+-- =========================
+local function teleportRoof()
+    local char = player.Character
+    local root = char and char:FindFirstChild("HumanoidRootPart")
+    if root then
+        root.CFrame = root.CFrame + Vector3.new(0, 500, 0)
+    end
+end
+
+-- =========================
+-- Floating Button
+-- =========================
+local function createTPFloatingButton()
+    if floatingTPButton then return end
+
+    floatingTPButton = Instance.new("TextButton")
+    floatingTPButton.Size = UDim2.new(0,120,0,50)
+    floatingTPButton.Position = UDim2.new(0.5,-60,0.6,0)
+    floatingTPButton.AnchorPoint = Vector2.new(0.5,0)
+    floatingTPButton.BackgroundColor3 = Color3.fromRGB(0,255,120)
+    floatingTPButton.TextColor3 = Color3.fromRGB(0,0,0)
+    floatingTPButton.TextScaled = true
+    floatingTPButton.Text = "TP Roof"
+    floatingTPButton.Parent = FloatingGui
+    floatingTPButton.Active = true
+    floatingTPButton.Draggable = true
+
+    Instance.new("UICorner", floatingTPButton).CornerRadius = UDim.new(0,12)
+
+    floatingTPButton.MouseButton1Click:Connect(teleportRoof)
+end
+
+-- =========================
+-- Buttons in TeleportTab
+-- =========================
+TeleportTab:Button({
+    Title = "Teleport Roof",
+    Desc = "เทเลพอร์ตขึ้นด้านบน / หลังคา",
+    Callback = teleportRoof
+})
+
+TeleportTab:Toggle({
+    Title = "Teleport Roof (Floating)",
+    Desc = "แสดงปุ่มลอย TP Roof บนหน้าจอ",
+    Value = false,
+    Callback = function(state)
+        if state then
+            createTPFloatingButton()
+        else
+            if floatingTPButton then
+                floatingTPButton:Destroy()
+                floatingTPButton = nil
+            end
+        end
+    end
+})
+--// Services
+local Players = game:GetService("Players")
+local TeleportService = game:GetService("TeleportService")
+local RunService = game:GetService("RunService")
+
+local player = Players.LocalPlayer
+local placeId = game.PlaceId
+
+--// Settings Tab
+local SettingsTab = Window:Tab({
+    Title = "Settings",
+    Icon = "settings"
+})
+
+-------------------------------------------------
+-- Rejoin Server
+-------------------------------------------------
+SettingsTab:Button({
+    Title = "Rejoin Server",
+    Desc = "เข้าเซิร์ฟเวอร์เดิมใหม่",
+    Callback = function()
+        TeleportService:Teleport(placeId, player)
+    end
+})
+
+-------------------------------------------------
+-- Server Hop
+-------------------------------------------------
+SettingsTab:Button({
+    Title = "Server Hop",
+    Desc = "สุ่มเข้าเซิร์ฟเวอร์ใหม่",
+    Callback = function()
+        local servers = {}
+        local req = syn and syn.request or http_request or request
+
+        local url = "https://games.roblox.com/v1/games/" .. placeId .. "/servers/Public?sortOrder=Asc&limit=100"
+        local body = game:HttpGet(url)
+        local data = game:GetService("HttpService"):JSONDecode(body)
+
+        for _, v in pairs(data.data) do
+            if v.playing < v.maxPlayers then
+                table.insert(servers, v.id)
+            end
+        end
+
+        if #servers > 0 then
+            TeleportService:TeleportToPlaceInstance(placeId, servers[math.random(1, #servers)], player)
+        end
+    end
+})
+
+-------------------------------------------------
+-- FPS Counter
+-------------------------------------------------
+local fpsLabel
+local fpsConnection
+
+SettingsTab:Toggle({
+    Title = "Show FPS",
+    Desc = "แสดง FPS บนหน้าจอ",
+    Value = false,
+    Callback = function(state)
+        if state then
+            if fpsLabel then return end
+
+            fpsLabel = Instance.new("TextLabel")
+            fpsLabel.Size = UDim2.new(0, 120, 0, 30)
+            fpsLabel.Position = UDim2.new(0, 10, 0, 10)
+            fpsLabel.BackgroundTransparency = 0.3
+            fpsLabel.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+            fpsLabel.TextColor3 = Color3.fromRGB(0, 255, 0)
+            fpsLabel.Font = Enum.Font.SourceSansBold
+            fpsLabel.TextSize = 18
+            fpsLabel.Text = "FPS: 0"
+            fpsLabel.Parent = player:WaitForChild("PlayerGui")
+
+            local last = tick()
+            local frames = 0
+
+            fpsConnection = RunService.RenderStepped:Connect(function()
+                frames += 1
+                if tick() - last >= 1 then
+                    fpsLabel.Text = "FPS: " .. frames
+                    frames = 0
+                    last = tick()
+                end
+            end)
+        else
+            if fpsConnection then
+                fpsConnection:Disconnect()
+                fpsConnection = nil
+            end
+            if fpsLabel then
+                fpsLabel:Destroy()
+                fpsLabel = nil
+            end
+        end
+    end
+})
