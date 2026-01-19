@@ -207,3 +207,282 @@ local function CreateSkeleton(plr, bones)
 end
 
 -- ===== Render =====
+
+RunService.RenderStepped:Connect(function()
+    if not getgenv().SkeletonESP then
+        for _,plr in pairs(Players:GetPlayers()) do
+            ClearSkeleton(plr)
+        end
+        return
+    end
+
+    for _,plr in pairs(Players:GetPlayers()) do
+        if plr ~= LocalPlayer and plr.Character then
+            local char = plr.Character
+            local humanoid = char:FindFirstChildOfClass("Humanoid")
+            if not humanoid then continue end
+
+            local bones = humanoid.RigType == Enum.HumanoidRigType.R15 and BonesR15 or BonesR6
+
+            if not Skeletons[plr] then
+                CreateSkeleton(plr, bones)
+            end
+
+            for i,bone in ipairs(bones) do
+                local p1 = char:FindFirstChild(bone[1])
+                local p2 = char:FindFirstChild(bone[2])
+                local line = Skeletons[plr][i]
+
+                if p1 and p2 then
+                    local s1,v1 = Camera:WorldToViewportPoint(p1.Position)
+                    local s2,v2 = Camera:WorldToViewportPoint(p2.Position)
+
+                    if v1 and v2 then
+                        line.From = Vector2.new(s1.X,s1.Y)
+                        line.To   = Vector2.new(s2.X,s2.Y)
+                        line.Visible = true
+                    else
+                        line.Visible = false
+                    end
+                else
+                    line.Visible = false
+                end
+            end
+        end
+    end
+end)
+
+-- ===== UI =====
+HackTab:Toggle({
+    Title = "Skeleton ESP (R6 / R15)",
+    Desc = "รองรับผู้เล่นทุก Rig",
+    Value = false,
+    Callback = function(v)
+        getgenv().SkeletonESP = v
+    end
+})
+-- =========================
+-- SERVICES
+-- =========================
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+local LocalPlayer = Players.LocalPlayer
+
+-- =========================
+-- CONFIG
+-- =========================
+local REVIVE_RANGE = 15
+local REVIVE_CHECK_DELAY = 0.3
+local AFK_TELEPORT_DELAY = 1.5
+local AFK_HEIGHT = 1200
+
+-- =========================
+-- VARIABLES
+-- =========================
+local autoReviveEnabled = false
+local afkMoneyEnabled = false
+
+local reviveLoop = nil
+local afkLoop = nil
+local afkPart = nil
+
+local interactEvent =
+    ReplicatedStorage
+        :WaitForChild("Events")
+        :WaitForChild("Character")
+        :WaitForChild("Interact")
+
+-- =========================
+-- UTILS
+-- =========================
+local function isDowned(plr)
+    local char = plr.Character
+    if not char then return false end
+    return char:GetAttribute("Downed") == true
+end
+
+-- =========================
+-- AFK PART
+-- =========================
+local function createAFKPart()
+    if afkPart then return end
+
+    afkPart = Instance.new("Part")
+    afkPart.Name = "AFK_PART"
+    afkPart.Size = Vector3.new(25, 2, 25)
+    afkPart.Anchored = true
+    afkPart.CanCollide = true
+    afkPart.Material = Enum.Material.Neon
+    afkPart.Color = Color3.fromRGB(0, 170, 255)
+    afkPart.Position = Vector3.new(0, AFK_HEIGHT, 0)
+    afkPart.Parent = workspace
+end
+
+local function tpToAFKPart(hrp)
+    if afkPart and hrp then
+        hrp.CFrame = afkPart.CFrame + Vector3.new(0, 3, 0)
+    end
+end
+
+-- =========================
+-- AUTO REVIVE
+-- =========================
+local function startAutoRevive()
+    if reviveLoop then return end
+
+    reviveLoop = task.spawn(function()
+        while autoReviveEnabled do
+            local char = LocalPlayer.Character
+            local hrp = char and char:FindFirstChild("HumanoidRootPart")
+
+            if hrp then
+                for _, pl in ipairs(Players:GetPlayers()) do
+                    if pl ~= LocalPlayer and isDowned(pl) then
+                        local pChar = pl.Character
+                        local pHrp = pChar and pChar:FindFirstChild("HumanoidRootPart")
+
+                        if pHrp then
+                            local dist = (hrp.Position - pHrp.Position).Magnitude
+                            if dist <= REVIVE_RANGE then
+                                pcall(function()
+                                    interactEvent:FireServer("Revive", true, pl.Name)
+                                end)
+                            end
+                        end
+                    end
+                end
+            end
+
+            task.wait(REVIVE_CHECK_DELAY)
+        end
+        reviveLoop = nil
+    end)
+end
+
+local function stopAutoRevive()
+    autoReviveEnabled = false
+end
+
+-- =========================
+-- AFK MONEY SYSTEM
+-- =========================
+local function startAFKMoney()
+    if afkLoop then return end
+
+    createAFKPart()
+
+    afkLoop = task.spawn(function()
+        while afkMoneyEnabled do
+            local char = LocalPlayer.Character
+            local hrp = char and char:FindFirstChild("HumanoidRootPart")
+
+            if not hrp then
+                task.wait(0.5)
+                continue
+            end
+
+            local found = false
+
+            for _, pl in ipairs(Players:GetPlayers()) do
+                if pl ~= LocalPlayer and isDowned(pl) then
+                    local pChar = pl.Character
+                    local pHrp = pChar and pChar:FindFirstChild("HumanoidRootPart")
+
+                    if pHrp then
+                        found = true
+                        repeat
+                            hrp.CFrame = pHrp.CFrame + Vector3.new(0, 3, 0)
+                            pcall(function()
+                                interactEvent:FireServer("Revive", true, pl.Name)
+                            end)
+                            task.wait(0.4)
+                        until not isDowned(pl) or not afkMoneyEnabled
+                    end
+                end
+            end
+
+            if not found then
+                tpToAFKPart(hrp)
+            end
+
+            task.wait(AFK_TELEPORT_DELAY)
+        end
+
+        afkLoop = nil
+    end)
+end
+
+local function stopAFKMoney()
+    afkMoneyEnabled = false
+    if afkPart then
+        afkPart:Destroy()
+        afkPart = nil
+    end
+end
+
+-- =========================
+-- RESPAWN FIX (สำคัญ)
+-- =========================
+LocalPlayer.CharacterAdded:Connect(function(char)
+    if not afkMoneyEnabled then return end
+
+    task.spawn(function()
+        local hrp = char:WaitForChild("HumanoidRootPart", 10)
+        local hum = char:WaitForChild("Humanoid", 10)
+        if not hrp or not hum then return end
+
+        -- กันเกมดึงกลับ
+        for i = 1, 5 do
+            if afkPart then
+                hrp.CFrame = afkPart.CFrame + Vector3.new(0, 3, 0)
+            end
+            task.wait(0.3)
+        end
+
+        hum.StateChanged:Connect(function(_, new)
+            if afkMoneyEnabled and afkPart then
+                if new == Enum.HumanoidStateType.Running
+                or new == Enum.HumanoidStateType.RunningNoPhysics then
+                    task.wait(0.1)
+                    hrp.CFrame = afkPart.CFrame + Vector3.new(0, 3, 0)
+                end
+            end
+        end)
+    end)
+end)
+
+-- =========================
+-- UI TOGGLES (HackTab ONLY)
+-- =========================
+HackTab:Toggle({
+    Title = "ออโต้ชุบเพื่อน",
+    Desc = "ชุบผู้เล่นที่ล้มอัตโนมัติเมื่ออยู่ใกล้",
+    Callback = function(state)
+        autoReviveEnabled = state
+        if state then
+            startAutoRevive()
+        else
+            stopAutoRevive()
+        end
+    end
+})
+
+HackTab:Toggle({
+    Title = "AFK Money (New)",
+    Desc = "เสก Part + วาร์ปชุบอัตโนมัติ",
+    Callback = function(state)
+        afkMoneyEnabled = state
+        if state then
+            startAFKMoney()
+        else
+            stopAFKMoney()
+        end
+    end
+})
+local AdditionalsTab = Window:Tab({
+    Title = "Additionals",
+    Icon = "plus"
+})
+local player = game.Players.LocalPlayer
