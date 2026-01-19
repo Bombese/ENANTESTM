@@ -19,7 +19,6 @@ local HackTab = Window:Tab({
     Title = "Hack",
     Icon = "zap",
 })
-Window:SelectTab(HackTab)
 
 local p = game.Players.LocalPlayer
 local RunService = game:GetService("RunService")
@@ -1447,3 +1446,4 @@ SettingsTab:Toggle({
         end
     end
 })
+Window:SelectTab(HackTab)
