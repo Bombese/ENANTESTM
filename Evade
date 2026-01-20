@@ -5,11 +5,11 @@ local WindUI = loadstring(game:HttpGet(
 
 -- Window
 local Window = WindUI:CreateWindow({
-    Title = "Evade Script ENAN HUB (Premium)",
+    Title = "Evade Script Shadow HUB (Premium)",
     Icon = "user",
     Author = "https://discord.gg/AXTKtmUvyf",
     OpenButton = {
-        Title = "ENAN HUB",
+        Title = "Shadow HUB",
         Icon = "monitor",
         Enabled = true,
         Draggable = true,
