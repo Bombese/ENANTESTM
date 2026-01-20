@@ -1320,3 +1320,41 @@ SettingsTab:Toggle({
         end
     end
 })
+-- GUI Tab
+local GuiTab = Window:Tab({
+    Title = "GUI",
+    Icon = "sliders"
+})
+
+local currentTransparency = 0.25
+
+-- ฟังก์ชันปรับโปร่งใส
+local function ApplyTransparency(value)
+    local player = game:GetService("Players").LocalPlayer
+
+    for _, gui in pairs(player.PlayerGui:GetChildren()) do
+        if gui:IsA("ScreenGui") and gui.Name:lower():find("wind") then
+            for _, obj in pairs(gui:GetDescendants()) do
+                if obj:IsA("Frame") then
+                    obj.BackgroundTransparency = value
+                    obj.BackgroundColor3 = Color3.fromRGB(20,20,20)
+                end
+
+                if obj:IsA("UIStroke") then
+                    obj.Transparency = math.clamp(value + 0.2, 0, 1)
+                end
+            end
+        end
+    end
+end
+GuiTab:Slider({
+    Title = "UI Transparency",
+    Desc = "ปรับความโปร่งใสของ UI",
+    Min = 0,
+    Max = 80,
+    Default = 25,
+    Callback = function(val)
+        currentTransparency = val / 100
+        ApplyTransparency(currentTransparency)
+    end
+})
