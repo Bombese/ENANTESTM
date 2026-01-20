@@ -1320,3 +1320,27 @@ SettingsTab:Toggle({
         end
     end
 })
+task.spawn(function()
+    local Players = game:GetService("Players")
+    local player = Players.LocalPlayer
+
+    -- รอให้ PlayerGui มี UI
+    repeat task.wait() until player:FindFirstChild("PlayerGui")
+
+    task.wait(1)
+
+    for _, gui in pairs(player.PlayerGui:GetChildren()) do
+        if gui:IsA("ScreenGui") then
+            for _, obj in pairs(gui:GetDescendants()) do
+                if obj:IsA("Frame") then
+                    obj.BackgroundTransparency = 0.25
+                    obj.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+                end
+
+                if obj:IsA("UIStroke") then
+                    obj.Transparency = 0.5
+                end
+            end
+        end
+    end
+end)
