@@ -1,0 +1,229 @@
+-- Load WindUI
+local WindUI = loadstring(game:HttpGet(
+    "https://github.com/Footagesus/WindUI/releases/latest/download/main.lua"
+))()
+
+-- Window
+local Window = WindUI:CreateWindow({
+    Title = "Blind Shot",
+    Icon = "eye",
+    Author = "Free UI",
+    Center = true,
+    AutoShow = true
+})
+
+-- Tab Hack
+local HackTab = Window:Tab({
+    Title = "Hack",
+    Icon = "shield"
+})
+
+--------------------------------------------------
+-- Services
+--------------------------------------------------
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local Camera = workspace.CurrentCamera
+local LocalPlayer = Players.LocalPlayer
+
+--------------------------------------------------
+-- ESP DATA
+--------------------------------------------------
+local Lines = {}
+local ESPEnabled = false
+local RenderConnection
+
+--------------------------------------------------
+-- Fix Character (มองเห็นผู้เล่น)
+--------------------------------------------------
+local function fixCharacter(player)
+    if player == LocalPlayer then return end
+
+    local function apply(char)
+        for _, v in pairs(char:GetDescendants()) do
+            if v:IsA("BasePart") then
+                v.Transparency = 0
+                v.LocalTransparencyModifier = 0
+                v.CastShadow = true
+            elseif v:IsA("Decal") then
+                v.Transparency = 0
+            end
+        end
+    end
+
+    if player.Character then
+        apply(player.Character)
+    end
+
+    player.CharacterAdded:Connect(apply)
+end
+
+--------------------------------------------------
+-- ESP Functions
+--------------------------------------------------
+local function getRightHand(char)
+    return char:FindFirstChild("RightHand")
+        or char:FindFirstChild("Right Arm")
+        or char:FindFirstChild("RightLowerArm")
+end
+
+local function addESP(player)
+    if player == LocalPlayer or Lines[player] then return end
+
+    local line = Drawing.new("Line")
+    line.Color = Color3.fromRGB(255, 0, 0)
+    line.Thickness = 2
+    line.Transparency = 1
+    line.Visible = false
+
+    Lines[player] = line
+end
+
+local function removeESP(player)
+    if Lines[player] then
+        Lines[player]:Remove()
+        Lines[player] = nil
+    end
+end
+
+--------------------------------------------------
+-- Toggle ESP
+--------------------------------------------------
+HackTab:Toggle({
+    Title = "ESP Human",
+    Desc = "Show human direction line",
+    Value = false,
+    Callback = function(state)
+        ESPEnabled = state
+
+        if state then
+            -- Fix & Add ESP
+            for _, p in pairs(Players:GetPlayers()) do
+                fixCharacter(p)
+                addESP(p)
+            end
+
+            Players.PlayerAdded:Connect(function(p)
+                fixCharacter(p)
+                addESP(p)
+            end)
+
+            Players.PlayerRemoving:Connect(removeESP)
+
+            RenderConnection = RunService.RenderStepped:Connect(function()
+                for player, line in pairs(Lines) do
+                    local char = player.Character
+                    local hand = char and getRightHand(char)
+
+                    if hand then
+                        local startPos = hand.Position
+                        local forwardPos = startPos + (hand.CFrame.LookVector * 50)
+
+                        local sPos, sVis = Camera:WorldToViewportPoint(startPos)
+                        local ePos, eVis = Camera:WorldToViewportPoint(forwardPos)
+
+                        if sVis and eVis then
+                            line.From = Vector2.new(sPos.X, sPos.Y)
+                            line.To   = Vector2.new(ePos.X, ePos.Y)
+                            line.Visible = true
+                        else
+                            line.Visible = false
+                        end
+                    else
+                        line.Visible = false
+                    end
+                end
+            end)
+        else
+            -- Disable ESP
+            if RenderConnection then
+                RenderConnection:Disconnect()
+                RenderConnection = nil
+            end
+
+            for p in pairs(Lines) do
+                removeESP(p)
+            end
+        end
+    end
+})
+--------------------------------------------------
+-- ESP BOX
+--------------------------------------------------
+local BoxESP = {}
+local BoxEnabled = false
+local BoxConnection
+
+local function createBox(player)
+    if player == LocalPlayer or BoxESP[player] then return end
+
+    local box = Drawing.new("Square")
+    box.Color = Color3.fromRGB(255, 255, 0)
+    box.Thickness = 2
+    box.Filled = false
+    box.Visible = false
+
+    BoxESP[player] = box
+end
+
+local function removeBox(player)
+    if BoxESP[player] then
+        BoxESP[player]:Remove()
+        BoxESP[player] = nil
+    end
+end
+
+--------------------------------------------------
+-- Toggle ESP BOX
+--------------------------------------------------
+HackTab:Toggle({
+    Title = "ESP Box",
+    Desc = "Show box on human",
+    Value = false,
+    Callback = function(state)
+        BoxEnabled = state
+
+        if state then
+            for _, p in pairs(Players:GetPlayers()) do
+                createBox(p)
+            end
+
+            Players.PlayerAdded:Connect(createBox)
+            Players.PlayerRemoving:Connect(removeBox)
+
+            BoxConnection = RunService.RenderStepped:Connect(function()
+                for player, box in pairs(BoxESP) do
+                    local char = player.Character
+                    local hrp = char and char:FindFirstChild("HumanoidRootPart")
+                    local hum = char and char:FindFirstChild("Humanoid")
+
+                    if hrp and hum and hum.Health > 0 then
+                        local pos, visible = Camera:WorldToViewportPoint(hrp.Position)
+                        if visible then
+                            local scale = 2000 / (hrp.Position - Camera.CFrame.Position).Magnitude
+                            box.Size = Vector2.new(40 * scale, 60 * scale)
+                            box.Position = Vector2.new(
+                                pos.X - box.Size.X / 2,
+                                pos.Y - box.Size.Y / 2
+                            )
+                            box.Visible = true
+                        else
+                            box.Visible = false
+                        end
+                    else
+                        box.Visible = false
+                    end
+                end
+            end)
+        else
+            if BoxConnection then
+                BoxConnection:Disconnect()
+                BoxConnection = nil
+            end
+
+            for p in pairs(BoxESP) do
+                removeBox(p)
+            end
+        end
+    end
+})
