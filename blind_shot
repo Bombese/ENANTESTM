@@ -148,17 +148,17 @@ HackTab:Toggle({
     end
 })
 --------------------------------------------------
--- ESP BOX
+-- BOX ESP ONLY
 --------------------------------------------------
 local BoxESP = {}
 local BoxEnabled = false
 local BoxConnection
 
-local function createBox(player)
+local function addBoxESP(player)
     if player == LocalPlayer or BoxESP[player] then return end
 
     local box = Drawing.new("Square")
-    box.Color = Color3.fromRGB(255, 255, 0)
+    box.Color = Color3.fromRGB(255, 255, 0) -- สีกรอบ
     box.Thickness = 2
     box.Filled = false
     box.Visible = false
@@ -166,7 +166,7 @@ local function createBox(player)
     BoxESP[player] = box
 end
 
-local function removeBox(player)
+local function removeBoxESP(player)
     if BoxESP[player] then
         BoxESP[player]:Remove()
         BoxESP[player] = nil
@@ -174,22 +174,22 @@ local function removeBox(player)
 end
 
 --------------------------------------------------
--- Toggle ESP BOX
+-- Toggle BOX ESP
 --------------------------------------------------
 HackTab:Toggle({
     Title = "ESP Box",
-    Desc = "Show box on human",
+    Desc = "Box ESP Human",
     Value = false,
     Callback = function(state)
         BoxEnabled = state
 
         if state then
             for _, p in pairs(Players:GetPlayers()) do
-                createBox(p)
+                addBoxESP(p)
             end
 
-            Players.PlayerAdded:Connect(createBox)
-            Players.PlayerRemoving:Connect(removeBox)
+            Players.PlayerAdded:Connect(addBoxESP)
+            Players.PlayerRemoving:Connect(removeBoxESP)
 
             BoxConnection = RunService.RenderStepped:Connect(function()
                 for player, box in pairs(BoxESP) do
@@ -200,7 +200,9 @@ HackTab:Toggle({
                     if hrp and hum and hum.Health > 0 then
                         local pos, visible = Camera:WorldToViewportPoint(hrp.Position)
                         if visible then
-                            local scale = 2000 / (hrp.Position - Camera.CFrame.Position).Magnitude
+                            local distance = (hrp.Position - Camera.CFrame.Position).Magnitude
+                            local scale = math.clamp(2000 / distance, 0.8, 4)
+
                             box.Size = Vector2.new(40 * scale, 60 * scale)
                             box.Position = Vector2.new(
                                 pos.X - box.Size.X / 2,
@@ -222,7 +224,7 @@ HackTab:Toggle({
             end
 
             for p in pairs(BoxESP) do
-                removeBox(p)
+                removeBoxESP(p)
             end
         end
     end
