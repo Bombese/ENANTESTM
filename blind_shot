@@ -229,3 +229,85 @@ HackTab:Toggle({
         end
     end
 })
+--------------------------------------------------
+-- BOX ESP ONLY
+--------------------------------------------------
+local BoxESP = {}
+local BoxEnabled = false
+local BoxConnection
+
+local function addBoxESP(player)
+    if player == LocalPlayer or BoxESP[player] then return end
+
+    local box = Drawing.new("Square")
+    box.Color = Color3.fromRGB(255, 255, 0) -- สีกรอบ
+    box.Thickness = 2
+    box.Filled = false
+    box.Visible = false
+
+    BoxESP[player] = box
+end
+
+local function removeBoxESP(player)
+    if BoxESP[player] then
+        BoxESP[player]:Remove()
+        BoxESP[player] = nil
+    end
+end
+
+--------------------------------------------------
+-- Toggle BOX ESP
+--------------------------------------------------
+HackTab:Toggle({
+    Title = "ESP Box",
+    Desc = "Box ESP Human",
+    Value = false,
+    Callback = function(state)
+        BoxEnabled = state
+
+        if state then
+            for _, p in pairs(Players:GetPlayers()) do
+                addBoxESP(p)
+            end
+
+            Players.PlayerAdded:Connect(addBoxESP)
+            Players.PlayerRemoving:Connect(removeBoxESP)
+
+            BoxConnection = RunService.RenderStepped:Connect(function()
+                for player, box in pairs(BoxESP) do
+                    local char = player.Character
+                    local hrp = char and char:FindFirstChild("HumanoidRootPart")
+                    local hum = char and char:FindFirstChild("Humanoid")
+
+                    if hrp and hum and hum.Health > 0 then
+                        local pos, visible = Camera:WorldToViewportPoint(hrp.Position)
+                        if visible then
+                            local distance = (hrp.Position - Camera.CFrame.Position).Magnitude
+                            local scale = math.clamp(2000 / distance, 0.8, 4)
+
+                            box.Size = Vector2.new(40 * scale, 60 * scale)
+                            box.Position = Vector2.new(
+                                pos.X - box.Size.X / 2,
+                                pos.Y - box.Size.Y / 2
+                            )
+                            box.Visible = true
+                        else
+                            box.Visible = false
+                        end
+                    else
+                        box.Visible = false
+                    end
+                end
+            end)
+        else
+            if BoxConnection then
+                BoxConnection:Disconnect()
+                BoxConnection = nil
+            end
+
+            for p in pairs(BoxESP) do
+                removeBoxESP(p)
+            end
+        end
+    end
+})
