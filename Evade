@@ -23,7 +23,7 @@ local HackTab = Window:Tab({
 local p = game.Players.LocalPlayer
 local RunService = game:GetService("RunService")
 
-local speed = 20
+local speed = 14
 local tpwalkConn -- เก็บ connection ไว้เปิด/ปิด
 
 HackTab:Toggle({
