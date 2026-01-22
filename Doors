@@ -1,0 +1,67 @@
+--------------------------------------------------
+-- Load WindUI
+--------------------------------------------------
+local WindUI
+do
+    local ok, result = pcall(function()
+        return require("./src/Init")
+    end)
+    WindUI = ok and result or loadstring(game:HttpGet(
+        "https://raw.githubusercontent.com/Footagesus/WindUI/main/dist/main.lua"
+    ))()
+end
+
+--------------------------------------------------
+-- Services
+--------------------------------------------------
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+
+--------------------------------------------------
+-- Speed Settings
+--------------------------------------------------
+local SPEED_VALUE = 21
+local DEFAULT_SPEED = 16
+
+local function setSpeed(v)
+    local char = LocalPlayer.Character
+    local hum = char and char:FindFirstChildOfClass("Humanoid")
+    if hum then
+        hum.WalkSpeed = v
+    end
+end
+
+-- รีเซ็ตสปีดตอนเกิดใหม่
+LocalPlayer.CharacterAdded:Connect(function()
+    task.wait(0.5)
+    setSpeed(DEFAULT_SPEED)
+end)
+
+--------------------------------------------------
+-- UI
+--------------------------------------------------
+local Window = WindUI:CreateWindow({
+    Title = "WindUI",
+    Folder = "WindUI",
+    OpenButton = {
+        Title = "WindUI",
+        Enabled = true
+    }
+})
+
+local Main = Window:Tab({
+    Title = "Main"
+})
+
+Main:Toggle({
+    Title = "⚡ Speed 21",
+    D
+    Default = false,
+    Callback = function(v)
+        if v then
+            setSpeed(SPEED_VALUE)
+        else
+            setSpeed(DEFAULT_SPEED)
+        end
+    end
+})
