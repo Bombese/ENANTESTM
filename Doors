@@ -54,8 +54,8 @@ local Main = Window:Tab({
 })
 
 Main:Toggle({
-    Title = "⚡ Speed 21",
-    D
+    Title = " Speed 21",
+    Desc = "ปรับความเร็วเดินเป็น21",
     Default = false,
     Callback = function(v)
         if v then
