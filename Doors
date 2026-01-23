@@ -41,10 +41,10 @@ end)
 -- UI
 --------------------------------------------------
 local Window = WindUI:CreateWindow({
-    Title = "WindUI",
-    Folder = "WindUI",
+    Title = "Doors Shadow HUB",
+    Folder = "https://discord.gg/AXTKtmUvyf",
     OpenButton = {
-        Title = "WindUI",
+        Title = "SHADOW HUB",
         Enabled = true
     }
 })
