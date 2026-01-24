@@ -54,10 +54,10 @@ end)
 -- UI
 --------------------------------------------------
 local Window = WindUI:CreateWindow({
-    Title = "Doors Shadow HUB (test10)",
-    Folder = "ShadowHub", -- แก้ตรงนี้
+    Title = "Doors Felon HUB(test10)",
+    Folder = "Felon HUB",
     OpenButton = {
-        Title = "SHADOW HUB",
+        Title = "Felon HUB",
         Enabled = true
     }
 })
