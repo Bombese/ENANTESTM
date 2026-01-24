@@ -10,11 +10,11 @@ do
         "https://raw.githubusercontent.com/Footagesus/WindUI/main/dist/main.lua"
     ))()
 end
-
 --------------------------------------------------
 -- Services
 --------------------------------------------------
 local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
 local LocalPlayer = Players.LocalPlayer
 
 --------------------------------------------------
@@ -22,19 +22,32 @@ local LocalPlayer = Players.LocalPlayer
 --------------------------------------------------
 local SPEED_VALUE = 21
 local DEFAULT_SPEED = 16
+local speedEnabled = false
 
-local function setSpeed(v)
+local function getHum()
     local char = LocalPlayer.Character
-    local hum = char and char:FindFirstChildOfClass("Humanoid")
-    if hum then
-        hum.WalkSpeed = v
-    end
+    return char and char:FindFirstChildOfClass("Humanoid")
 end
 
--- รีเซ็ตสปีดตอนเกิดใหม่
-LocalPlayer.CharacterAdded:Connect(function()
-    task.wait(0.5)
-    setSpeed(DEFAULT_SPEED)
+-- ล็อกสปีดตลอดเวลา (กันเกมรีเซ็ต)
+RunService.Stepped:Connect(function()
+    if speedEnabled then
+        local hum = getHum()
+        if hum and hum.WalkSpeed ~= SPEED_VALUE then
+            hum.WalkSpeed = SPEED_VALUE
+        end
+    end
+end)
+
+-- ตอนเกิดใหม่
+LocalPlayer.CharacterAdded:Connect(function(char)
+    local hum = char:WaitForChild("Humanoid")
+    task.wait(0.3)
+    if speedEnabled then
+        hum.WalkSpeed = SPEED_VALUE
+    else
+        hum.WalkSpeed = DEFAULT_SPEED
+    end
 end)
 
 --------------------------------------------------
@@ -42,26 +55,24 @@ end)
 --------------------------------------------------
 local Window = WindUI:CreateWindow({
     Title = "Doors Shadow HUB",
-    Folder = "https://discord.gg/AXTKtmUvyf",
+    Folder = "ShadowHub", -- แก้ตรงนี้
     OpenButton = {
         Title = "SHADOW HUB",
         Enabled = true
     }
 })
 
-local Main = Window:Tab({
-    Title = "Main"
-})
+local Main = Window:Tab({ Title = "Main" })
 
 Main:Toggle({
-    Title = " Speed 21",
-    Desc = "ปรับความเร็วเดินเป็น21",
+    Title = "Speed 21",
+    Desc = "ปรับความเร็วเดินเป็น 21",
     Default = false,
     Callback = function(v)
-        if v then
-            setSpeed(SPEED_VALUE)
-        else
-            setSpeed(DEFAULT_SPEED)
+        speedEnabled = v
+        local hum = getHum()
+        if hum then
+            hum.WalkSpeed = v and SPEED_VALUE or DEFAULT_SPEED
         end
     end
 })
