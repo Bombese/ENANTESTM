@@ -76,4 +76,4 @@ Main:Toggle({
         end
     end
 })
-Mian:Section({ Title = "Alert System" })
+Main :Section({ Title = "Alert System" })
