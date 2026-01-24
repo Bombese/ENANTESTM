@@ -295,7 +295,7 @@ workspace.DescendantAdded:Connect(function(v)
     task.wait(0.2)
     AddDoorESP(v)
 end)
-Main:Toggle({
+ESPTap:Toggle({
     Title = "Door ESP",
     Default = false,
     Callback = function(state)
@@ -309,7 +309,7 @@ Main:Toggle({
             end
         end
 
-        WindUI:Notify({
+        ESPTap:Notify({
             Title = "Door ESP",
             Content = state and "เปิดแล้ว" or "ปิดแล้ว",
             Duration = 2
