@@ -54,7 +54,7 @@ end)
 -- UI
 --------------------------------------------------
 local Window = WindUI:CreateWindow({
-    Title = "Doors Shadow HUB (test5)",
+    Title = "Doors Shadow HUB (test6)",
     Folder = "ShadowHub", -- แก้ตรงนี้
     OpenButton = {
         Title = "SHADOW HUB",
@@ -237,6 +237,81 @@ ESPTab:Toggle({
         WindUI:Notify({
             Title = "ESP Monster",
             Content = v and "เปิดแล้ว" or "ปิดแล้ว",
+            Duration = 2
+        })
+    end
+})
+local DoorESPEnabled = false
+local function RemoveDoorESP(obj)
+    if obj:FindFirstChild("DoorESP") then
+        obj.DoorESP:Destroy()
+    end
+    for _,v in pairs(obj:GetDescendants()) do
+        if v.Name == "DoorESPTag" then
+            v:Destroy()
+        end
+    end
+end
+local function AddDoorESP(obj)
+    if not DoorESPEnabled then return end
+    if not obj:IsA("Model") then return end
+    if not obj.Name:lower():find("door") then return end
+    if obj:FindFirstChild("DoorESP") then return end
+
+    local part = obj:FindFirstChildWhichIsA("BasePart")
+    if not part then return end
+
+    local hl = Instance.new("Highlight")
+    hl.Name = "DoorESP"
+    hl.FillTransparency = 1
+    hl.OutlineColor = Color3.fromRGB(0,170,255)
+    hl.Parent = obj
+
+    local bill = Instance.new("BillboardGui")
+    bill.Name = "DoorESPTag"
+    bill.Size = UDim2.new(0,80,0,18)
+    bill.StudsOffset = Vector3.new(0,3,0)
+    bill.AlwaysOnTop = true
+
+    local text = Instance.new("TextLabel")
+    text.Parent = bill
+    text.Size = UDim2.new(1,0,1,0)
+    text.BackgroundTransparency = 1
+    text.TextColor3 = Color3.fromRGB(0,170,255)
+    text.TextStrokeTransparency = 0.2
+    text.TextSize = 10
+    text.Font = Enum.Font.SourceSansBold
+    text.Text = "DOOR"
+
+    bill.Parent = part
+end
+local function ScanDoors()
+    for _,v in pairs(workspace:GetDescendants()) do
+        AddDoorESP(v)
+    end
+end
+
+workspace.DescendantAdded:Connect(function(v)
+    task.wait(0.2)
+    AddDoorESP(v)
+end)
+Main:Toggle({
+    Title = "Door ESP",
+    Default = false,
+    Callback = function(state)
+        DoorESPEnabled = state
+
+        if state then
+            ScanDoors()
+        else
+            for _,v in pairs(workspace:GetDescendants()) do
+                RemoveDoorESP(v)
+            end
+        end
+
+        WindUI:Notify({
+            Title = "Door ESP",
+            Content = state and "เปิดแล้ว" or "ปิดแล้ว",
             Duration = 2
         })
     end
