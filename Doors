@@ -170,3 +170,75 @@ Main:Toggle({
         })
     end
 })
+local ESPTab = Window:Tab({ Title = "ESP" })
+local ESPEnabled = false
+local ESPObjects = {}
+
+-- รายชื่อมอนที่ให้ขึ้น ESP
+local Monsters = {
+    Rush = true, Ambush = true, Seek = true, Figure = true,
+    Screech = true, Halt = true, Eyes = true,
+    Grumble = true, Giggle = true, Gloombats = true,
+}
+
+local function createESP(model, name)
+    if ESPObjects[model] then return end
+
+    local bill = Instance.new("BillboardGui")
+    bill.Name = "MonsterESP"
+    bill.Size = UDim2.new(0,100,0,40)
+    bill.AlwaysOnTop = true
+    bill.StudsOffset = Vector3.new(0,3,0)
+
+    local text = Instance.new("TextLabel", bill)
+    text.Size = UDim2.new(1,0,1,0)
+    text.BackgroundTransparency = 1
+    text.TextColor3 = Color3.fromRGB(255,0,0)
+    text.TextStrokeTransparency = 0
+    text.TextScaled = true
+    text.Font = 2 -- ตามที่ขอ
+    text.Text = name
+
+    bill.Parent = model:FindFirstChild("Head") or model.PrimaryPart or model
+
+    ESPObjects[model] = bill
+end
+
+local function removeESP(model)
+    if ESPObjects[model] then
+        ESPObjects[model]:Destroy()
+        ESPObjects[model] = nil
+    end
+end
+workspace.DescendantAdded:Connect(function(obj)
+    if not ESPEnabled then return end
+    if obj:IsA("Model") and Monsters[obj.Name] then
+        createESP(obj, obj.Name)
+    end
+end)
+
+workspace.DescendantRemoving:Connect(function(obj)
+    removeESP(obj)
+end)
+ESPTap:Section({ Title = "ESP Mode Setting" })
+ESPTab:Toggle({
+    Title = "ESP Monster",
+    Default = false,
+    Callback = function(v)
+        ESPEnabled = v
+
+        -- ล้าง ESP เก่าเมื่อปิด
+        if not v then
+            for m,gui in pairs(ESPObjects) do
+                gui:Destroy()
+            end
+            table.clear(ESPObjects)
+        end
+
+        WindUI:Notify({
+            Title = "ESP Monster",
+            Content = v and "เปิดแล้ว" or "ปิดแล้ว",
+            Duration = 2
+        })
+    end
+})
