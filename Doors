@@ -378,3 +378,124 @@ ESPTab:Toggle({
         end
     end
 })
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+
+local player = Players.LocalPlayer
+local MAX_DISTANCE = 200
+local GOLD_COLOR = Color3.fromRGB(255, 200, 40)
+
+local objects = {}
+local goldEspEnabled = false
+local renderConnection
+
+--------------------------------------------------
+local function isGoldItem(name)
+	name = string.lower(name)
+	return string.find(name, "gold") ~= nil
+end
+
+local function getPart(obj)
+	if obj:IsA("Model") then
+		return obj.PrimaryPart or obj:FindFirstChildWhichIsA("BasePart", true)
+	elseif obj:IsA("BasePart") then
+		return obj
+	end
+end
+--------------------------------------------------
+
+local function addESP(obj)
+	if objects[obj] or not goldEspEnabled then return end
+
+	local part = getPart(obj)
+	if not part then return end
+
+	local highlight = Instance.new("Highlight")
+	highlight.FillColor = GOLD_COLOR
+	highlight.OutlineColor = Color3.new(1,1,1)
+	highlight.FillTransparency = 0.25
+	highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+	highlight.Enabled = false
+	highlight.Parent = obj
+
+	local gui = Instance.new("BillboardGui")
+	gui.Size = UDim2.fromOffset(140, 30)
+	gui.StudsOffset = Vector3.new(0, 2, 0)
+	gui.AlwaysOnTop = true
+	gui.Adornee = part
+	gui.Enabled = false
+	gui.Parent = obj
+
+	local label = Instance.new("TextLabel")
+	label.Size = UDim2.new(1,0,1,0)
+	label.BackgroundTransparency = 1
+	label.TextSize = 10
+	label.Font = Enum.Font.Code
+	label.TextColor3 = GOLD_COLOR
+	label.TextStrokeTransparency = 0.3
+	label.Text = obj.Name
+	label.Parent = gui
+
+	objects[obj] = {part = part, gui = gui, label = label, hl = highlight}
+end
+
+--------------------------------------------------
+local function clearESP()
+	for _, data in pairs(objects) do
+		if data.gui then data.gui:Destroy() end
+		if data.hl then data.hl:Destroy() end
+	end
+	table.clear(objects)
+end
+--------------------------------------------------
+
+local function enableGoldESP()
+	goldEspEnabled = true
+
+	-- สแกนของที่มีอยู่
+	for _, obj in pairs(workspace:GetDescendants()) do
+		if isGoldItem(obj.Name) then
+			addESP(obj)
+		end
+	end
+
+	-- อัปเดตระยะ
+	renderConnection = RunService.RenderStepped:Connect(function()
+		local char = player.Character
+		if not char or not char:FindFirstChild("HumanoidRootPart") then return end
+		local rootPos = char.HumanoidRootPart.Position
+
+		for obj, data in pairs(objects) do
+			if obj:IsDescendantOf(workspace) then
+				local dist = (data.part.Position - rootPos).Magnitude
+				
+				if dist <= MAX_DISTANCE then
+					data.gui.Enabled = true
+					data.hl.Enabled = true
+					data.label.Text = string.format("%s [%dm]", obj.Name, math.floor(dist))
+				else
+					data.gui.Enabled = false
+					data.hl.Enabled = false
+				end
+			end
+		end
+	end)
+end
+--------------------------------------------------
+
+local function disableGoldESP()
+	goldEspEnabled = false
+	if renderConnection then
+		renderConnection:Disconnect()
+		renderConnection = nil
+	end
+	clearESP()
+end
+
+--------------------------------------------------
+workspace.DescendantAdded:Connect(function(obj)
+	if goldEspEnabled and isGoldItem(obj.Name) then
+		task.wait()
+		addESP(obj)
+	end
+end)
