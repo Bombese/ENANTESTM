@@ -499,3 +499,146 @@ workspace.DescendantAdded:Connect(function(obj)
 		addESP(obj)
 	end
 end)
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+
+local player = Players.LocalPlayer
+
+--------------------------------------------------
+-- 📦 รายชื่อไอเทม
+--------------------------------------------------
+local ITEM_NAMES = {
+	["Alarm Clock"]=true,["Anchor"]=true,["Backdoor Key"]=true,["Backdoor Lock"]=true,
+	["Bandage"]=true,["Bandage Pack"]=true,["Barrel of Starlight"]=true,["Battery"]=true,
+	["Bread"]=true,["Candle"]=true,["Cheese"]=true,["Crucifix"]=true,
+	["Electrical Fuse"]=true,["Electrical Key"]=true,["Flashlight"]=true,
+	["Glitch Fragment"]=true,["Glowstick"]=true,["Gold"]=true,["Gween Soda"]=true,
+	["Haste Lever"]=true,["Herb of Veridis"]=true,["Holy Hand Grenade"]=true,
+	["Hotel Key"]=true,["Hotel Lock"]=true,["Jeff Tip Jar"]=true,["Laser Pointer"]=true,
+	["Library Book"]=true,["Library Lock"]=true,["Library Paper"]=true,
+	["Lockpick"]=true,["Moonlight Candle"]=true,["Moonlight Smoothie"]=true,
+	["Multitool"]=true,["Potion"]=true,["Shakelight"]=true,["Shears"]=true,
+	["Skeleton Key"]=true,["Smoothie"]=true,["Starlight Bottle"]=true,
+	["Starlight Vial"]=true,["Straplight"]=true,["Vitamins"]=true,
+	["Big Shield Potion"]=true,["Small Shield Potion"]=true
+}
+
+--------------------------------------------------
+local COLOR = Color3.fromRGB(0,255,170)
+local tracked = {}
+local espEnabled = false
+local renderConnection
+--------------------------------------------------
+
+local function getPart(obj)
+	if obj:IsA("Model") then
+		return obj:FindFirstChildWhichIsA("BasePart", true)
+	elseif obj:IsA("BasePart") then
+		return obj
+	end
+end
+
+--------------------------------------------------
+local function addESP(obj)
+	if tracked[obj] or not espEnabled then return end
+
+	local part = getPart(obj)
+	if not part then return end
+
+	local h = Instance.new("Highlight")
+	h.FillColor = COLOR
+	h.OutlineColor = Color3.new(1,1,1)
+	h.FillTransparency = 0.35
+	h.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+	h.Enabled = false
+	h.Parent = obj
+
+	local bill = Instance.new("BillboardGui")
+	bill.Size = UDim2.new(0,200,0,40)
+	bill.StudsOffset = Vector3.new(0,2.5,0)
+	bill.AlwaysOnTop = true
+	bill.Enabled = false
+	bill.Adornee = part
+	bill.Parent = obj
+
+	local label = Instance.new("TextLabel")
+	label.Size = UDim2.new(1,0,1,0)
+	label.BackgroundTransparency = 1
+	label.Font = Enum.Font.Code
+	label.TextSize = 10
+	label.TextStrokeTransparency = 0
+	label.TextColor3 = COLOR
+	label.Text = obj.Name
+	label.Parent = bill
+
+	tracked[obj] = {part = part, bill = bill, label = label, hl = h}
+end
+
+--------------------------------------------------
+local function clearESP()
+	for _,data in pairs(tracked) do
+		if data.bill then data.bill:Destroy() end
+		if data.hl then data.hl:Destroy() end
+	end
+	table.clear(tracked)
+end
+
+--------------------------------------------------
+local function enableItemESP()
+	espEnabled = true
+
+	for _,v in pairs(workspace:GetDescendants()) do
+		if ITEM_NAMES[v.Name] then
+			addESP(v)
+		end
+	end
+
+	renderConnection = RunService.RenderStepped:Connect(function()
+		local char = player.Character
+		if not char or not char:FindFirstChild("HumanoidRootPart") then return end
+		local root = char.HumanoidRootPart.Position
+
+		for obj,data in pairs(tracked) do
+			if obj:IsDescendantOf(workspace) then
+				local dist = (data.part.Position - root).Magnitude
+				if dist <= 200 then
+					data.bill.Enabled = true
+					data.hl.Enabled = true
+					data.label.Text = obj.Name.." ["..math.floor(dist).."]"
+				else
+					data.bill.Enabled = false
+					data.hl.Enabled = false
+				end
+			end
+		end
+	end)
+end
+
+--------------------------------------------------
+local function disableItemESP()
+	espEnabled = false
+	if renderConnection then
+		renderConnection:Disconnect()
+		renderConnection = nil
+	end
+	clearESP()
+end
+
+--------------------------------------------------
+workspace.DescendantAdded:Connect(function(v)
+	if espEnabled and ITEM_NAMES[v.Name] then
+		task.wait()
+		addESP(v)
+	end
+end)
+ESPTab:Toggle({
+    Title = "Item ESP",
+    Default = false,
+    Callback = function(state)
+        if state then
+            enableItemESP()
+        else
+            disableItemESP()
+        end
+    end
+})
