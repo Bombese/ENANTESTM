@@ -907,3 +907,152 @@ ESPTab:Toggle({
         end
     end
 })
+local CollectionService = game:GetService("CollectionService")
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local Workspace = game:GetService("Workspace")
+
+local player = Players.LocalPlayer
+local COLOR  = Color3.fromRGB(0,255,120)
+local MAX_DISTANCE = 300
+
+local espEnabled = false
+local renderConnection
+local tracked = {}
+
+--------------------------------------------------
+local GHOST_NAMES = {
+    "A-60","A-90","A-120","Ambush","Blitz","Bob","Bramble","Caws","Dread",
+    "Dupe","El Goblino","Eyes","Eyestalk","Figure","Giggle","Glitch",
+    "Gloombats","Grampy","Grumble","Groundskeeper","Guiding Light","Halt",
+    "Haste","Hide","Jack","Jeff","Lookman","Louie","Mandrake","Monument",
+    "Queen Grumble","Rush","Sally","Seek","Shadow","Snare","Screech",
+    "Surge","Timothy","Void"
+}
+
+local ghostLookup = {}
+for _,name in ipairs(GHOST_NAMES) do
+	ghostLookup[name] = true
+end
+--------------------------------------------------
+
+local function tagGhost(model)
+	if model:IsA("Model") and ghostLookup[model.Name] then
+		if not CollectionService:HasTag(model,"Ghost") then
+			CollectionService:AddTag(model,"Ghost")
+		end
+	end
+end
+
+--------------------------------------------------
+local function addESP(ghost)
+	if tracked[ghost] or not espEnabled then return end
+
+	local base = ghost:FindFirstChildWhichIsA("BasePart", true)
+	if not base then return end
+
+	local highlight = Instance.new("Highlight")
+	highlight.FillColor = COLOR
+	highlight.OutlineColor = Color3.new(1,1,1)
+	highlight.FillTransparency = 0.4
+	highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+	highlight.Enabled = false
+	highlight.Parent = ghost
+
+	local billboard = Instance.new("BillboardGui")
+	billboard.Size = UDim2.new(0,220,0,50)
+	billboard.StudsOffset = Vector3.new(0,5,0)
+	billboard.AlwaysOnTop = true
+	billboard.Adornee = base
+	billboard.Enabled = false
+	billboard.Parent = ghost
+
+	local text = Instance.new("TextLabel")
+	text.Size = UDim2.new(1,0,1,0)
+	text.BackgroundTransparency = 1
+	text.TextColor3 = COLOR
+	text.TextStrokeTransparency = 0.4
+	text.Font = Enum.Font.Code
+	text.TextScaled = true
+	text.Text = ghost.Name
+	text.Parent = billboard
+
+	tracked[ghost] = {base = base, bill = billboard, hl = highlight, label = text}
+end
+
+--------------------------------------------------
+local function clearESP()
+	for _,data in pairs(tracked) do
+		if data.bill then data.bill:Destroy() end
+		if data.hl then data.hl:Destroy() end
+	end
+	table.clear(tracked)
+end
+
+--------------------------------------------------
+local function enableMonsterESP()
+	espEnabled = true
+
+	for _,desc in pairs(Workspace:GetDescendants()) do
+		tagGhost(desc)
+	end
+
+	for _,ghost in pairs(CollectionService:GetTagged("Ghost")) do
+		addESP(ghost)
+	end
+
+	renderConnection = RunService.RenderStepped:Connect(function()
+		local char = player.Character
+		if not char or not char:FindFirstChild("HumanoidRootPart") then return end
+		local root = char.HumanoidRootPart.Position
+
+		for ghost,data in pairs(tracked) do
+			if ghost:IsDescendantOf(Workspace) then
+				local dist = (data.base.Position - root).Magnitude
+				if dist <= MAX_DISTANCE then
+					data.bill.Enabled = true
+					data.hl.Enabled = true
+					data.label.Text = ghost.Name.." ["..math.floor(dist).."]"
+				else
+					data.bill.Enabled = false
+					data.hl.Enabled = false
+				end
+			end
+		end
+	end)
+end
+
+--------------------------------------------------
+local function disableMonsterESP()
+	espEnabled = false
+	if renderConnection then
+		renderConnection:Disconnect()
+		renderConnection = nil
+	end
+	clearESP()
+end
+
+--------------------------------------------------
+Workspace.DescendantAdded:Connect(function(obj)
+	task.delay(0.1, tagGhost, obj)
+end)
+
+CollectionService:GetInstanceAddedSignal("Ghost"):Connect(addESP)
+CollectionService:GetInstanceRemovedSignal("Ghost"):Connect(function(obj)
+	if tracked[obj] then
+		if tracked[obj].bill then tracked[obj].bill:Destroy() end
+		if tracked[obj].hl then tracked[obj].hl:Destroy() end
+		tracked[obj] = nil
+	end
+end)
+ESPTab:Toggle({
+    Title = "Monster ESP",
+    Default = false,
+    Callback = function(state)
+        if state then
+            enableMonsterESP()
+        else
+            disableMonsterESP()
+        end
+    end
+})
