@@ -54,7 +54,7 @@ end)
 -- UI
 --------------------------------------------------
 local Window = WindUI:CreateWindow({
-    Title = "Doors Shadow HUB (test6)",
+    Title = "Doors Shadow HUB (test10)",
     Folder = "ShadowHub", -- แก้ตรงนี้
     OpenButton = {
         Title = "SHADOW HUB",
@@ -239,5 +239,142 @@ ESPTab:Toggle({
             Content = v and "เปิดแล้ว" or "ปิดแล้ว",
             Duration = 2
         })
+    end
+})
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+
+local player = Players.LocalPlayer
+local MAX_DISTANCE = 200
+
+local objects = {}
+local espEnabled = false
+local renderConnection
+
+--------------------------------------------------
+-- สร้าง ESP ให้ Object
+--------------------------------------------------
+local function addESP(obj)
+	if objects[obj] then return end
+	if not espEnabled then return end
+
+	local part
+	if obj:IsA("Model") then
+		part = obj.PrimaryPart or obj:FindFirstChildWhichIsA("BasePart")
+	else
+		part = obj
+	end
+	if not part then return end
+
+	local highlight = Instance.new("Highlight")
+	highlight.FillColor = Color3.fromRGB(0, 255, 100)
+	highlight.OutlineColor = Color3.fromRGB(255, 255, 255)
+	highlight.FillTransparency = 0.4
+	highlight.OutlineTransparency = 0
+	highlight.Enabled = false
+	highlight.Parent = obj
+
+	local gui = Instance.new("BillboardGui")
+	gui.Size = UDim2.fromOffset(120, 30)
+	gui.StudsOffset = Vector3.new(0, 2, 0)
+	gui.AlwaysOnTop = true
+	gui.Adornee = part
+	gui.Enabled = false
+	gui.Parent = obj
+
+	local label = Instance.new("TextLabel")
+	label.Size = UDim2.new(1, 0, 1, 0)
+	label.BackgroundTransparency = 1
+	label.TextSize = 10
+	label.Font = Enum.Font.Code
+	label.TextColor3 = Color3.fromRGB(0, 255, 0)
+	label.TextStrokeTransparency = 0.5
+	label.Text = "KEY"
+	label.Parent = gui
+
+	objects[obj] = {part = part, gui = gui, label = label, hl = highlight}
+end
+
+--------------------------------------------------
+-- ลบ ESP ทั้งหมด
+--------------------------------------------------
+local function clearESP()
+	for obj, data in pairs(objects) do
+		if data.gui then data.gui:Destroy() end
+		if data.hl then data.hl:Destroy() end
+	end
+	table.clear(objects)
+end
+
+--------------------------------------------------
+-- เปิดระบบ ESP
+--------------------------------------------------
+local function enableESP()
+	espEnabled = true
+
+	-- สแกนของที่มีอยู่
+	for _, obj in pairs(workspace:GetDescendants()) do
+		if obj.Name == "Key" and (obj:IsA("Model") or obj:IsA("BasePart")) then
+			addESP(obj)
+		end
+	end
+
+	-- อัปเดตระยะทุกเฟรม
+	renderConnection = RunService.RenderStepped:Connect(function()
+		local char = player.Character
+		if not char or not char:FindFirstChild("HumanoidRootPart") then return end
+		local rootPos = char.HumanoidRootPart.Position
+
+		for obj, data in pairs(objects) do
+			if obj and obj:IsDescendantOf(workspace) then
+				local dist = (data.part.Position - rootPos).Magnitude
+				
+				if dist <= MAX_DISTANCE then
+					data.gui.Enabled = true
+					data.hl.Enabled = true
+					data.label.Text = string.format("KEY [%dm]", math.floor(dist))
+				else
+					data.gui.Enabled = false
+					data.hl.Enabled = false
+				end
+			else
+				if data.gui then data.gui:Destroy() end
+				if data.hl then data.hl:Destroy() end
+				objects[obj] = nil
+			end
+		end
+	end)
+end
+
+--------------------------------------------------
+-- ปิดระบบ ESP
+--------------------------------------------------
+local function disableESP()
+	espEnabled = false
+	if renderConnection then
+		renderConnection:Disconnect()
+		renderConnection = nil
+	end
+	clearESP()
+end
+
+--------------------------------------------------
+-- ตรวจจับ Key ใหม่เมื่อเปิด ESP
+--------------------------------------------------
+workspace.DescendantAdded:Connect(function(obj)
+	if espEnabled and obj.Name == "Key" and (obj:IsA("Model") or obj:IsA("BasePart")) then
+		task.wait(0.1)
+		addESP(obj)
+	end
+end)
+ESPTab:Toggle({
+    Title = "Key ESP",
+    Default = false,
+    Callback = function(state)
+        if state then
+            enableESP()
+        else
+            disableESP()
+        end
     end
 })
