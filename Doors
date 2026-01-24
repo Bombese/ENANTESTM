@@ -92,7 +92,7 @@ local Entities = {
 }
 
 --------------------------------------------------
--- ENTITY NOTIFY FUNCTION
+-- NOTIFY FUNCTION
 --------------------------------------------------
 local function NotifyEntity(name)
     if not EntityAlertEnabled then return end
@@ -111,16 +111,47 @@ local function NotifyEntity(name)
 end
 
 --------------------------------------------------
--- DETECT ENTITY SPAWN
+-- ENTITY DETECTION CORE (ผสานเก่า + ใหม่)
+--------------------------------------------------
+local function detectEntity(obj)
+    local name = obj.Name
+
+    -- ระบบเก่า (ชื่อเป๊ะ)
+    if Entities[name] then
+        return name
+    end
+
+    -- ระบบใหม่ (ชื่อคล้าย)
+    local lower = string.lower(name)
+    for ent,_ in pairs(Entities) do
+        if string.find(lower, string.lower(ent)) then
+            return ent
+        end
+    end
+
+    -- ตรวจลูกโมเดล (ตัวซ่อนชื่อ)
+    if obj:FindFirstChild("RushMoving") then return "Rush" end
+    if obj:FindFirstChild("AmbushMoving") then return "Ambush" end
+    if obj:FindFirstChild("Screech") then return "Screech" end
+    if obj:FindFirstChild("Eyes") then return "Eyes" end
+    if obj:FindFirstChild("SeekRig") then return "Seek" end
+
+    return nil
+end
+
+--------------------------------------------------
+-- DETECT SPAWN
 --------------------------------------------------
 workspace.DescendantAdded:Connect(function(obj)
-    if obj:IsA("Model") and Entities[obj.Name] then
-        NotifyEntity(obj.Name)
+    if not obj:IsA("Model") then return end
+    local ent = detectEntity(obj)
+    if ent then
+        NotifyEntity(ent)
     end
 end)
 
 --------------------------------------------------
--- UI SECTION + TOGGLE (ใส่ใน Tab Main)
+-- UI (อยู่ในแท็บ Main)
 --------------------------------------------------
 Main:Section({ Title = "Notification" })
 
