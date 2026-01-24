@@ -642,3 +642,136 @@ ESPTab:Toggle({
         end
     end
 })
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local player = Players.LocalPlayer
+
+local COLOR = Color3.fromRGB(0,255,120)
+
+local tracked = {}
+local espEnabled = false
+local renderConnection
+
+--------------------------------------------------
+local function hasNumber(text)
+	return string.find(text, "%d") ~= nil
+end
+
+--------------------------------------------------
+local function addDoorESP(door, numberPart)
+	if tracked[door] or not espEnabled then return end
+
+	local base = door:FindFirstChildWhichIsA("BasePart")
+	if not base then return end
+
+	local h = Instance.new("Highlight")
+	h.FillColor = COLOR
+	h.OutlineColor = Color3.new(1,1,1)
+	h.FillTransparency = 0.3
+	h.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+	h.Enabled = false
+	h.Parent = door
+
+	local bill = Instance.new("BillboardGui")
+	bill.Size = UDim2.new(0,200,0,40)
+	bill.StudsOffset = Vector3.new(0,3,0)
+	bill.AlwaysOnTop = true
+	bill.Enabled = false
+	bill.Adornee = base
+	bill.Parent = door
+
+	local label = Instance.new("TextLabel")
+	label.Size = UDim2.new(1,0,1,0)
+	label.BackgroundTransparency = 1
+	label.Font = Enum.Font.Code
+	label.TextSize = 14
+	label.TextStrokeTransparency = 0
+	label.TextColor3 = COLOR
+	label.Text = "DOOR"
+	label.Parent = bill
+
+	tracked[door] = {base = base, bill = bill, label = label, hl = h, num = numberPart}
+end
+
+--------------------------------------------------
+local function clearESP()
+	for _,data in pairs(tracked) do
+		if data.bill then data.bill:Destroy() end
+		if data.hl then data.hl:Destroy() end
+	end
+	table.clear(tracked)
+end
+
+--------------------------------------------------
+local function enableDoorESP()
+	espEnabled = true
+
+	-- สแกนของที่มีอยู่
+	for _,v in pairs(workspace:GetDescendants()) do
+		if (v:IsA("SurfaceGui") or v:IsA("BillboardGui")) then
+			local textLabel = v:FindFirstChildWhichIsA("TextLabel", true)
+			if textLabel and hasNumber(textLabel.Text) then
+				local door = v:FindFirstAncestorWhichIsA("Model")
+				if door then
+					addDoorESP(door, textLabel)
+				end
+			end
+		end
+	end
+
+	-- ลูปอัปเดตระยะ (ลูปเดียว)
+	renderConnection = RunService.RenderStepped:Connect(function()
+		local char = player.Character
+		if not char or not char:FindFirstChild("HumanoidRootPart") then return end
+		local root = char.HumanoidRootPart.Position
+
+		for door,data in pairs(tracked) do
+			if door:IsDescendantOf(workspace) then
+				local dist = (data.base.Position - root).Magnitude
+				if dist <= 250 then
+					data.bill.Enabled = true
+					data.hl.Enabled = true
+					data.label.Text = "DOOR "..data.num.Text.." ["..math.floor(dist).."]"
+				else
+					data.bill.Enabled = false
+					data.hl.Enabled = false
+				end
+			end
+		end
+	end)
+end
+
+--------------------------------------------------
+local function disableDoorESP()
+	espEnabled = false
+	if renderConnection then
+		renderConnection:Disconnect()
+		renderConnection = nil
+	end
+	clearESP()
+end
+
+--------------------------------------------------
+workspace.DescendantAdded:Connect(function(v)
+	if not espEnabled then return end
+	if v:IsA("SurfaceGui") or v:IsA("BillboardGui") then
+		local textLabel = v:FindFirstChildWhichIsA("TextLabel", true)
+		if textLabel and hasNumber(textLabel.Text) then
+			local door = v:FindFirstAncestorWhichIsA("Model")
+			if door then
+				addDoorESP(door, textLabel)
+			end
+		end
+	end
+end)
+ESPTab:Toggle({
+    Title = "Door ESP",
+    Default = false,
+    Callback = function(state)
+        if state then
+            enableDoorESP()
+        else
+            disableDoorESP()
+        end
+    end
+})
