@@ -54,7 +54,7 @@ end)
 -- UI
 --------------------------------------------------
 local Window = WindUI:CreateWindow({
-    Title = "Doors Shadow HUB (test)",
+    Title = "Doors Shadow HUB (test1)",
     Folder = "ShadowHub", -- แก้ตรงนี้
     OpenButton = {
         Title = "SHADOW HUB",
@@ -77,11 +77,12 @@ Main:Toggle({
     end
 })
 Main :Section({ Title = "Notification " })
--- ================= SETTINGS =================
+--------------------------------------------------
+-- ENTITY ALERT SETTINGS
+--------------------------------------------------
 local EntityAlertEnabled = true
 local Debounce = {}
 
--- รายชื่อผีทั้งหมด
 local Entities = {
     Rush = true, Ambush = true, Seek = true, Figure = true,
     Screech = true, Halt = true, Eyes = true, Dupe = true,
@@ -91,7 +92,9 @@ local Entities = {
     Grumble = true, Giggle = true, Gloombats = true,
 }
 
--- ================= NOTIFY FUNCTION =================
+--------------------------------------------------
+-- ENTITY NOTIFY FUNCTION
+--------------------------------------------------
 local function NotifyEntity(name)
     if not EntityAlertEnabled then return end
     if Debounce[name] then return end
@@ -103,21 +106,26 @@ local function NotifyEntity(name)
         Duration = 4
     })
 
-    -- รีเซ็ตกันแจ้งซ้ำ
     task.delay(3, function()
         Debounce[name] = nil
     end)
 end
 
--- ================= ENTITY DETECTOR =================
+--------------------------------------------------
+-- DETECT ENTITY SPAWN
+--------------------------------------------------
 workspace.DescendantAdded:Connect(function(obj)
     if obj:IsA("Model") and Entities[obj.Name] then
         NotifyEntity(obj.Name)
     end
 end)
 
--- ================= TOGGLE BUTTON (ใส่ใน Tab Main) =================
-Main:CreateToggle({
+--------------------------------------------------
+-- UI SECTION + TOGGLE (ใส่ใน Tab Main)
+--------------------------------------------------
+Main:Section({ Title = "Notification" })
+
+Main:Toggle({
     Title = "Entity Spawn Alert",
     Default = true,
     Callback = function(state)
