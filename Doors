@@ -54,7 +54,7 @@ end)
 -- UI
 --------------------------------------------------
 local Window = WindUI:CreateWindow({
-    Title = "Doors Shadow HUB (test3)",
+    Title = "Doors Shadow HUB (test5)",
     Folder = "ShadowHub", -- แก้ตรงนี้
     OpenButton = {
         Title = "SHADOW HUB",
@@ -220,7 +220,6 @@ end)
 workspace.DescendantRemoving:Connect(function(obj)
     removeESP(obj)
 end)
-ESPTap:Section({ Title = "ESP Mode Setting" })
 ESPTab:Toggle({
     Title = "ESP Monster",
     Default = false,
