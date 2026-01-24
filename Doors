@@ -76,7 +76,6 @@ Main:Toggle({
         end
     end
 })
-Main :Section({ Title = "Notification " })
 --------------------------------------------------
 -- ENTITY ALERT SETTINGS
 --------------------------------------------------
