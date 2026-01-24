@@ -54,7 +54,7 @@ end)
 -- UI
 --------------------------------------------------
 local Window = WindUI:CreateWindow({
-    Title = "Doors Shadow HUB (test2)",
+    Title = "Doors Shadow HUB (test3)",
     Folder = "ShadowHub", -- แก้ตรงนี้
     OpenButton = {
         Title = "SHADOW HUB",
@@ -63,6 +63,8 @@ local Window = WindUI:CreateWindow({
 })
 
 local Main = Window:Tab({ Title = "Main" })
+
+Main:Section({ Title = "Player Setting" })
 
 Main:Toggle({
     Title = "Speed 21",
