@@ -1291,7 +1291,7 @@ local function serverHop()
 	end
 end
 SettingTab:Button({
-	Title = "Server Hop",
+	Title = "Server Hop ( Private Server )",
 	Description = "ย้ายไปเซิร์ฟเวอร์ใหม่ (Private Server)",
 	Callback = function()
 		serverHop()
