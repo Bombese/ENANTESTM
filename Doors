@@ -1315,3 +1315,32 @@ SettingTab:Button({
 		serverHop()
 	end
 })
+--------------------------------------------------
+-- Discord Button
+--------------------------------------------------
+SettingTab:Section({ Title = "Community" })
+
+SettingTab:Button({
+    Title = "Join Discord",
+    Description = "กดเพื่อคัดลอกลิงก์ดิสคอร์ด",
+    Callback = function()
+        local link = "https://discord.gg/AXTKtmUvyf"
+
+        -- ถ้า executor รองรับ setclipboard
+        if setclipboard then
+            setclipboard(link)
+            game:GetService("StarterGui"):SetCore("SendNotification", {
+                Title = "Discord Copied",
+                Text = "คัดลอกลิงก์ Discord แล้ว",
+                Duration = 5
+            })
+        else
+            -- กรณีคัดลอกไม่ได้ แสดงลิงก์แทน
+            game:GetService("StarterGui"):SetCore("SendNotification", {
+                Title = "Discord Link",
+                Text = link,
+                Duration = 8
+            })
+        end
+    end
+})
