@@ -1274,3 +1274,26 @@ SettingTab:Button({
 		rejoinServer()
 	end
 })
+local TeleportService = game:GetService("TeleportService")
+local Players = game:GetService("Players")
+
+local player = Players.LocalPlayer
+local placeId = game.PlaceId
+
+local function serverHop()
+	local success, err = pcall(function()
+		local code = TeleportService:ReserveServer(placeId)
+		TeleportService:TeleportToPrivateServer(placeId, code, {player})
+	end)
+
+	if not success then
+		warn("Server Hop Error:", err)
+	end
+end
+SettingTab:Button({
+	Title = "Server Hop",
+	Description = "ย้ายไปเซิร์ฟเวอร์ใหม่ (Private Server)",
+	Callback = function()
+		serverHop()
+	end
+})
