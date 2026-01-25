@@ -15,7 +15,158 @@ local Window = WindUI:CreateWindow({
         Draggable = true,
     }
 })
-local HackTab = Window:Tab({
-    Title = "Main",
-    Icon = "home",
+-- สร้าง Tab หลักชื่อ "Main" (หรือ "หลัก" ก็ได้)
+local MainTab = Window:CreateTab({
+    Name = "Main",                     -- ชื่อแท็บ
+    Icon = "rbxassetid://7733715400"   -- ไอคอน Roblox (เปลี่ยนได้)
+    -- หรือใช้ string icon จาก Lucide ถ้า library รองรับ
 })
+
+-- ================================
+-- Movement Hacks (วิ่งเร็ว + กระโดดสูง)
+-- ================================
+
+local speedEnabled = false
+local jumpEnabled = false
+local speedValue = 50
+local jumpValue = 100
+local speedConnection = nil
+local jumpConnection = nil
+
+local function updateSpeed()
+    if speedConnection then speedConnection:Disconnect() end
+    if not speedEnabled then return end
+    
+    speedConnection = game:GetService("RunService").Heartbeat:Connect(function()
+        local char = game.Players.LocalPlayer.Character
+        if char then
+            local hum = char:FindFirstChildOfClass("Humanoid")
+            if hum then
+                hum.WalkSpeed = speedValue
+            end
+        end
+    end)
+end
+
+local function updateJump()
+    if jumpConnection then jumpConnection:Disconnect() end
+    if not jumpEnabled then return end
+    
+    jumpConnection = game:GetService("RunService").Heartbeat:Connect(function()
+        local char = game.Players.LocalPlayer.Character
+        if char then
+            local hum = char:FindFirstChildOfClass("Humanoid")
+            if hum then
+                hum.JumpPower = jumpValue
+            end
+        end
+    end)
+end
+
+-- รีเซ็ตอัตโนมัติเมื่อเกิดใหม่
+game.Players.LocalPlayer.CharacterAdded:Connect(function()
+    task.wait(0.8)  -- รอ humanoid โหลด
+    if speedEnabled then updateSpeed() end
+    if jumpEnabled then updateJump() end
+end)
+
+-- =============================================
+-- UI Elements ใน Tab Main
+-- =============================================
+
+MainTab:CreateSection("Movement Hacks")
+
+-- Toggle วิ่งเร็ว
+MainTab:CreateToggle({
+    Name = "วิ่งเร็ว (Speed Hack)",
+    Default = false,
+    Callback = function(value)
+        speedEnabled = value
+        if value then
+            updateSpeed()
+            print("เปิดวิ่งเร็ว: " .. speedValue)
+        else
+            if speedConnection then speedConnection:Disconnect() end
+            -- รีเซ็ตเป็นปกติ
+            local hum = game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+            if hum then hum.WalkSpeed = 16 end
+            print("ปิดวิ่งเร็ว")
+        end
+    end
+})
+
+-- Slider ความเร็ว
+MainTab:CreateSlider({
+    Name = "ความเร็ววิ่ง",
+    Min = 16,
+    Max = 250,
+    Increment = 1,
+    Default = 50,
+    Callback = function(value)
+        speedValue = value
+        print("ตั้งความเร็ว: " .. value)
+        if speedEnabled then
+            updateSpeed()  -- อัพเดททันที
+        end
+    end
+})
+
+-- Toggle กระโดดสูง
+MainTab:CreateToggle({
+    Name = "กระโดดสูง (Jump Hack)",
+    Default = false,
+    Callback = function(value)
+        jumpEnabled = value
+        if value then
+            updateJump()
+            print("เปิดกระโดดสูง: " .. jumpValue)
+        else
+            if jumpConnection then jumpConnection:Disconnect() end
+            local hum = game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+            if hum then hum.JumpPower = 50 end
+            print("ปิดกระโดดสูง")
+        end
+    end
+})
+
+-- Slider ความสูงกระโดด
+MainTab:CreateSlider({
+    Name = "ความสูงกระโดด",
+    Min = 50,
+    Max = 300,
+    Increment = 1,
+    Default = 100,
+    Callback = function(value)
+        jumpValue = value
+        print("ตั้งกระโดด: " .. value)
+        if jumpEnabled then
+            updateJump()  -- อัพเดททันที
+        end
+    end
+})
+
+-- ปุ่มรีเซ็ตทั้งหมด
+MainTab:CreateButton({
+    Name = "รีเซ็ตการเคลื่อนไหว (กลับปกติ)",
+    Callback = function()
+        speedEnabled = false
+        jumpEnabled = false
+        
+        if speedConnection then speedConnection:Disconnect() end
+        if jumpConnection then jumpConnection:Disconnect() end
+        
+        local hum = game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+        if hum then
+            hum.WalkSpeed = 16
+            hum.JumpPower = 50
+        end
+        
+        print("รีเซ็ตความเร็วและกระโดดเป็นค่าปกติแล้ว")
+    end
+})
+
+-- ข้อความแจ้งเตือน/คำแนะนำ
+MainTab:CreateLabel("ระบบจะคงอยู่หลังตาย ถ้าเปิดไว้")
+MainTab:CreateLabel("สูงสุดแนะนำ: Speed 200–250, Jump 250–300 (เกมส่วนใหญ่)")
+
+print("Movement Hacks สำหรับ Wind UI โหลดเรียบร้อย!")
