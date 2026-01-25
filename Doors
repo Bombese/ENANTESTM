@@ -1250,7 +1250,10 @@ SettingTab:Toggle({
 		end
 	end
 })
-SettingTab:Section({ Title = "Server Setting" }
+SettingTab:Section({ 
+	Title = "Server Setting" 
+})
+
 local TeleportService = game:GetService("TeleportService")
 local Players = game:GetService("Players")
 
@@ -1263,6 +1266,7 @@ local function rejoinServer()
 		player
 	)
 end
+
 SettingTab:Button({
 	Title = "Rejoin Server",
 	Description = "ออกจากเกมแล้วเข้าเซิร์ฟเวอร์เดิมใหม่",
