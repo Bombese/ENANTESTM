@@ -54,7 +54,7 @@ end)
 -- UI
 --------------------------------------------------
 local Window = WindUI:CreateWindow({
-    Title = "Doors Felon HUB(test10)",
+    Title = "Doors Felon HUB(Basic Script)",
     Folder = "Felon HUB",
     OpenButton = {
         Title = "Felon HUB",
