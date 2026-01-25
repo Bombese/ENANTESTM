@@ -1,26 +1,22 @@
--- Load WindUI
 local WindUI = loadstring(game:HttpGet(
-    "https://github.com/Footagesus/WindUI/releases/latest/download/main.lua"
+    "https://raw.githubusercontent.com/Footagesus/WindUI/main/dist/main.lua"
 ))()
 
--- Window
 local Window = WindUI:CreateWindow({
-    Title = "Thai Felon HUB (Premium)",
+    Title = "Test",
     Icon = "user",
-    Author = "https://discord.gg/AXTKtmUvyf",
+    Author = "me",
     OpenButton = {
-        Title = "Felon HUB",
-        Icon = "monitor",
-        Enabled = true,
-        Draggable = true,
+        Enabled = false
     }
 })
--- สร้าง Tab หลักชื่อ "Main" (หรือ "หลัก" ก็ได้)
+
 local MainTab = Window:CreateTab({
-    Name = "Main",                     -- ชื่อแท็บ
-    Icon = "Main",--ไอคอน Roblox (เปลี่ยนได้)
-    -- หรือใช้ string icon จาก Lucide ถ้า library รองรับ
+    Name = "Main",
+    Icon = "home",
 })
+
+MainTab:CreateLabel("Tab ทำงานแล้ว")
 
 -- ================================
 -- Movement Hacks (วิ่งเร็ว + กระโดดสูง)
