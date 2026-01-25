@@ -15,3 +15,7 @@ local Window = WindUI:CreateWindow({
         Draggable = true,
     }
 })
+local HackTab = Window:Tab({
+    Title = "Main",
+    Icon = "home",
+})
