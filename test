@@ -1,1 +1,17 @@
-t
+-- Load WindUI
+local WindUI = loadstring(game:HttpGet(
+    "https://github.com/Footagesus/WindUI/releases/latest/download/main.lua"
+))()
+
+-- Window
+local Window = WindUI:CreateWindow({
+    Title = "Evade Script Felon HUB (Premium)",
+    Icon = "user",
+    Author = "https://discord.gg/AXTKtmUvyf",
+    OpenButton = {
+        Title = "Felon HUB",
+        Icon = "monitor",
+        Enabled = true,
+        Draggable = true,
+    }
+})
