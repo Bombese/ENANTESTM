@@ -1250,9 +1250,7 @@ SettingTab:Toggle({
 		end
 	end
 })
-
 SettingTab:Section({ Title = "Server Setting" }
-
 local TeleportService = game:GetService("TeleportService")
 local Players = game:GetService("Players")
 
