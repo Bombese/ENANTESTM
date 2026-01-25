@@ -1300,14 +1300,7 @@ SettingTab:Button({
 local TeleportService = game:GetService("TeleportService")
 local Players = game:GetService("Players")
 
-local player = Players.LocalPlayer
-local placeId = game.PlaceId
-
--- สร้างเซิร์ฟเวอร์ใหม่
-local code = TeleportService:ReserveServer(placeId)
-
--- ย้ายเข้าเซิร์ฟนั้น
-TeleportService:TeleportToPrivateServer(placeId, code, {player})
+TeleportService:Teleport(game.PlaceId, Players.LocalPlayer)
 SettingTab:Button({
 	Title = "Server Hop",
 	Description = "ย้ายไปเซิร์ฟเวอร์ใหม่ (Private Server)",
