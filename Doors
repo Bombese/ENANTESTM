@@ -1056,3 +1056,81 @@ ESPTab:Toggle({
         end
     end
 })
+local Lighting = game:GetService("Lighting")
+
+local lightEnabled = false
+local savedSettings = {}
+local removedEffects = {}
+
+--------------------------------------------------
+local function enableFullBright()
+	if lightEnabled then return end
+	lightEnabled = true
+
+	-- จำค่าเดิม
+	savedSettings = {
+		Brightness = Lighting.Brightness,
+		ClockTime = Lighting.ClockTime,
+		GlobalShadows = Lighting.GlobalShadows,
+		FogEnd = Lighting.FogEnd,
+		FogStart = Lighting.FogStart,
+		OutdoorAmbient = Lighting.OutdoorAmbient,
+		Ambient = Lighting.Ambient
+	}
+
+	-- ปรับแสง
+	Lighting.Brightness = 5
+	Lighting.ClockTime = 14
+	Lighting.GlobalShadows = false
+	Lighting.FogEnd = 1e10
+	Lighting.FogStart = 0
+	Lighting.OutdoorAmbient = Color3.fromRGB(255,255,255)
+	Lighting.Ambient = Color3.fromRGB(255,255,255)
+
+	-- ซ่อนเอฟเฟกต์มืด ๆ (ไม่ลบทิ้ง แต่ย้ายออก)
+	for _,v in pairs(Lighting:GetChildren()) do
+		if v:IsA("Atmosphere")
+		or v:IsA("BloomEffect")
+		or v:IsA("BlurEffect")
+		or v:IsA("ColorCorrectionEffect")
+		or v:IsA("DepthOfFieldEffect")
+		or v:IsA("SunRaysEffect") then
+			removedEffects[v] = v.Parent
+			v.Parent = nil
+		end
+	end
+end
+--------------------------------------------------
+
+local function disableFullBright()
+	if not lightEnabled then return end
+	lightEnabled = false
+
+	-- คืนค่าเดิม
+	for k,v in pairs(savedSettings) do
+		Lighting[k] = v
+	end
+
+	-- เอาเอฟเฟกต์กลับ
+	for obj,parent in pairs(removedEffects) do
+		if obj then
+			obj.Parent = parent
+		end
+	end
+
+	table.clear(savedSettings)
+	table.clear(removedEffects)
+end
+local SettingTab = Window:Tab({Title = "Setting"})
+
+SettingTab:Toggle({
+	Title = "Increase Light",
+	Default = false,
+	Callback = function(state)
+		if state then
+			enableFullBright()
+		else
+			disableFullBright()
+		end
+	end
+})
