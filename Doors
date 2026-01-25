@@ -1134,3 +1134,119 @@ SettingTab:Toggle({
 		end
 	end
 })
+local Lighting = game:GetService("Lighting")
+local Terrain = workspace:FindFirstChildOfClass("Terrain")
+
+local fpsBoostEnabled = false
+local savedLighting = {}
+local modifiedParts = {}
+local hiddenVisuals = {}
+local soundSettings = {}
+
+--------------------------------------------------
+local function enableFPSBoost()
+	if fpsBoostEnabled then return end
+	fpsBoostEnabled = true
+
+	-- 💡 จำค่าแสงเดิม
+	savedLighting = {
+		GlobalShadows = Lighting.GlobalShadows,
+		Brightness = Lighting.Brightness,
+		EnvironmentDiffuseScale = Lighting.EnvironmentDiffuseScale,
+		EnvironmentSpecularScale = Lighting.EnvironmentSpecularScale,
+		FogEnd = Lighting.FogEnd,
+		OutdoorAmbient = Lighting.OutdoorAmbient
+	}
+
+	Lighting.GlobalShadows = false
+	Lighting.Brightness = 0.5
+	Lighting.EnvironmentDiffuseScale = 0
+	Lighting.EnvironmentSpecularScale = 0
+	Lighting.FogEnd = 1e10
+	Lighting.OutdoorAmbient = Color3.fromRGB(150,150,150)
+
+	-- 🎭 ซ่อนเอฟเฟกต์ภาพ (ไม่ลบ)
+	for _,v in pairs(Lighting:GetChildren()) do
+		if v:IsA("PostEffect") or v:IsA("Atmosphere") or v:IsA("Sky") then
+			hiddenVisuals[v] = v.Parent
+			v.Parent = nil
+		end
+	end
+
+	-- 🧱 ลดรายละเอียด Part
+	for _,p in pairs(workspace:GetDescendants()) do
+		if p:IsA("BasePart") then
+			modifiedParts[p] = {
+				Material = p.Material,
+				Reflectance = p.Reflectance,
+				CastShadow = p.CastShadow
+			}
+			p.Material = Enum.Material.Plastic
+			p.Reflectance = 0
+			p.CastShadow = false
+		elseif p:IsA("Sound") then
+			soundSettings[p] = p.RollOffMaxDistance
+			p.RollOffMaxDistance = 30
+		end
+	end
+
+	-- 🌊 Terrain น้ำ
+	pcall(function()
+		if Terrain then
+			Terrain.WaterWaveSize = 0
+			Terrain.WaterWaveSpeed = 0
+			Terrain.WaterReflectance = 0
+			Terrain.WaterTransparency = 1
+		end
+	end)
+
+	pcall(function()
+		settings().Rendering.QualityLevel = Enum.QualityLevel.Level01
+	end)
+end
+--------------------------------------------------
+
+local function disableFPSBoost()
+	if not fpsBoostEnabled then return end
+	fpsBoostEnabled = false
+
+	-- คืนค่าแสง
+	for k,v in pairs(savedLighting) do
+		Lighting[k] = v
+	end
+
+	-- เอาเอฟเฟกต์กลับ
+	for obj,parent in pairs(hiddenVisuals) do
+		if obj then obj.Parent = parent end
+	end
+
+	-- คืนค่า Parts
+	for p,data in pairs(modifiedParts) do
+		if p then
+			p.Material = data.Material
+			p.Reflectance = data.Reflectance
+			p.CastShadow = data.CastShadow
+		end
+	end
+
+	-- คืนค่าเสียง
+	for s,val in pairs(soundSettings) do
+		if s then s.RollOffMaxDistance = val end
+	end
+
+	table.clear(savedLighting)
+	table.clear(hiddenVisuals)
+	table.clear(modifiedParts)
+	table.clear(soundSettings)
+end
+SettingTab:Toggle({
+	Title = "FPS Boost",
+	Default = false,
+	Callback = function(state)
+		if state then
+			enableFPSBoost()
+		else
+			disableFPSBoost()
+		end
+	end
+})
