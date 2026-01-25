@@ -220,9 +220,6 @@ end)
 workspace.DescendantRemoving:Connect(function(obj)
     removeESP(obj)
 end)
-
-ESPTap:Section({ Title = "ESP TEST" }
-
 ESPTab:Toggle({
     Title = "ESP Monster",
     Default = false,
