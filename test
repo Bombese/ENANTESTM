@@ -18,7 +18,7 @@ local Window = WindUI:CreateWindow({
 -- สร้าง Tab หลักชื่อ "Main" (หรือ "หลัก" ก็ได้)
 local MainTab = Window:CreateTab({
     Name = "Main",                     -- ชื่อแท็บ
-    Icon = "rbxassetid://7733715400"   -- ไอคอน Roblox (เปลี่ยนได้)
+    Icon = "Main"   -- ไอคอน Roblox (เปลี่ยนได้)
     -- หรือใช้ string icon จาก Lucide ถ้า library รองรับ
 })
 
