@@ -1,0 +1,314 @@
+-- โหลด Wind UI (เวอร์ชันล่าสุดจาก GitHub)
+local WindUI = loadstring(game:HttpGet("https://raw.githubusercontent.com/Footagesus/WindUI/main/main.lua"))()
+
+-- สร้าง Window หลัก
+local Window = WindUI:Create({
+    Title = "Bom's Hub - Wind UI",
+    Theme = "Dark",          -- เปลี่ยนได้: Dark / Light / Aqua / Neon ฯลฯ
+    Size = UDim2.new(0, 620, 0, 480),
+    Center = true,
+    AutoShow = true
+})
+
+-- =============================================
+-- Tab: Main (Movement + Rainbow NameTag + RGB Body)
+-- =============================================
+local MainTab = Window:CreateTab({
+    Name = "Main",
+    Icon = "rbxassetid://7733715400"   -- ไอคอนตัวอย่าง เปลี่ยนได้
+})
+
+MainTab:CreateSection("Movement Hacks")
+
+local speedEnabled = false
+local jumpEnabled = false
+local speedValue = 50
+local jumpValue = 100
+local speedConn = nil
+local jumpConn = nil
+
+local function UpdateSpeed()
+    if speedConn then speedConn:Disconnect() end
+    if not speedEnabled then return end
+    speedConn = game.RunService.Heartbeat:Connect(function()
+        local hum = game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChildWhichIsA("Humanoid")
+        if hum then hum.WalkSpeed = speedValue end
+    end)
+end
+
+local function UpdateJump()
+    if jumpConn then jumpConn:Disconnect() end
+    if not jumpEnabled then return end
+    jumpConn = game.RunService.Heartbeat:Connect(function()
+        local hum = game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChildWhichIsA("Humanoid")
+        if hum then hum.JumpPower = jumpValue end
+    end)
+end
+
+game.Players.LocalPlayer.CharacterAdded:Connect(function()
+    task.wait(0.8)
+    if speedEnabled then UpdateSpeed() end
+    if jumpEnabled then UpdateJump() end
+end)
+
+MainTab:CreateToggle({
+    Name = "วิ่งเร็ว (Speed Hack)",
+    Default = false,
+    Callback = function(v)
+        speedEnabled = v
+        if v then UpdateSpeed() else
+            if speedConn then speedConn:Disconnect() end
+            local hum = game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChildWhichIsA("Humanoid")
+            if hum then hum.WalkSpeed = 16 end
+        end
+    end
+})
+
+MainTab:CreateSlider({
+    Name = "ความเร็ววิ่ง (16-250)",
+    Min = 16, Max = 250, Increment = 1, Default = 50,
+    Callback = function(v)
+        speedValue = v
+        if speedEnabled then UpdateSpeed() end
+    end
+})
+
+MainTab:CreateToggle({
+    Name = "กระโดดสูง (Jump Hack)",
+    Default = false,
+    Callback = function(v)
+        jumpEnabled = v
+        if v then UpdateJump() else
+            if jumpConn then jumpConn:Disconnect() end
+            local hum = game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChildWhichIsA("Humanoid")
+            if hum then hum.JumpPower = 50 end
+        end
+    end
+})
+
+MainTab:CreateSlider({
+    Name = "ความสูงกระโดด (50-300)",
+    Min = 50, Max = 300, Increment = 1, Default = 100,
+    Callback = function(v)
+        jumpValue = v
+        if jumpEnabled then UpdateJump() end
+    end
+})
+
+MainTab:CreateButton({
+    Name = "รีเซ็ต Movement เป็นปกติ",
+    Callback = function()
+        speedEnabled = false
+        jumpEnabled = false
+        if speedConn then speedConn:Disconnect() end
+        if jumpConn then jumpConn:Disconnect() end
+        local hum = game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChildWhichIsA("Humanoid")
+        if hum then
+            hum.WalkSpeed = 16
+            hum.JumpPower = 50
+        end
+    end
+})
+
+-- Rainbow NameTag
+MainTab:CreateSection("Rainbow NameTag")
+
+local nameRainbow = false
+local nameSpeed = 0.2
+local nameThread
+
+local function StartNameRainbow()
+    if nameThread then coroutine.close(nameThread) end
+    nameThread = coroutine.create(function()
+        local hue = 0
+        while nameRainbow do
+            local col = Color3.fromHSV(hue, 1, 1)
+            pcall(function()
+                game.ReplicatedStorage.NameTagRemoteEvent:FireServer("name", col, 38)
+            end)
+            hue = (hue + 0.01) % 1
+            task.wait(nameSpeed)
+        end
+    end)
+    coroutine.resume(nameThread)
+end
+
+MainTab:CreateToggle({
+    Name = "เปิด Rainbow NameTag",
+    Default = false,
+    Callback = function(v)
+        nameRainbow = v
+        if v then StartNameRainbow() else
+            if nameThread then coroutine.close(nameThread) end
+        end
+    end
+})
+
+MainTab:CreateSlider({
+    Name = "ความเร็ว NameTag Rainbow (0.05-1)",
+    Min = 0.05, Max = 1, Increment = 0.01, Default = 0.2,
+    Callback = function(v)
+        nameSpeed = v
+        if nameRainbow then StartNameRainbow() end
+    end
+})
+
+-- RGB Body Rainbow
+MainTab:CreateSection("RGB Body Rainbow")
+
+local bodyRainbow = false
+local bodySpeed = 0.2
+local bodyThread
+
+local function StartBodyRainbow()
+    if bodyThread then coroutine.close(bodyThread) end
+    bodyThread = coroutine.create(function()
+        local hue = 0
+        while bodyRainbow do
+            local col = Color3.fromHSV(hue, 1, 1)
+            pcall(function()
+                game.ReplicatedStorage.BloxbizRemotes.CatalogOnApplyToRealHumanoid:FireServer({["BodyColor"] = col})
+            end)
+            hue = (hue + 0.01) % 1
+            task.wait(bodySpeed)
+        end
+    end)
+    coroutine.resume(bodyThread)
+end
+
+MainTab:CreateToggle({
+    Name = "เปิด RGB Body Rainbow",
+    Default = false,
+    Callback = function(v)
+        bodyRainbow = v
+        if v then StartBodyRainbow() else
+            if bodyThread then coroutine.close(bodyThread) end
+        end
+    end
+})
+
+MainTab:CreateSlider({
+    Name = "ความเร็ว Body Rainbow (0.05-1)",
+    Min = 0.05, Max = 1, Increment = 0.01, Default = 0.2,
+    Callback = function(v)
+        bodySpeed = v
+        if bodyRainbow then StartBodyRainbow() end
+    end
+})
+
+-- =============================================
+-- Tab: Outfits
+-- =============================================
+local OutfitsTab = Window:CreateTab({ Name = "Outfits", Icon = "rbxassetid://7072718362" })
+
+OutfitsTab:CreateSection("เปลี่ยนชุดตัวละคร")
+
+-- ฟังก์ชัน applyOutfit1, applyOutfit2, ... (copy มาจากสคริปต์เดิมของคุณ)
+-- เพื่อความสั้น ผมใส่แค่ตัวอย่าง 1 ชุด คุณ copy ฟังก์ชัน applyOutfit อื่น ๆ มาต่อได้เลย
+
+local function applyOutfit1()
+    pcall(function()
+        game.ReplicatedStorage.CatalogGuiRemote:InvokeServer({ /* โค้ดชุด 1 ของคุณ */ })
+    end)
+    print("ใส่ชุด 1 แล้ว")
+end
+
+OutfitsTab:CreateButton({ Name = "ใส่ชุด 1", Callback = applyOutfit1 })
+
+-- เพิ่มปุ่มชุดอื่น ๆ ตามเดิม เช่น
+-- OutfitsTab:CreateButton({ Name = "ใส่ชุด 2", Callback = applyOutfit2 })
+-- OutfitsTab:CreateButton({ Name = "ใส่ชุด 4", Callback = applyOutfit4 })
+-- OutfitsTab:CreateButton({ Name = "ใส่ชุด 5", Callback = applyOutfit5 })
+
+OutfitsTab:CreateButton({
+    Name = "Reset Character (แก้บัคชุด)",
+    Callback = function()
+        if game.Players.LocalPlayer.Character then
+            game.Players.LocalPlayer.Character:BreakJoints()
+        end
+    end
+})
+
+-- =============================================
+-- Tab: Firefly
+-- =============================================
+local FireflyTab = Window:CreateTab({ Name = "Firefly", Icon = "rbxassetid://7072721035" })
+
+FireflyTab:CreateSection("Firefly Spawner")
+
+local fireflyCount = 100
+local stopActions = false
+
+local function spawnFireflies(amount)
+    local tool = game.Players.LocalPlayer.Backpack:FindFirstChild("Fireflies") or game.Players.LocalPlayer.Character:FindFirstChild("Fireflies")
+    if not tool then print("ไม่พบ Fireflies") return end
+    local remote = tool:FindFirstChild("RemoteEvent")
+    if not remote then print("ไม่พบ Remote") return end
+
+    stopActions = false
+    for i = 1, amount do
+        if stopActions then break end
+        pcall(function() remote:FireServer() end)
+        if i % 100 == 0 then task.wait() end
+    end
+end
+
+FireflyTab:CreateInput({
+    Name = "จำนวน Fireflies",
+    Placeholder = "เช่น 500",
+    Callback = function(text)
+        local n = tonumber(text)
+        if n and n > 0 then fireflyCount = n end
+    end
+})
+
+FireflyTab:CreateButton({
+    Name = "เสก Fireflies",
+    Callback = function() spawnFireflies(fireflyCount) end
+})
+
+FireflyTab:CreateButton({
+    Name = "หยุดเสก",
+    Callback = function() stopActions = true end
+})
+
+FireflyTab:CreateButton({
+    Name = "ล้าง Fireflies ทั้งหมด",
+    Callback = function()
+        local c = 0
+        for _, v in workspace:GetDescendants() do
+            if v.Name:lower():find("firefly") then v:Destroy() c += 1 end
+        end
+        print("ล้างแล้ว " .. c .. " ตัว")
+    end
+})
+
+-- =============================================
+-- Tab: Background
+-- =============================================
+local BgTab = Window:CreateTab({ Name = "Background", Icon = "rbxassetid://7072714792" })
+
+local bgGui
+
+local function SetupBackground()
+    -- copy ฟังก์ชัน setupBackground() เดิมของคุณมาที่นี่
+    -- แล้วเก็บไว้ใน bgGui
+end
+
+BgTab:CreateButton({
+    Name = "สร้าง/รีเซ็ตพื้นหลัง",
+    Callback = function()
+        if bgGui then bgGui:Destroy() end
+        bgGui = SetupBackground()
+    end
+})
+
+BgTab:CreateToggle({
+    Name = "แสดงพื้นหลัง",
+    Default = true,
+    Callback = function(v)
+        if bgGui then bgGui.Enabled = v end
+    end
+})
+
+print("Wind UI Hub โหลดเรียบร้อย - Bom's Style")
