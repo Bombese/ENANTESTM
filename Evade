@@ -456,8 +456,9 @@ end)
 -- =========================
 -- UI TOGGLES (HackTab ONLY)
 -- =========================
+HackTab:Section({ Title = "Auto Fram and revive" })
 HackTab:Toggle({
-    Title = "ออโต้ชุบเพื่อน",
+    Title = "Auto revive ",
     Desc = "ชุบผู้เล่นที่ล้มอัตโนมัติเมื่ออยู่ใกล้",
     Callback = function(state)
         autoReviveEnabled = state
