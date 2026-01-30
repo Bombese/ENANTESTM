@@ -19,7 +19,7 @@ local HackTab = Window:Tab({
     Title = "Hack",
     Icon = "zap",
 })
-
+HackTab:Section({ Title = "Player Settings" })
 local p = game.Players.LocalPlayer
 local RunService = game:GetService("RunService")
 
