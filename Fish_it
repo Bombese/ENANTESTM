@@ -1,7 +1,173 @@
-local Players = game:GetService("Players")
-local player = Players.LocalPlayer
+--// WindUI - ORIGINAL + Fishing Tab
+local WindUI = loadstring(game:HttpGet(
+    "https://github.com/Footagesus/WindUI/releases/latest/download/main.lua"
+))()
 
-local message = "Please wait, update"
+--// Create Window
+local Window = WindUI:CreateWindow({
+    Title = "Felon HUB : Fish it",
+    Icon = "monitor",
+    Author = "Fish it v0.25",
 
-task.wait(1) -- หน่วงนิดนึงกันเออเรอร์
-player:Kick(message)
+    OpenButton = {
+        Title = "Felon HUB",
+        Icon = "menu",
+        CornerRadius = UDim.new(0,16),
+        StrokeThickness = 2,
+        Enabled = true,
+        Draggable = true,
+    }
+})
+--// Fishing Tab
+local TabFishing = Window:Tab({
+    Title = "Fishing",
+    Icon = "fish"
+})
+
+TabFishing:Select()
+task.wait() -- สำคัญมากสำหรับ WindUI บางเวอร์ชัน
+
+TabFishing:Button({
+    Title = "Hold Fishing Rod",
+    Desc = "Equip fishing rod from hotbar",
+    Callback = function()
+        local args = {1}
+        game:GetService("ReplicatedStorage")
+            :WaitForChild("Packages")
+            :WaitForChild("_Index")
+            :WaitForChild("sleitnick_net@0.2.0")
+            :WaitForChild("net")
+            :WaitForChild("RE/EquipToolFromHotbar")
+            :FireServer(unpack(args))
+    end
+})
+TabFishing:Section({ Title = "Fishing Settings" })
+local AutoFishing = false
+
+TabFishing:Toggle({
+    Title = "Auto Fishing",
+    Desc = "Need Level 3",
+    Value = false,
+    Callback = function(v)
+        AutoFishing = v
+
+        local args = {
+            AutoFishing
+        }
+
+        game:GetService("ReplicatedStorage")
+            :WaitForChild("Packages")
+            :WaitForChild("_Index")
+            :WaitForChild("sleitnick_net@0.2.0")
+            :WaitForChild("net")
+            :WaitForChild("RF/UpdateAutoFishingState")
+            :InvokeServer(unpack(args))
+    end
+})
+getgenv().AutoFishEnabled = false
+
+TabFishing:Toggle({
+    Title = "Auto Fishing (Hack)",
+    Desc = "Auto fishing Script",
+    Default = false, -- เริ่มต้นปิด
+    Callback = function(state)
+        getgenv().AutoFishEnabled = state -- state = true/false จากการเลื่อนสวิตช์
+
+        if state then
+            print("Auto Fish: ON")
+            -- เริ่ม loop ตกปลา
+            spawn(function()
+                local ReplicatedStorage = game:GetService("ReplicatedStorage")
+                local net = ReplicatedStorage:WaitForChild("Packages")
+                    :WaitForChild("_Index")
+                    :WaitForChild("sleitnick_net@0.2.0")
+                    :WaitForChild("net")
+                
+                local fishingTime = 2.5 -- เวลาตกปลา 2 วิ
+
+                while getgenv().AutoFishEnabled do
+                    -- 1️⃣ เริ่มชาร์จเบ็ด
+                    pcall(function()
+                        net:WaitForChild("RF/ChargeFishingRod"):InvokeServer()
+                    end)
+
+                    -- 2️⃣ เริ่มมินิเกมตกปลา
+local args = {
+    -0.5718742609024048,
+    0.9868654702702968,
+    1767239549.336499
+}
+game:GetService("ReplicatedStorage")
+    :WaitForChild("Packages")
+    :WaitForChild("_Index")
+    :WaitForChild("sleitnick_net@0.2.0")
+    :WaitForChild("net")
+    :WaitForChild("RF/RequestFishingMinigameStarted")
+    :InvokeServer(unpack(args))
+
+                    -- 3️⃣ รอให้มินิเกมตกปลาเสร็จ
+                    wait(fishingTime)
+
+                    -- 4️⃣ จบมินิเกม
+                    pcall(function()
+                        net:WaitForChild("RE/FishingCompleted"):FireServer()
+                    end)
+
+                    wait(0.0000000000000001) -- เว้นก่อนรอบต่อไป
+                end
+            end)
+        else
+            print("Auto Fish: OFF")
+            -- เลื่อนปิด → loop จะหยุดเองเพราะ while ตรวจ getgenv().AutoFishEnabled
+        end
+    end
+})
+TabFishing:Section({ Title = "Sell and buy rods" })
+TabFishing:Button({
+    Title = "Sell All Items",
+    Desc = "Sell all items in inventory",
+    Callback = function()
+        game:GetService("ReplicatedStorage")
+            :WaitForChild("Packages")
+            :WaitForChild("_Index")
+            :WaitForChild("sleitnick_net@0.2.0")
+            :WaitForChild("net")
+            :WaitForChild("RF/SellAllItems")
+            :InvokeServer()
+    end
+})
+TabFishing:Button({
+    Title = "TP Buy Rods",
+    Desc = "Teleport to Rods Shop",
+    Callback = function()
+        local player = game:GetService("Players").LocalPlayer
+        local char = player.Character or player.CharacterAdded:Wait()
+        local hrp = char:WaitForChild("HumanoidRootPart")
+
+        hrp.CFrame = CFrame.new(145.23, 20.47, 2834.56)
+    end
+})
+local Function = Window:Tab({
+    Title = "Function",
+    Icon = "function"
+})
+Function:Section({ Title = "Function Setting " })
+Function:Button({
+    Title = "Oxygen inf",
+    Desc = "O2 Infinity",
+    Callback = function(v)
+        local ReplicatedStorage = game:GetService("ReplicatedStorage")
+        
+        -- RemoteFunction ใส่ Oxygen Tank
+        local EquipTank = ReplicatedStorage:WaitForChild("Packages")
+            :WaitForChild("_Index")
+            :WaitForChild("sleitnick_net@0.2.0")
+            :WaitForChild("net")
+            :WaitForChild("RF/EquipOxygenTank")
+        
+        -- ใส่ Oxygen Tank รหัส 105
+        pcall(function()
+            EquipTank:InvokeServer(105)
+        end)
+    end
+})
