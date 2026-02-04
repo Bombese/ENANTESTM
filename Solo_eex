@@ -113,94 +113,177 @@ Main:Button({
         startDungeon()
     end
 })
-Main:Toggle({
-    Title = "Auto Farm",
-    Desc = "Auto Farm mob",
-    Value = false,
-    Callback = function(v)
-local player = game.Players.LocalPlayer
+-- // Auto Farm ลอยเหนือมอนสเตอร์ + ติดตามตัวใกล้สุด
+-- // ใช้ BodyPosition เพื่อเคลื่อนที่แบบนุ่มนวล ไม่ใช่ CFrame teleport
+
+local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
+local player = Players.LocalPlayer
 
-local TOGGLE = false   -- จะถูก set จาก Toggle
-local HEIGHT_ABOVE = 10
-local MAX_DISTANCE = 500
+-- ตัวแปรควบคุม (global เพื่อให้ toggle เข้าถึงได้)
+getgenv().AutoFarmEnabled = false
+getgenv().FarmHeight = 10          -- ความสูงเหนือหัวมอน
+getgenv().MaxFarmDistance = 500    -- ระยะสูงสุดที่มองหามอน
 
+-- ตัวแปรสำหรับ BodyPosition
 local bodyPos = nil
 
-local function setupBodyMover()
+-- ฟังก์ชันสร้าง BodyPosition เมื่อต้องการ
+local function setupBodyMover(hrp)
     if bodyPos then return end
     
-    local char = player.Character
-    if not char then return end
-    
-    local hrp = char:FindFirstChild("HumanoidRootPart")
-    if not hrp then return end
-    
     bodyPos = Instance.new("BodyPosition")
-    bodyPos.MaxForce = Vector3.new(25000, 25000, 25000)
-    bodyPos.D = 1000
+    bodyPos.MaxForce = Vector3.new(40000, 40000, 40000)
     bodyPos.P = 15000
+    bodyPos.D = 1000
     bodyPos.Parent = hrp
 end
 
+-- ตรวจสอบว่าตัวเป็นมอนสเตอร์ที่ใช้งานได้จริงหรือไม่
 local function isValidMonster(model)
-    if not model:IsA("Model") then return false end
-    local hum = model:FindFirstChildWhichIsA("Humanoid")
-    if not hum then return false end
-    if hum.Health <= 0 then return false end
+    if not model or not model:IsA("Model") then return false end
+    
+    local humanoid = model:FindFirstChildWhichIsA("Humanoid")
+    if not humanoid then return false end
+    if humanoid.Health <= 0 then return false end
+    
+    -- ไม่ใช่ตัวเรา และไม่ใช่ผู้เล่นอื่น
     if model == player.Character then return false end
-    if game.Players:GetPlayerFromCharacter(model) then return false end
+    if Players:GetPlayerFromCharacter(model) then return false end
+    
     return true
 end
 
+-- หามอนสเตอร์ที่ใกล้ที่สุด
 local function getClosestMonster()
-    local char = player.Character
-    if not char then return nil end
-    local hrp = char:FindFirstChild("HumanoidRootPart")
+    local character = player.Character
+    if not character then return nil end
+    
+    local hrp = character:FindFirstChild("HumanoidRootPart")
     if not hrp then return nil end
     
     local closest = nil
-    local minDist = MAX_DISTANCE
+    local shortestDist = getgenv().MaxFarmDistance
 
-    for _, obj in pairs(workspace:GetChildren()) do   -- เปลี่ยนมาใช้ GetChildren + loop ลึกแค่จำเป็น
+    -- วนดูเฉพาะลูกใน Workspace (เร็วกว่า GetDescendants เยอะ)
+    for _, obj in ipairs(workspace:GetChildren()) do
         if isValidMonster(obj) then
-            local targetHRP = obj:FindFirstChild("HumanoidRootPart") or obj:FindFirstChild("Torso") or obj:FindFirstChild("UpperTorso")
+            local targetHRP = obj:FindFirstChild("HumanoidRootPart") 
+                             or obj:FindFirstChild("Torso") 
+                             or obj:FindFirstChild("UpperTorso")
+                             or obj:FindFirstChild("LowerTorso")
+            
             if targetHRP then
-                local dist = (hrp.Position - targetHRP.Position).Magnitude
-                if dist < minDist then
-                    minDist = dist
+                local distance = (hrp.Position - targetHRP.Position).Magnitude
+                if distance < shortestDist then
+                    shortestDist = distance
                     closest = targetHRP
                 end
             end
         end
     end
+    
     return closest
 end
 
--- ฟังก์ชันหลัก
-RunService.Heartbeat:Connect(function()   -- ใช้ Heartbeat แทน RenderStepped (เบากว่า)
-    if not TOGGLE then
+-- จัดการเมื่อตัวละครเกิดใหม่ (respawn)
+player.CharacterAdded:Connect(function(newChar)
+    task.wait(0.5) -- รอให้ตัวละครโหลดเสร็จ
+    
+    -- ล้าง BodyPosition เก่า
+    if bodyPos then
+        bodyPos:Destroy()
+        bodyPos = nil
+    end
+    
+    -- ถ้ากำลังเปิด Auto Farm ให้ตั้งค่าใหม่ทันที
+    if getgenv().AutoFarmEnabled then
+        local newHRP = newChar:WaitForChild("HumanoidRootPart", 5)
+        if newHRP then
+            setupBodyMover(newHRP)
+        end
+    end
+end)
+
+-- ระบบหลัก (ใช้ Heartbeat เพราะเบากว่า RenderStepped)
+RunService.Heartbeat:Connect(function()
+    if not getgenv().AutoFarmEnabled then
+        -- เมื่อปิด → คืนตำแหน่งให้ปกติ
         if bodyPos then
-            bodyPos.Position = player.Character.HumanoidRootPart.Position
+            local hrp = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
+            if hrp then
+                bodyPos.Position = hrp.Position
+            end
         end
         return
     end
 
-    local target = getClosestMonster()
-    local char = player.Character
-    local myHRP = char and char:FindFirstChild("HumanoidRootPart")
+    local character = player.Character
+    if not character then return end
+    
+    local hrp = character:FindFirstChild("HumanoidRootPart")
+    if not hrp then return end
 
-    if target and myHRP then
-        if not bodyPos or bodyPos.Parent ~= myHRP then
-            setupBodyMover()
+    local target = getClosestMonster()
+    
+    if target then
+        -- สร้าง BodyPosition ถ้ายังไม่มี
+        if not bodyPos or bodyPos.Parent ~= hrp then
+            setupBodyMover(hrp)
         end
         
-        local targetPos = target.Position + Vector3.new(0, HEIGHT_ABOVE, 0)
+        -- ตำแหน่งเป้าหมาย = เหนือหัวมอน
+        local targetPos = target.Position + Vector3.new(0, getgenv().FarmHeight, 0)
         bodyPos.Position = targetPos
     else
-        -- ถ้าไม่มีเป้า → ค่อย ๆ ลดแรง หรือปิด BodyPosition
+        -- ไม่มีมอน → อยู่กับที่
         if bodyPos then
-            bodyPos.Position = myHRP.Position
+            bodyPos.Position = hrp.Position
         end
     end
 end)
+
+-- =================================================
+--                ส่วน UI (ตัวอย่าง)
+-- =================================================
+-- เปลี่ยนส่วนนี้ให้ตรงกับ UI Library ที่คุณใช้จริง
+
+-- ตัวอย่างสมมติใช้ Fluxus / Orca / Shadow UI style
+-- ถ้าใช้ Kavo, Rayfield, Linoria ฯลฯ ให้ปรับตาม syntax ของแต่ละตัว
+
+Main:Toggle({
+    Title = "Auto Farm",
+    Desc = "ลอยเหนือมอนสเตอร์อัตโนมัติ",
+    Value = false,
+    Callback = function(value)
+        getgenv().AutoFarmEnabled = value
+        
+        if value then
+            print("[AutoFarm] เปิดแล้ว")
+            -- ถ้าต้องการแจ้งในเกม
+            -- game:GetService("StarterGui"):SetCore("SendNotification", {
+            --     Title = "Auto Farm", Text = "เปิดแล้ว", Duration = 3
+            -- })
+        else
+            print("[AutoFarm] ปิดแล้ว")
+            -- รีเซ็ตเมื่อปิด
+            if bodyPos then
+                bodyPos:Destroy()
+                bodyPos = nil
+            end
+        end
+    end
+})
+
+-- เพิ่ม Toggle ปรับความสูง (optional)
+Main:Slider({
+    Title = "ความสูงเหนือมอน",
+    Min = 5,
+    Max = 25,
+    Default = 10,
+    Callback = function(value)
+        getgenv().FarmHeight = value
+    end
+})
+
+print("Auto Farm Script Loaded!")
