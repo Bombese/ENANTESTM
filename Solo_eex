@@ -130,7 +130,7 @@ local FarmableMonsters = {
     "Jungle Monkey", "Cave Bat", "Giant Spider", "Orc", "High Orc", "Snow Yeti"
 }
 
-local lastWarpTime = 0  -- กันวาร์ปถี่เกิน
+local lastWarpTime = 3  -- กันวาร์ปถี่เกิน
 
 local function isValidMonster(model)
     if not model or not model:IsA("Model") then return false end
