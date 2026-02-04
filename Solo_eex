@@ -19,24 +19,26 @@ local Main = Window:Tab({
     Title = "Main",
     Icon = "Main",
 })
-local FeatureEnabled = false
-local FeatureThread = nil
+local VirtualUser = game:GetService("VirtualUser")
+local Player = game.Players.LocalPlayer
 
-local function StartFeature()
-    if FeatureThread then return end -- กันรันซ้ำ
+-- ฟังชั่นเริ่มกดรัวๆ
+_G.AutoClick = true -- เปลี่ยนเป็น false เพื่อหยุด
 
-    FeatureThread = task.spawn(function()
-        while FeatureEnabled do
-            print("Feature running...")
-            task.wait(0.5)
-        end
-    end)
-end
+spawn(function()
+    while _G.AutoClick do
+        -- จำลองการคลิกเมาส์ (Button1 = คลิกซ้าย)
+        VirtualUser:CaptureController()
+        VirtualUser:ClickButton1(Vector2.new(0, 0)) 
+        
+        -- ตั้งเวลาหน่วง (0.1 คือ 10 ครั้งต่อวินาที)
+        -- แนะนำให้ใช้สุ่มเวลาเล็กน้อยเพื่อป้องกันการตรวจจับ
+        wait(0.1 + math.random() * 0.05) 
+    end
+end)
 
-local function StopFeature()
-    FeatureEnabled = false
-    FeatureThread = nil
-end
+print("Auto Clicker Started!")
+
 Main:Toggle({
     Title = "Auto Attack ",
     Desc = "Auto hit (Sword)",
