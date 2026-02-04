@@ -113,29 +113,24 @@ Main:Button({
         startDungeon()
     end
 })
+-- // Auto Farm Warp/Teleport to Monster (เฉพาะมอนปกติ)
+-- // ใช้ CFrame วาร์ปตรง ๆ + delay เล็กน้อยเพื่อไม่ให้เตะ
+
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local player = Players.LocalPlayer
 
 getgenv().AutoFarmEnabled = false
-getgenv().FarmHeight = 10
-getgenv().MaxFarmDistance = 500
+getgenv().FarmHeight = 10          -- ความสูงเหนือหัวมอนตอนวาร์ป
+getgenv().MaxFarmDistance = 500    -- ระยะสูงสุด
+getgenv().WarpDelay = 0.3          -- เวลาระหว่างวาร์ป (ป้องกันเตะ) ยิ่งน้อยยิ่งเร็วแต่เสี่ยง
 
 local FarmableMonsters = {
     "Goblin", "Zombie", "Desert Scorpion", "Sand Warrior", "Forest Bear",
     "Jungle Monkey", "Cave Bat", "Giant Spider", "Orc", "High Orc", "Snow Yeti"
 }
 
-local bodyPos = nil
-
-local function setupBodyMover(hrp)
-    if bodyPos then return end
-    bodyPos = Instance.new("BodyPosition")
-    bodyPos.MaxForce = Vector3.new(40000, 40000, 40000)
-    bodyPos.P = 15000
-    bodyPos.D = 1000
-    bodyPos.Parent = hrp
-end
+local lastWarpTime = 0  -- กันวาร์ปถี่เกิน
 
 local function isValidMonster(model)
     if not model or not model:IsA("Model") then return false end
@@ -147,7 +142,6 @@ local function isValidMonster(model)
     
     local modelName = model.Name:lower()
     
-    -- เช็คชื่อในลิสต์ที่ต้องการฟาร์ม
     for _, name in ipairs(FarmableMonsters) do
         if modelName:find(name:lower()) then
             return true
@@ -167,7 +161,11 @@ local function getClosestMonster()
     
     for _, obj in ipairs(workspace:GetChildren()) do
         if isValidMonster(obj) then
-            local targetHRP = obj:FindFirstChild("HumanoidRootPart") or obj:FindFirstChild("Torso") or obj:FindFirstChild("UpperTorso")
+            local targetHRP = obj:FindFirstChild("HumanoidRootPart") 
+                             or obj:FindFirstChild("Torso") 
+                             or obj:FindFirstChild("UpperTorso")
+                             or obj:FindFirstChild("PrimaryPart")
+            
             if targetHRP then
                 local dist = (hrp.Position - targetHRP.Position).Magnitude
                 if dist < shortestDist then
@@ -180,52 +178,74 @@ local function getClosestMonster()
     return closest
 end
 
+-- จัดการตัวละครเกิดใหม่
 player.CharacterAdded:Connect(function(newChar)
-    task.wait(0.5)
-    if bodyPos then bodyPos:Destroy() bodyPos = nil end
-    if getgenv().AutoFarmEnabled then
-        local newHRP = newChar:WaitForChild("HumanoidRootPart", 5)
-        if newHRP then setupBodyMover(newHRP) end
-    end
+    task.wait(1)  -- รอโหลด
+    print("[AutoFarm] ตัวละครเกิดใหม่แล้ว")
 end)
 
+-- ระบบหลัก: วาร์ปแทนลอย
 RunService.Heartbeat:Connect(function()
-    if not getgenv().AutoFarmEnabled then
-        if bodyPos then
-            local hrp = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
-            if hrp then bodyPos.Position = hrp.Position end
-        end
-        return
-    end
-
-    local hrp = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
+    if not getgenv().AutoFarmEnabled then return end
+    
+    local character = player.Character
+    if not character then return end
+    
+    local hrp = character:FindFirstChild("HumanoidRootPart")
     if not hrp then return end
-
+    
+    -- เช็ค cooldown เพื่อไม่ให้วาร์ปถี่เกิน (ป้องกันเตะ)
+    if tick() - lastWarpTime < getgenv().WarpDelay then return end
+    
     local target = getClosestMonster()
     
     if target then
-        if not bodyPos or bodyPos.Parent ~= hrp then
-            setupBodyMover(hrp)
-        end
-        bodyPos.Position = target.Position + Vector3.new(0, getgenv().FarmHeight, 0)
-    elseif bodyPos then
-        bodyPos.Position = hrp.Position
+        local targetPos = target.Position + Vector3.new(0, getgenv().FarmHeight, 0)
+        
+        -- วาร์ปตรง ๆ
+        hrp.CFrame = CFrame.new(targetPos) * CFrame.Angles(0, math.rad(math.random(-30, 30)), 0)  -- หมุนเล็กน้อยให้ดูธรรมชาติ
+        
+        lastWarpTime = tick()
+        
+        -- print debug (ลบได้ถ้าไม่ต้องการ)
+        -- print("วาร์ปไปมอน: " .. target.Parent.Name .. " ที่ " .. tostring(targetPos))
     end
 end)
 
--- ส่วน UI (ปรับตาม library ของคุณ)
+-- ส่วน UI (ปรับตาม library ของคุณ เช่น Fluxus/Orca/Kavo)
 Main:Toggle({
-    Title = "Auto Farm Mob",
-    Desc = "ฟาร์มเฉพาะมอนปกติ (Goblin, Zombie, etc.)",
+    Title = "Auto Farm (Warp Mode)",
+    Desc = "วาร์ปไปหามอนอัตโนมัติ (เร็ว + เสถียร)",
     Value = false,
     Callback = function(value)
         getgenv().AutoFarmEnabled = value
-        if not value and bodyPos then
-            bodyPos:Destroy()
-            bodyPos = nil
+        if value then
+            print("[AutoFarm Warp] เปิดแล้ว - วาร์ปไปมอนทันที")
+        else
+            print("[AutoFarm Warp] ปิดแล้ว")
         end
-        print("Auto Farm: " .. (value and "เปิด" or "ปิด"))
     end
 })
 
-print("Auto Farm (เฉพาะมอนปกติ) Loaded!")
+-- Slider ปรับความสูง + ความเร็ววาร์ป (optional)
+Main:Slider({
+    Title = "ความสูงเหนือมอน",
+    Min = 5,
+    Max = 20,
+    Default = 10,
+    Callback = function(v)
+        getgenv().FarmHeight = v
+    end
+})
+
+Main:Slider({
+    Title = "Delay ระหว่างวาร์ป (วินาที)",
+    Min = 0.1,
+    Max = 1,
+    Default = 0.3,
+    Callback = function(v)
+        getgenv().WarpDelay = v
+    end
+})
+
+print("Auto Farm Warp Mode Loaded! (กด Toggle เพื่อเริ่ม)")
