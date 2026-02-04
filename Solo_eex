@@ -113,64 +113,46 @@ Main:Button({
         startDungeon()
     end
 })
--- // Auto Farm Warp/Teleport to Monster (เฉพาะมอนปกติ)
--- // ใช้ CFrame วาร์ปตรง ๆ + delay เล็กน้อยเพื่อไม่ให้เตะ
-
 local Players = game:GetService("Players")
-local RunService = game:GetService("RunService")
 local player = Players.LocalPlayer
-
 getgenv().AutoFarmEnabled = false
-getgenv().FarmHeight = 10          -- ความสูงเหนือหัวมอนตอนวาร์ป
-getgenv().MaxFarmDistance = 500    -- ระยะสูงสุด
-getgenv().WarpDelay = 1          -- เวลาระหว่างวาร์ป (ป้องกันเตะ) ยิ่งน้อยยิ่งเร็วแต่เสี่ยง
+getgenv().FarmHeight = 10
+getgenv().WarpDelay = 0.3
+getgenv().MaxFarmDistance = 1000
 
+local lastWarpTime = 0
 local FarmableMonsters = {
     "Goblin", "Zombie", "Desert Scorpion", "Sand Warrior", "Forest Bear",
     "Jungle Monkey", "Cave Bat", "Giant Spider", "Orc", "High Orc", "Snow Yeti"
 }
 
-local lastWarpTime = 1  -- กันวาร์ปถี่เกิน
-
-local function isValidMonster(model)
-    if not model or not model:IsA("Model") then return false end
-    
-    local humanoid = model:FindFirstChildWhichIsA("Humanoid")
-    if not humanoid or humanoid.Health <= 0 then return false end
-    
-    if model == player.Character or Players:GetPlayerFromCharacter(model) then return false end
-    
-    local modelName = model.Name:lower()
-    
-    for _, name in ipairs(FarmableMonsters) do
-        if modelName:find(name:lower()) then
-            return true
-        end
-    end
-    
-    return false
-end
-
+-- // logic หาตัวละคร //
 local function getClosestMonster()
     local character = player.Character
-    if not character then return nil end
-    local hrp = character:FindFirstChild("HumanoidRootPart")
+    local hrp = character and character:FindFirstChild("HumanoidRootPart")
     if not hrp then return nil end
     
     local closest, shortestDist = nil, getgenv().MaxFarmDistance
     
     for _, obj in ipairs(workspace:GetChildren()) do
-        if isValidMonster(obj) then
-            local targetHRP = obj:FindFirstChild("HumanoidRootPart") 
-                             or obj:FindFirstChild("Torso") 
-                             or obj:FindFirstChild("UpperTorso")
-                             or obj:FindFirstChild("PrimaryPart")
+        local humanoid = obj:FindFirstChildOfClass("Humanoid")
+        if obj:IsA("Model") and humanoid and humanoid.Health > 0 then
+            local isTarget = false
+            for _, name in ipairs(FarmableMonsters) do
+                if obj.Name:lower():find(name:lower()) then
+                    isTarget = true
+                    break
+                end
+            end
             
-            if targetHRP then
-                local dist = (hrp.Position - targetHRP.Position).Magnitude
-                if dist < shortestDist then
-                    shortestDist = dist
-                    closest = targetHRP
+            if isTarget then
+                local targetHRP = obj.PrimaryPart or obj:FindFirstChild("HumanoidRootPart")
+                if targetHRP then
+                    local dist = (hrp.Position - targetHRP.Position).Magnitude
+                    if dist < shortestDist then
+                        shortestDist = dist
+                        closest = targetHRP
+                    end
                 end
             end
         end
@@ -178,76 +160,53 @@ local function getClosestMonster()
     return closest
 end
 
--- จัดการตัวละครเกิดใหม่
-player.CharacterAdded:Connect(function(newChar)
-    task.wait(1)  -- รอโหลด
-    print("[AutoFarm] ตัวละครเกิดใหม่แล้ว")
-end)
-
--- ระบบหลัก: วาร์ปแทนลอย
-RunService.Heartbeat:Connect(function()
-    if not getgenv().AutoFarmEnabled then return end
-    
-    local character = player.Character
-    if not character then return end
-    
-    local hrp = character:FindFirstChild("HumanoidRootPart")
-    if not hrp then return end
-    
-    -- เช็ค cooldown เพื่อไม่ให้วาร์ปถี่เกิน (ป้องกันเตะ)
-    if tick() - lastWarpTime < getgenv().WarpDelay then return end
-    
-    local target = getClosestMonster()
-    
-    if target then
-        local targetPos = target.Position + Vector3.new(0, getgenv().FarmHeight, 0)
-        
-        -- วาร์ปตรง ๆ
-        hrp.CFrame = CFrame.new(targetPos) * CFrame.Angles(0, math.rad(math.random(-30, 30)), 0)  -- หมุนเล็กน้อยให้ดูธรรมชาติ
-        
-        lastWarpTime = tick()
-        
-        -- print debug (ลบได้ถ้าไม่ต้องการ)
-        -- print("วาร์ปไปมอน: " .. target.Parent.Name .. " ที่ " .. tostring(targetPos))
-    end
-end)
-
--- ส่วน UI (ปรับตาม library ของคุณ เช่น Fluxus/Orca/Kavo)
-Main:Toggle({
-    Title = "Auto Farm (Warp Mode)",
-    Desc = "วาร์ปไปหามอนอัตโนมัติ (เร็ว + เสถียร)",
-    Value = false,
-    Callback = function(value)
-        getgenv().AutoFarmEnabled = value
-        if value then
-            print("[AutoFarm Warp] เปิดแล้ว - วาร์ปไปมอนทันที")
-        else
-            print("[AutoFarm Warp] ปิดแล้ว")
+-- // Main Loop //
+task.spawn(function()
+    while task.wait(0.1) do
+        if getgenv().AutoFarmEnabled then
+            local character = player.Character
+            local hrp = character and character:FindFirstChild("HumanoidRootPart")
+            
+            if hrp and (tick() - lastWarpTime >= getgenv().WarpDelay) then
+                local target = getClosestMonster()
+                if target then
+                    hrp.CFrame = CFrame.new(target.Position + Vector3.new(0, getgenv().FarmHeight, 0))
+                    lastWarpTime = tick()
+                end
+            end
         end
     end
+end)
+
+Main:Toggle({
+    Title = "Auto Farm (Warp)",
+    Desc = "วาร์ปไปหามอนสเตอร์อัตโนมัติ",
+    Value = false,
+    Callback = function(state)
+        getgenv().AutoFarmEnabled = state
+    end
 })
--- ค่าเริ่มต้นกัน Slider ไม่ยิง Callback
-getgenv().FarmHeight = 10
-getgenv().WarpDelay = 1
 
 Main:Slider({
-    Title = "ความสูงเหนือมอน",
+    Title = "Warp Delay",
+    Desc = "ระยะเวลาดีเลย์ (ค่าน้อย = เร็ว)",
+    Min = 0.1,
+    Max = 2,
+    Step = 0.1,
+    Value = 0.3,
+    Callback = function(v)
+        getgenv().WarpDelay = v
+    end
+})
+
+MainTab:Slider({
+    Title = "Farm Height",
+    Desc = "ความสูงเหนือหัวมอนสเตอร์",
     Min = 5,
-    Max = 20,
-    Default = 10,
+    Max = 30,
+    Step = 1,
+    Value = 10,
     Callback = function(v)
         getgenv().FarmHeight = v
     end
 })
-
-Main:Slider({
-    Title = "Delay ระหว่างวาร์ป (วินาที)",
-    Min = 0.1,
-    Max = 1,
-    Default = 0.3,
-    Callback = function(v)
-        getgenv().WarpDelay = math.clamp(v,0.15,1)
-    end
-})
-
-print("Auto Farm Warp Mode Loaded!")
