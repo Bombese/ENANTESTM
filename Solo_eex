@@ -82,3 +82,31 @@ Main:Button({
         _G.RequestingQuest = false
     end
 })
+Main:Button({
+    Title = "Auto Start dungeon ",
+    Desc = "Start the dungeon ",
+    Callback = function()
+-- Services
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+-- Paths
+local RemoteServices = ReplicatedStorage:WaitForChild("RemoteServices")
+local DungeonService = RemoteServices:WaitForChild("DungeonService")
+local RF = DungeonService:WaitForChild("RF")
+local StartDungeon = RF:WaitForChild("StartDungeon") -- RemoteFunction
+
+-- Function เรียกดันเจี้ยน
+local function startDungeon()
+    local success, result = pcall(function()
+        return StartDungeon:InvokeServer()
+    end)
+
+    if success then
+        print("StartDungeon success:", result)
+    else
+        warn("StartDungeon error:", result)
+    end
+end
+
+-- เรียกใช้งาน
+startDungeon()
