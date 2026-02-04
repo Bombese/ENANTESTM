@@ -164,18 +164,9 @@ local function getClosestMonster()
     return closest
 end
 
--- [3] UI Settings (Wind UI)
-local WindUI = loadstring(game:HttpGet("https://tree-hub.vercel.app/api/UI/WindUI"))()
-local Window = WindUI:CreateWindow({
-    Title = "Gemini Warp Farm",
-    Icon = "rbxassetid://10734923210",
-    Author = "Gemini AI",
-    Folder = "WarpFarmConfig"
-})
+local Main = Window:Tab({ Title = "Main", Icon = "rbxassetid://10734923210" })
 
-local MainTab = Window:Tab({ Title = "Main", Icon = "rbxassetid://10734923210" })
-
-MainTab:Toggle({
+Main:Toggle({
     Title = "Auto Farm (Warp Mode)",
     Desc = "วาร์ปไปเหนือหัวมอนสเตอร์อัตโนมัติ",
     Value = false,
@@ -184,7 +175,7 @@ MainTab:Toggle({
     end
 })
 
-MainTab:Slider({
+Main:Slider({
     Title = "Warp Height",
     Desc = "ระยะความสูงเหนือมอนเตอร์ (ตอนนี้คือ 5)",
     Min = 0,
@@ -196,7 +187,7 @@ MainTab:Slider({
     end
 })
 
-MainTab:Slider({
+Main:Slider({
     Title = "Warp Speed (Delay)",
     Desc = "ยิ่งน้อยยิ่งวาร์ปไว",
     Min = 0.1,
