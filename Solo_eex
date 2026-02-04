@@ -114,71 +114,93 @@ Main:Button({
     end
 })
 Main:Toggle({
-    Title = "Auto Attack",
-    Desc = "Auto hit (Sword)",
+    Title = "Auto Farm",
+    Desc = "Auto Farm mob",
     Value = false,
     Callback = function(v)
 local player = game.Players.LocalPlayer
-local runService = game:GetService("RunService")
+local RunService = game:GetService("RunService")
 
--- การตั้งค่า
+local TOGGLE = false   -- จะถูก set จาก Toggle
+local HEIGHT_ABOVE = 10
 local MAX_DISTANCE = 500
-local HEIGHT_ABOVE = 10 
 
--- สร้างแรงยกเพื่อให้นิ่ง (BodyVelocity)
-local bv = Instance.new("BodyVelocity")
-bv.MaxForce = Vector3.new(math.huge, math.huge, math.huge) -- ใช้แรงมหาศาลเพื่อสู้กับแรงโน้มถ่วง
-bv.Velocity = Vector3.new(0, 0, 0) -- ล็อคความเร็วเป็น 0 เพื่อให้นิ่งสนิท
+local bodyPos = nil
 
-function isMonster(model)
-    if model:IsA("Model") and model:FindFirstChild("Humanoid") and model ~= player.Character then
-        if not game.Players:GetPlayerFromCharacter(model) then
-            return true
-        end
-    end
-    return false
+local function setupBodyMover()
+    if bodyPos then return end
+    
+    local char = player.Character
+    if not char then return end
+    
+    local hrp = char:FindFirstChild("HumanoidRootPart")
+    if not hrp then return end
+    
+    bodyPos = Instance.new("BodyPosition")
+    bodyPos.MaxForce = Vector3.new(25000, 25000, 25000)
+    bodyPos.D = 1000
+    bodyPos.P = 15000
+    bodyPos.Parent = hrp
 end
 
-function getClosestMonster()
-    local closestTarget = nil
-    local shortestDistance = MAX_DISTANCE
-    local myHRP = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
+local function isValidMonster(model)
+    if not model:IsA("Model") then return false end
+    local hum = model:FindFirstChildWhichIsA("Humanoid")
+    if not hum then return false end
+    if hum.Health <= 0 then return false end
+    if model == player.Character then return false end
+    if game.Players:GetPlayerFromCharacter(model) then return false end
+    return true
+end
 
-    if not myHRP then return nil end
+local function getClosestMonster()
+    local char = player.Character
+    if not char then return nil end
+    local hrp = char:FindFirstChild("HumanoidRootPart")
+    if not hrp then return nil end
+    
+    local closest = nil
+    local minDist = MAX_DISTANCE
 
-    for _, obj in pairs(game.Workspace:GetDescendants()) do
-        if isMonster(obj) then
-            local targetHRP = obj:FindFirstChild("HumanoidRootPart")
+    for _, obj in pairs(workspace:GetChildren()) do   -- เปลี่ยนมาใช้ GetChildren + loop ลึกแค่จำเป็น
+        if isValidMonster(obj) then
+            local targetHRP = obj:FindFirstChild("HumanoidRootPart") or obj:FindFirstChild("Torso") or obj:FindFirstChild("UpperTorso")
             if targetHRP then
-                local distance = (myHRP.Position - targetHRP.Position).Magnitude
-                if distance <= shortestDistance then
-                    closestTarget = targetHRP
-                    shortestDistance = distance
+                local dist = (hrp.Position - targetHRP.Position).Magnitude
+                if dist < minDist then
+                    minDist = dist
+                    closest = targetHRP
                 end
             end
         end
     end
-    return closestTarget
+    return closest
 end
 
--- ฟังก์ชันที่ทำให้ลอยนิ่ง
-runService.RenderStepped:Connect(function()
+-- ฟังก์ชันหลัก
+RunService.Heartbeat:Connect(function()   -- ใช้ Heartbeat แทน RenderStepped (เบากว่า)
+    if not TOGGLE then
+        if bodyPos then
+            bodyPos.Position = player.Character.HumanoidRootPart.Position
+        end
+        return
+    end
+
     local target = getClosestMonster()
-    local character = player.Character
-    local myHRP = character and character:FindFirstChild("HumanoidRootPart")
+    local char = player.Character
+    local myHRP = char and char:FindFirstChild("HumanoidRootPart")
 
     if target and myHRP then
-        -- ใส่ BodyVelocity เข้าไปในตัวถ้ายังไม่มี
-        if bv.Parent ~= myHRP then
-            bv.Parent = myHRP
+        if not bodyPos or bodyPos.Parent ~= myHRP then
+            setupBodyMover()
         end
-
-        -- วาร์ปไปตำแหน่งเหนือหัว
-        local targetPos = target.Position
-        myHRP.CFrame = CFrame.new(targetPos.X, targetPos.Y + HEIGHT_ABOVE, targetPos.Z)
+        
+        local targetPos = target.Position + Vector3.new(0, HEIGHT_ABOVE, 0)
+        bodyPos.Position = targetPos
     else
-        -- ถ้าไม่มีมอนสเตอร์ ให้เอาแรงยกออกเพื่อให้ตกลงมาปกติ (หรือจะให้ลอยค้างไว้ก็ได้)
-        bv.Parent = nil
+        -- ถ้าไม่มีเป้า → ค่อย ๆ ลดแรง หรือปิด BodyPosition
+        if bodyPos then
+            bodyPos.Position = myHRP.Position
+        end
     end
 end)
-)}
