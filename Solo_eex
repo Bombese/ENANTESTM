@@ -37,3 +37,9 @@ local function StopFeature()
     FeatureEnabled = false
     FeatureThread = nil
 end
+Main:Toggle({
+    Title = "Auto Attack ",
+    Desc = "Auto hit (Sword)",
+    Value = false,
+    Callback = function(v)
+        if v then
