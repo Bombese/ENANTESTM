@@ -19,3 +19,21 @@ local Main = Window:Tab({
     Title = "Main",
     Icon = "Main",
 })
+local FeatureEnabled = false
+local FeatureThread = nil
+
+local function StartFeature()
+    if FeatureThread then return end -- กันรันซ้ำ
+
+    FeatureThread = task.spawn(function()
+        while FeatureEnabled do
+            print("Feature running...")
+            task.wait(0.5)
+        end
+    end)
+end
+
+local function StopFeature()
+    FeatureEnabled = false
+    FeatureThread = nil
+end
