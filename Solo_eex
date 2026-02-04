@@ -51,3 +51,34 @@ Main:Toggle({
         end
     end
 })
+Main:Button({
+    Title = "Auto Quest",
+    Desc = "Auto Task",
+    Callback = function()
+        local questName = "Subway" -- เปลี่ยนชื่อเควสตรงนี้จุดเดียวพอ
+
+        local rs = game:GetService("ReplicatedStorage")
+        local questRF = rs:WaitForChild("RemoteServices")
+            :WaitForChild("QuestsV2Service")
+            :WaitForChild("RF")
+            :WaitForChild("RequestQuest")
+
+        -- กันกดรัว
+        if _G.RequestingQuest then return end
+        _G.RequestingQuest = true
+
+        -- ยิงแบบกันพัง
+        local success, result = pcall(function()
+            return questRF:InvokeServer(questName)
+        end)
+
+        if success then
+            print("รับเควสสำเร็จ:", result)
+        else
+            warn("รับเควสไม่สำเร็จ:", result)
+        end
+
+        task.wait(1)
+        _G.RequestingQuest = false
+    end
+})
