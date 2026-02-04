@@ -15,39 +15,39 @@ local Window = WindUI:CreateWindow({
         Draggable = true,
     }
 })
+
 local Main = Window:Tab({
     Title = "Main",
-    Icon = "Main",
+    Icon = "home", -- เปลี่ยน Icon เป็นชื่อที่ Library รองรับ
 })
+
 local VirtualUser = game:GetService("VirtualUser")
-local Player = game.Players.LocalPlayer
+_G.AutoClick = false -- ตั้งต้นให้เป็น false ไว้ก่อน
 
--- ฟังชั่นเริ่มกดรัวๆ
-_G.AutoClick = true -- เปลี่ยนเป็น false เพื่อหยุด
-
-spawn(function()
-    while _G.AutoClick do
-        -- จำลองการคลิกเมาส์ (Button1 = คลิกซ้าย)
-        VirtualUser:CaptureController()
-        VirtualUser:ClickButton1(Vector2.new(0, 0)) 
-        
-        -- ตั้งเวลาหน่วง (0.1 คือ 10 ครั้งต่อวินาที)
-        -- แนะนำให้ใช้สุ่มเวลาเล็กน้อยเพื่อป้องกันการตรวจจับ
-        wait(0.1 + math.random() * 0.05) 
-    end
-end)
-
-print("Auto Clicker Started!")
+-- ฟังก์ชันสำหรับคลิก
+local function DoClick()
+    task.spawn(function()
+        while _G.AutoClick do
+            pcall(function()
+                VirtualUser:CaptureController()
+                VirtualUser:ClickButton1(Vector2.new(0, 0))
+            end)
+            task.wait(0.1) -- ความเร็วในการกด
+        end
+    end)
+end
 
 Main:Toggle({
-    Title = "Auto Attack ",
+    Title = "Auto Attack",
     Desc = "Auto hit (Sword)",
     Value = false,
     Callback = function(v)
+        _G.AutoClick = v -- กำหนดค่าตามปุ่ม Toggle (true หรือ false)
         if v then
-           StartFeature()
+            DoClick() -- ถ้าเปิด ให้เริ่มทำงาน
+            print("Auto Clicker: ON")
         else
-            StopFeature()
+            print("Auto Clicker: OFF")
         end
     end
 })
