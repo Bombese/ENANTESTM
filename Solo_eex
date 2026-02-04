@@ -113,3 +113,72 @@ Main:Button({
         startDungeon()
     end
 })
+Main:Toggle({
+    Title = "Auto Attack",
+    Desc = "Auto hit (Sword)",
+    Value = false,
+    Callback = function(v)
+local player = game.Players.LocalPlayer
+local runService = game:GetService("RunService")
+
+-- การตั้งค่า
+local MAX_DISTANCE = 500
+local HEIGHT_ABOVE = 10 
+
+-- สร้างแรงยกเพื่อให้นิ่ง (BodyVelocity)
+local bv = Instance.new("BodyVelocity")
+bv.MaxForce = Vector3.new(math.huge, math.huge, math.huge) -- ใช้แรงมหาศาลเพื่อสู้กับแรงโน้มถ่วง
+bv.Velocity = Vector3.new(0, 0, 0) -- ล็อคความเร็วเป็น 0 เพื่อให้นิ่งสนิท
+
+function isMonster(model)
+    if model:IsA("Model") and model:FindFirstChild("Humanoid") and model ~= player.Character then
+        if not game.Players:GetPlayerFromCharacter(model) then
+            return true
+        end
+    end
+    return false
+end
+
+function getClosestMonster()
+    local closestTarget = nil
+    local shortestDistance = MAX_DISTANCE
+    local myHRP = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
+
+    if not myHRP then return nil end
+
+    for _, obj in pairs(game.Workspace:GetDescendants()) do
+        if isMonster(obj) then
+            local targetHRP = obj:FindFirstChild("HumanoidRootPart")
+            if targetHRP then
+                local distance = (myHRP.Position - targetHRP.Position).Magnitude
+                if distance <= shortestDistance then
+                    closestTarget = targetHRP
+                    shortestDistance = distance
+                end
+            end
+        end
+    end
+    return closestTarget
+end
+
+-- ฟังก์ชันที่ทำให้ลอยนิ่ง
+runService.RenderStepped:Connect(function()
+    local target = getClosestMonster()
+    local character = player.Character
+    local myHRP = character and character:FindFirstChild("HumanoidRootPart")
+
+    if target and myHRP then
+        -- ใส่ BodyVelocity เข้าไปในตัวถ้ายังไม่มี
+        if bv.Parent ~= myHRP then
+            bv.Parent = myHRP
+        end
+
+        -- วาร์ปไปตำแหน่งเหนือหัว
+        local targetPos = target.Position
+        myHRP.CFrame = CFrame.new(targetPos.X, targetPos.Y + HEIGHT_ABOVE, targetPos.Z)
+    else
+        -- ถ้าไม่มีมอนสเตอร์ ให้เอาแรงยกออกเพื่อให้ตกลงมาปกติ (หรือจะให้ลอยค้างไว้ก็ได้)
+        bv.Parent = nil
+    end
+end)
+)}
