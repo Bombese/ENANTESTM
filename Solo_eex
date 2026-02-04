@@ -43,3 +43,9 @@ Main:Toggle({
     Value = false,
     Callback = function(v)
         if v then
+           StartFeature()
+        else
+            StopFeature()
+        end
+    end
+})
