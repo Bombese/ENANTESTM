@@ -63,12 +63,6 @@ task.spawn(function()
     end
 end)
 
--- // UI Tabs //
-local Main = Window:Tab({
-    Title = "Main Farm",
-    Icon = "rbxassetid://10734923210"
-})
-
 Main:Toggle({
     Title = "Auto Farm (Warp)",
     Desc = "วาร์ปไปหามอนสเตอร์อัตโนมัติ",
