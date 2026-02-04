@@ -123,14 +123,14 @@ local player = Players.LocalPlayer
 getgenv().AutoFarmEnabled = false
 getgenv().FarmHeight = 10          -- ความสูงเหนือหัวมอนตอนวาร์ป
 getgenv().MaxFarmDistance = 500    -- ระยะสูงสุด
-getgenv().WarpDelay = 0.3          -- เวลาระหว่างวาร์ป (ป้องกันเตะ) ยิ่งน้อยยิ่งเร็วแต่เสี่ยง
+getgenv().WarpDelay = 1          -- เวลาระหว่างวาร์ป (ป้องกันเตะ) ยิ่งน้อยยิ่งเร็วแต่เสี่ยง
 
 local FarmableMonsters = {
     "Goblin", "Zombie", "Desert Scorpion", "Sand Warrior", "Forest Bear",
     "Jungle Monkey", "Cave Bat", "Giant Spider", "Orc", "High Orc", "Snow Yeti"
 }
 
-local lastWarpTime = 3  -- กันวาร์ปถี่เกิน
+local lastWarpTime = 1  -- กันวาร์ปถี่เกิน
 
 local function isValidMonster(model)
     if not model or not model:IsA("Model") then return false end
@@ -228,7 +228,7 @@ Main:Toggle({
 })
 -- ค่าเริ่มต้นกัน Slider ไม่ยิง Callback
 getgenv().FarmHeight = 10
-getgenv().WarpDelay = 0.3
+getgenv().WarpDelay = 1
 
 Main:Slider({
     Title = "ความสูงเหนือมอน",
