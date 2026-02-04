@@ -226,8 +226,10 @@ Main:Toggle({
         end
     end
 })
+-- ค่าเริ่มต้นกัน Slider ไม่ยิง Callback
+getgenv().FarmHeight = 10
+getgenv().WarpDelay = 0.3
 
--- Slider ปรับความสูง + ความเร็ววาร์ป (optional)
 Main:Slider({
     Title = "ความสูงเหนือมอน",
     Min = 5,
@@ -244,8 +246,8 @@ Main:Slider({
     Max = 1,
     Default = 0.3,
     Callback = function(v)
-        getgenv().WarpDelay = v
+        getgenv().WarpDelay = math.clamp(v,0.15,1)
     end
 })
 
-print("Auto Farm Warp Mode Loaded! (กด Toggle เพื่อเริ่ม)")
+print("Auto Farm Warp Mode Loaded!")
