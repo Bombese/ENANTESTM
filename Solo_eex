@@ -113,121 +113,69 @@ Main:Button({
         startDungeon()
     end
 })
--- [1] Services & Global Variables
-local Players = game:GetService("Players")
-local TeleportService = game:GetService("TeleportService")
-local player = Players.LocalPlayer
+Main:Toggle({
+    Title = "Auto Farm",
+    Desc = "Auto Farm mob",
+    Value = false,
+    Callback = function(v)
+        _G.AutoFarm = v -- กำหนดสถานะเปิด/ปิดผ่าน Global Variable
 
-getgenv().AutoFarmEnabled = false
-getgenv().FarmHeight = 5
-getgenv().WarpDelay = 0.3
-getgenv().MaxDistance = 1000
+        local player = game.Players.LocalPlayer
+        local runService = game:GetService("RunService")
 
--- รายชื่อมอนสเตอร์ (แก้ไขเพิ่ม/ลดได้ที่นี่)
-local FarmableMonsters = {
-    "Goblin", "Zombie", "Desert Scorpion", "Sand Warrior", "Forest Bear",
-    "Jungle Monkey", "Cave Bat", "Giant Spider", "Orc", "High Orc", "Snow Yeti"
-}
+        -- การตั้งค่า
+        local MAX_DISTANCE = 500
+        local HEIGHT_ABOVE = 10 
 
--- [2] Functions (ต้องอยู่ด้านบนของ Loop เสมอ)
-local function getClosestMonster()
-    local character = player.Character
-    local hrp = character and character:FindFirstChild("HumanoidRootPart")
-    if not hrp then return nil end
-    
-    local closest, shortestDist = nil, getgenv().MaxDistance
-    
-    for _, obj in ipairs(workspace:GetChildren()) do
-        local humanoid = obj:FindFirstChildOfClass("Humanoid")
-        if obj:IsA("Model") and humanoid and humanoid.Health > 0 then
-            -- เช็คชื่อมอนสเตอร์จากใน List
-            local isTarget = false
-            for _, name in ipairs(FarmableMonsters) do
-                if obj.Name:lower():find(name:lower()) then
-                    isTarget = true
-                    break
-                end
-            end
-            
-            if isTarget then
-                local targetHRP = obj.PrimaryPart or obj:FindFirstChild("HumanoidRootPart")
-                if targetHRP then
-                    local dist = (hrp.Position - targetHRP.Position).Magnitude
-                    if dist < shortestDist then
-                        shortestDist = dist
-                        closest = targetHRP
+        -- สร้าง BodyVelocity เพื่อความนิ่ง
+        local bv = Instance.new("BodyVelocity")
+        bv.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
+        bv.Velocity = Vector3.new(0, 0, 0)
+
+        -- ฟังก์ชันหามอนสเตอร์
+        local function getClosestMonster()
+            local closestTarget = nil
+            local shortestDistance = MAX_DISTANCE
+            local myHRP = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
+
+            if not myHRP then return nil end
+
+            for _, obj in pairs(game.Workspace:GetDescendants()) do
+                if obj:IsA("Model") and obj:FindFirstChild("Humanoid") and obj:FindFirstChild("HumanoidRootPart") then
+                    if obj ~= player.Character and not game.Players:GetPlayerFromCharacter(obj) then
+                        local distance = (myHRP.Position - obj.HumanoidRootPart.Position).Magnitude
+                        if distance <= shortestDistance then
+                            closestTarget = obj.HumanoidRootPart
+                            shortestDistance = distance
+                        end
                     end
                 end
             end
+            return closestTarget
         end
-    end
-    return closest
-end
 
-local Main = Window:Tab({ Title = "Main", Icon = "rbxassetid://10734923210" })
+        -- ลูปการทำงาน (จะทำงานเฉพาะตอนที่ _G.AutoFarm เป็น true)
+        task.spawn(function()
+            while _G.AutoFarm do
+                local target = getClosestMonster()
+                local character = player.Character
+                local myHRP = character and character:FindFirstChild("HumanoidRootPart")
 
-Main:Toggle({
-    Title = "Auto Farm (Warp Mode)",
-    Desc = "วาร์ปไปเหนือหัวมอนสเตอร์อัตโนมัติ",
-    Value = false,
-    Callback = function(state)
-        getgenv().AutoFarmEnabled = state
-    end
-})
-
-Main:Slider({
-    Title = "Warp Height",
-    Desc = "ระยะความสูงเหนือมอนเตอร์ (ตอนนี้คือ 5)",
-    Min = 0,
-    Max = 20,
-    Step = 1,
-    Value = 5,
-    Callback = function(v)
-        getgenv().FarmHeight = v
-    end
-})
-
-Main:Slider({
-    Title = "Warp Speed (Delay)",
-    Desc = "ยิ่งน้อยยิ่งวาร์ปไว",
-    Min = 0.1,
-    Max = 1.5,
-    Step = 0.1,
-    Value = 0.3,
-    Callback = function(v)
-        getgenv().WarpDelay = v
-    end
-})
-
-local MiscTab = Window:Tab({ Title = "Misc", Icon = "rbxassetid://10734923210" })
-
-MiscTab:Button({
-    Title = "Rejoin Game",
-    Callback = function()
-        TeleportService:Teleport(game.PlaceId, player)
-    end
-})
-
--- [4] Main Loop System (วางไว้ด้านล่างสุด)
-task.spawn(function()
-    while task.wait() do
-        if getgenv().AutoFarmEnabled then
-            local target = getClosestMonster()
-            local character = player.Character
-            local hrp = character and character:FindFirstChild("HumanoidRootPart")
-            
-            if target and hrp then
-                -- วาร์ป
-                hrp.CFrame = CFrame.new(target.Position + Vector3.new(0, getgenv().FarmHeight, 0))
-                -- หน่วงเวลาตามที่ตั้งค่าไว้ใน Slider
-                task.wait(getgenv().WarpDelay)
+                if target and myHRP then
+                    -- ล็อคความเร็วให้นิ่ง
+                    if bv.Parent ~= myHRP then
+                        bv.Parent = myHRP
+                    end
+                    -- วาร์ปไปเหนือหัวเป้าหมาย
+                    myHRP.CFrame = CFrame.new(target.Position + Vector3.new(0, HEIGHT_ABOVE, 0))
+                else
+                    bv.Parent = nil
+                end
+                task.wait() -- ป้องกันเกมค้าง
             end
-        end
+            
+            -- เมื่อปิด Toggle ให้ล้างค่า
+            if bv then bv.Parent = nil end
+        end)
     end
-end)
-
-WindUI:Notify({
-    Title = "Ready!",
-    Content = "สคริปต์เรียงลำดับและพร้อมใช้งานแล้ว",
-    Time = 5
 })
