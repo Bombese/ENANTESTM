@@ -45,7 +45,7 @@ end
 Main:Section({ Title = " Player Settings " })
 Main:Toggle({
     Title = "Auto Attack",
-    Desc = "Auto hit (Top Right)",
+    Desc = "Auto hit (sword)",
     Value = false,
     Callback = function(v)
         _G.AutoClick = v 
@@ -59,7 +59,7 @@ Main:Toggle({
 })
 
 Main:Button({
-    Title = "Auto Quest",
+    Title = "Auto Quest (Hunter Tin)",
     Desc = "Auto Task",
     Callback = function()
         local questName = "Subway" -- เปลี่ยนชื่อเควสตรงนี้จุดเดียวพอ
