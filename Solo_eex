@@ -316,3 +316,20 @@ local Main = Window:Tab({
     Title = "Quest",
     Icon = "quest", -- เปลี่ยน Icon เป็นชื่อที่ Library รองรับ
 })
+Quest:Button({
+    Title = "Auto Quest (Rubble doug)",
+    Desc = "Auto Task lv. 20",
+    Callback = function()
+    local ReplicatedStorage = game:GetService("ReplicatedStorage")
+    -- ใช้ pcall เพื่อป้องกัน Script พังหากหา Remote ไม่เจอหรือ Server ปฏิเสธ
+    local success, err = pcall(function()
+        local RequestQuest = ReplicatedStorage:WaitForChild("RemoteServices"):WaitForChild("QuestsV2Service"):WaitForChild("RF"):WaitForChild("RequestQuest")
+        RequestQuest:InvokeServer("Caves")
+    end)
+
+    if success then
+        print("ส่งคำขอรับเควสสำเร็จ!")
+    else
+        warn("เกิดข้อผิดพลาด: " .. tostring(err))
+    end
+end
