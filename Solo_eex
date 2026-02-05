@@ -180,6 +180,48 @@ Main:Toggle({
     end
 })
 
+local TP = Window:Tab({
+    Title = "TP ",
+    Icon = "locate"          -- แก้ตรงนี้ (เลือกชื่อที่ library มีจริง)
+})
+
+-- ฟังก์ชันช่วยเหลือ (ทำให้โค้ดสั้นลงและเหมือนกันหมด)
+local function teleportTo(pos)
+    local player = game.Players.LocalPlayer
+    local char = player.Character
+    
+    if char and char:FindFirstChild("HumanoidRootPart") then
+        char.HumanoidRootPart.CFrame = CFrame.new(pos + Vector3.new(0, 3, 0)) -- บวก 3 ทุกครั้ง
+        print("Teleported to " .. tostring(pos))
+    else
+        warn("ไม่พบตัวละครหรือ HumanoidRootPart")
+    end
+end
+
+TP:Button({
+    Title = "Telepot to Summon Powers",
+    Desc = "วาปไปที่สุ่มพลัง",
+    Callback = function()
+        teleportTo(Vector3.new(61.74, -9.45, -113.31))
+    end
+})
+
+TP:Button({
+    Title = "Telepot to Sell loot here",
+    Desc = "วาปไปที่ขายไอเทม",
+    Callback = function()
+        teleportTo(Vector3.new(-24.34, -7.45, -72.88))
+    end
+})
+
+TP:Button({
+    Title = "Telepot to merchant (shop item)",
+    Desc = "วาปไปที่ซื้อไอเทม",
+    Callback = function()
+        teleportTo(Vector3.new(-45.38, -9.45, 15.51))
+    end
+})
+
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 local Camera = workspace.CurrentCamera
