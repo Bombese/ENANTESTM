@@ -179,10 +179,12 @@ Main:Toggle({
         end)
     end
 })
+
 local TP = Window:Tab({
     Title = "TP ",
     Icon = "Telapot"
 })
+
 TP:Button({
     Title = "Telepot to Summon Powers",
     Desc = "วาปไปที่สุ่มพลัง",
@@ -197,6 +199,7 @@ else
     warn("ไม่พบตัวละคร")
 end
 })
+
 TP:Button({
     Title = "Telepot to Sell loot here",
     Desc = "วาปไปที่ขายไอเทม",
@@ -209,6 +212,7 @@ if lp.Character and lp.Character:FindFirstChild("HumanoidRootPart") then
     lp.Character.HumanoidRootPart.CFrame = target
 end
 })
+
 TP:Button({
     Title = "Telepot to merchant (shop item)",
     Desc = "วาปไปที่ซื้อไอเทม",
