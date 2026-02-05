@@ -22,32 +22,39 @@ local Main = Window:Tab({
 })
 
 local VirtualUser = game:GetService("VirtualUser")
-_G.AutoClick = false 
+local Camera = workspace.CurrentCamera
+_G.AutoClick = false
 
--- ฟังก์ชันสำหรับจัดการการกด/ปล่อย
-local function HandleClick(isHolding)
-    pcall(function()
-        VirtualUser:CaptureController()
-        if isHolding then
-            -- สั่งให้ "กดปุ่มเม้าส์ซ้ายค้างไว้"
-            VirtualUser:Button1Down(Vector2.new(0, 0))
-            print("Auto Hold: ON")
-        else
-            -- สั่งให้ "ปล่อยปุ่มเม้าส์ซ้าย"
-            VirtualUser:Button1Up(Vector2.new(0, 0))
-            print("Auto Hold: OFF")
+-- ฟังก์ชันสำหรับคลิก
+local function DoClick()
+    task.spawn(function()
+        while _G.AutoClick do
+            pcall(function()
+                -- คำนวณหาตำแหน่งมุมขวาบน (ลบระยะขอบออกเล็กน้อยเพื่อให้โดนปุ่มพอดี)
+                local screenWidth = Camera.ViewportSize.X
+                local rightTop = Vector2.new(screenWidth - 50, 50) 
+                
+                VirtualUser:CaptureController()
+                VirtualUser:ClickButton1(rightTop)
+            end)
+            task.wait(0.1) -- ปรับความเร็วตรงนี้ (0.1 คือ 10 ครั้งต่อวินาที)
         end
     end)
 end
 
 Main:Section({ Title = " Player Settings " })
 Main:Toggle({
-    Title = "Auto Attack (Hold)",
-    Desc = "Hold mouse button 1 (Sword)",
+    Title = "Auto Attack",
+    Desc = "Auto hit (Top Right)",
     Value = false,
     Callback = function(v)
         _G.AutoClick = v 
-        HandleClick(v) -- เรียกใช้ฟังก์ชันตามค่า Toggle (true = กดค้าง / false = ปล่อย)
+        if v then
+            DoClick()
+            print("Auto Clicker (Top Right): ON")
+        else
+            print("Auto Clicker: OFF")
+        end
     end
 })
 
