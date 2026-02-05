@@ -312,3 +312,7 @@ OtherTab:Button({
         end
     end
 })
+local Main = Window:Tab({
+    Title = "Quest",
+    Icon = "quest", -- เปลี่ยน Icon เป็นชื่อที่ Library รองรับ
+})
