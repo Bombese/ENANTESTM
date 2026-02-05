@@ -222,11 +222,14 @@ local function TPToPlayer(plr)
             plr.Character.HumanoidRootPart.CFrame * CFrame.new(0, 0, -3)
     end
 end
-
+local TP = Window:Tab({
+    Title = "TP ",
+    Icon = "Telapot"
+})
 -- ===== UI TAB =====
 local OtherTab = Window:Tab({
     Title = "Others",
-    Icon = "eye",
+    Icon = "eee",
 })
 
 OtherTab:Dropdown({
