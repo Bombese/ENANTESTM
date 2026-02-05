@@ -197,7 +197,7 @@ local function teleportTo(pos)
         warn("ไม่พบตัวละครหรือ HumanoidRootPart")
     end
 end
-
+TP:Section({ Title = " Summon Teleport " })
 TP:Button({
     Title = "Telepot to Summon Powers",
     Desc = "วาปไปที่สุ่มพลัง",
@@ -205,7 +205,7 @@ TP:Button({
         teleportTo(Vector3.new(61.74, -9.45, -113.31))
     end
 })
-
+TP:Section({ Title = " Shop and Sell Teleport " })
 TP:Button({
     Title = "Telepot to Sell loot here",
     Desc = "วาปไปที่ขายไอเทม",
