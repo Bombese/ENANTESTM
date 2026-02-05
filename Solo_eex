@@ -36,7 +36,7 @@ local function DoClick()
         end
     end)
 end
-
+Main:Section({ Title = " Player Settings " })
 Main:Toggle({
     Title = "Auto Attack",
     Desc = "Auto hit (Sword)",
@@ -104,7 +104,7 @@ local function startDungeon()
     end
 end
 
-
+Main:Section({ Title = "Dungeon Setting" })
 --// ===== UI BUTTON =====
 Main:Button({
     Title = "Start Dungeon",
