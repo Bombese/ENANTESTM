@@ -313,10 +313,6 @@ OtherTab:Button({
     end
 })
 
-local QuestTab = Window:Tab({
-    Title = "Quest",
-    Icon = "scroll", -- ใช้ชื่อไอคอนที่ lib รองรับ
-})
 -- Services
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
@@ -330,7 +326,7 @@ local RequestQuest = ReplicatedStorage
 -- Tab
 local Quest = Window:Tab({
     Title = "Quest",
-    Icon = "quest",
+    Icon = "scroll",
 })
 
 -- กันกดรัว
