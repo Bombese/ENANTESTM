@@ -272,47 +272,6 @@ local function TPToPlayer(plr)
     end
 end
 
--- ===== UI TAB =====
-local OtherTab = Window:Tab({
-    Title = "Others",
-    Icon = "eee",
-})
-
-OtherTab:Dropdown({
-    Title = "Search Player ",
-    Values = PlayerList,
-    Value = nil,
-    Multi = false,
-    Callback = function(v)
-        getgenv().SelectedPlayer = Players:FindFirstChild(v)
-    end
-})
-
-OtherTab:Button({
-    Title = "watch other players ",
-    Callback = function()
-        if getgenv().SelectedPlayer then
-            Spectate(getgenv().SelectedPlayer)
-        end
-    end
-})
-
-OtherTab:Button({
-    Title = "Return to your pov",
-    Callback = function()
-        UnSpectate()
-    end
-})
-
-OtherTab:Button({
-    Title = "TP to player ",
-    Callback = function()
-        if getgenv().SelectedPlayer then
-            TPToPlayer(getgenv().SelectedPlayer)
-        end
-    end
-})
-
 -- Services
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
