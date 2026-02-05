@@ -180,53 +180,6 @@ Main:Toggle({
     end
 })
 
-local TP = Window:Tab({
-    Title = "TP ",
-    Icon = "Telapot"
-})
-
-TP:Button({
-    Title = "Telepot to Summon Powers",
-    Desc = "วาปไปที่สุ่มพลัง",
-    Callback = function()
-local targetPos = Vector3.new(61.74, -9.45, -113.31)
-local character = game.Players.LocalPlayer.Character
-
-if character and character:FindFirstChild("HumanoidRootPart") then
-    -- วาร์ปไปที่พิกัด โดยยกตัวขึ้นจากพื้นเล็กน้อยป้องกันการจมดิน
-    character.HumanoidRootPart.CFrame = CFrame.new(targetPos + Vector3.new(0, 2, 0))
-else
-    warn("ไม่พบตัวละคร")
-end
-})
-
-TP:Button({
-    Title = "Telepot to Sell loot here",
-    Desc = "วาปไปที่ขายไอเทม",
-    Callback = function()
--- พิกัดเป้าหมายใหม่
-local target = CFrame.new(-24.34, -7.45, -72.88) -- บวก Y ขึ้นมา 2 กันจมพื้น
-
-local lp = game:GetService("Players").LocalPlayer
-if lp.Character and lp.Character:FindFirstChild("HumanoidRootPart") then
-    lp.Character.HumanoidRootPart.CFrame = target
-end
-})
-
-TP:Button({
-    Title = "Telepot to merchant (shop item)",
-    Desc = "วาปไปที่ซื้อไอเทม",
-    Callback = function()
-local target = CFrame.new(-45.38, -9.45, 15.51)
-local player = game:GetService("Players").LocalPlayer
-
-if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
-    -- วาร์ปไปจุดเป้าหมาย
-    player.Character.HumanoidRootPart.CFrame = target
-    print("Teleported to new coordinates!")
-end
-})
-
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 local Camera = workspace.CurrentCamera
