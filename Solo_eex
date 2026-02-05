@@ -230,7 +230,7 @@ local OtherTab = Window:Tab({
 })
 
 OtherTab:Dropdown({
-    Title = "เลือกผู้เล่น",
+    Title = "Search Player ",
     Values = PlayerList,
     Value = nil,
     Multi = false,
@@ -240,7 +240,7 @@ OtherTab:Dropdown({
 })
 
 OtherTab:Button({
-    Title = "ดูมุมมองผู้เล่น",
+    Title = "watch other players ",
     Callback = function()
         if getgenv().SelectedPlayer then
             Spectate(getgenv().SelectedPlayer)
@@ -249,14 +249,14 @@ OtherTab:Button({
 })
 
 OtherTab:Button({
-    Title = "กลับมามุมมองเรา",
+    Title = "Return to your pov",
     Callback = function()
         UnSpectate()
     end
 })
 
 OtherTab:Button({
-    Title = "TP ไปหาผู้เล่น (ทันที)",
+    Title = "TP to player ",
     Callback = function()
         if getgenv().SelectedPlayer then
             TPToPlayer(getgenv().SelectedPlayer)
