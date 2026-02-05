@@ -5,7 +5,7 @@ local WindUI = loadstring(game:HttpGet(
 
 -- Window
 local Window = WindUI:CreateWindow({
-    Title = "Solo Hunters Felon HUB (test)",
+    Title = "Solo Hunters Felon HUB (test2)",
     Icon = "user",
     Author = "https://discord.gg/AXTKtmUvyf",
     OpenButton = {
@@ -312,25 +312,50 @@ OtherTab:Button({
         end
     end
 })
+
+local QuestTab = Window:Tab({
+    Title = "Quest",
+    Icon = "scroll", -- ใช้ชื่อไอคอนที่ lib รองรับ
+})
+-- Services
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+-- Remote (เตรียมไว้ครั้งเดียว ไม่ต้องหาใหม่ทุกกด)
+local RequestQuest = ReplicatedStorage
+    :WaitForChild("RemoteServices")
+    :WaitForChild("QuestsV2Service")
+    :WaitForChild("RF")
+    :WaitForChild("RequestQuest")
+
+-- Tab
 local Quest = Window:Tab({
     Title = "Quest",
-    Icon = "quest", -- เปลี่ยน Icon เป็นชื่อที่ Library รองรับ
+    Icon = "quest",
 })
-Quest:Button({
-    Title = "Auto Quest (Rubble doug)",
-    Desc = "Auto Task lv. 20",
-    Callback = function()
-    local ReplicatedStorage = game:GetService("ReplicatedStorage")
-    -- ใช้ pcall เพื่อป้องกัน Script พังหากหา Remote ไม่เจอหรือ Server ปฏิเสธ
-    local success, err = pcall(function()
-        local RequestQuest = ReplicatedStorage:WaitForChild("RemoteServices"):WaitForChild("QuestsV2Service"):WaitForChild("RF"):WaitForChild("RequestQuest")
-        RequestQuest:InvokeServer("Caves")
-    end)
 
-    if success then
-        print("ส่งคำขอรับเควสสำเร็จ!")
-    else
-        warn("เกิดข้อผิดพลาด: " .. tostring(err))
+-- กันกดรัว
+local debounce = false
+
+-- Button
+Quest:Button({
+    Title = "Get Quest (Rubble Doug)",
+    Desc = "รับเควสเลเวล 20",
+    Callback = function()
+
+        if debounce then return end
+        debounce = true
+
+        local success, err = pcall(function()
+            RequestQuest:InvokeServer("Caves")
+        end)
+
+        if success then
+            print("รับเควสสำเร็จ")
+        else
+            warn("ผิดพลาด: " .. tostring(err))
+        end
+
+        task.wait(2) -- หน่วงกันสแปม
+        debounce = false
     end
-end
 })
