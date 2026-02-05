@@ -179,3 +179,87 @@ Main:Toggle({
         end)
     end
 })
+
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local Camera = workspace.CurrentCamera
+
+getgenv().SelectedPlayer = nil
+
+-- ===== PLAYER LIST =====
+local PlayerList = {}
+
+local function RefreshPlayers()
+    table.clear(PlayerList)
+    for _,p in pairs(Players:GetPlayers()) do
+        if p ~= LocalPlayer then
+            table.insert(PlayerList, p.Name)
+        end
+    end
+end
+
+RefreshPlayers()
+Players.PlayerAdded:Connect(RefreshPlayers)
+Players.PlayerRemoving:Connect(RefreshPlayers)
+
+-- ===== SPECTATE =====
+local function Spectate(plr)
+    if plr and plr.Character and plr.Character:FindFirstChild("Humanoid") then
+        Camera.CameraSubject = plr.Character.Humanoid
+    end
+end
+
+local function UnSpectate()
+    if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
+        Camera.CameraSubject = LocalPlayer.Character.Humanoid
+    end
+end
+
+-- ===== TP INSTANT =====
+local function TPToPlayer(plr)
+    if plr and plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
+        LocalPlayer.Character.HumanoidRootPart.CFrame =
+            plr.Character.HumanoidRootPart.CFrame * CFrame.new(0, 0, -3)
+    end
+end
+
+-- ===== UI TAB =====
+local OtherTab = Window:Tab({
+    Title = "Others",
+    Icon = "eye",
+})
+
+OtherTab:Dropdown({
+    Title = "เลือกผู้เล่น",
+    Values = PlayerList,
+    Value = nil,
+    Multi = false,
+    Callback = function(v)
+        getgenv().SelectedPlayer = Players:FindFirstChild(v)
+    end
+})
+
+OtherTab:Button({
+    Title = "ดูมุมมองผู้เล่น",
+    Callback = function()
+        if getgenv().SelectedPlayer then
+            Spectate(getgenv().SelectedPlayer)
+        end
+    end
+})
+
+OtherTab:Button({
+    Title = "กลับมามุมมองเรา",
+    Callback = function()
+        UnSpectate()
+    end
+})
+
+OtherTab:Button({
+    Title = "TP ไปหาผู้เล่น (ทันที)",
+    Callback = function()
+        if getgenv().SelectedPlayer then
+            TPToPlayer(getgenv().SelectedPlayer)
+        end
+    end
+})
