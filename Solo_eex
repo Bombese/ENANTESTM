@@ -185,7 +185,7 @@ local UserInputService = game:GetService("UserInputService")
 local player = Players.LocalPlayer
 
 -- Settings
-getgenv().WalkSpeedValue = 16
+getgenv().WalkSpeedValue = 40
 getgenv().InfJump = false
 getgenv().Noclip = false
 
@@ -240,8 +240,8 @@ HackTab:Slider({
     Desc = "ปรับความเร็วการเดิน",
     Step = 1,
     Value = {
-        Min = 16,
-        Max = 200,
+        Min = 40,
+        Max = 1000,
         Default = getgenv().WalkSpeedValue
     },
     Callback = function(v)
