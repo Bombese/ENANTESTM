@@ -18,7 +18,7 @@ local Window = WindUI:CreateWindow({
 
 local Main = Window:Tab({
     Title = "Main",
-    Icon = "home", -- เปลี่ยน Icon เป็นชื่อที่ Library รองรับ
+    Icon = "star",
 })
 
 local VirtualUser = game:GetService("VirtualUser")
