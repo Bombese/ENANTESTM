@@ -122,24 +122,24 @@ Main:Button({
 })
 Main:Toggle({
     Title = "Auto Farm",
-    Desc = "Auto Farm mob",
+    Desc = "Auto Farm mob (Horizontal Mode)",
     Value = false,
     Callback = function(v)
-        _G.AutoFarm = v -- กำหนดสถานะเปิด/ปิดผ่าน Global Variable
+        _G.AutoFarm = v 
 
         local player = game.Players.LocalPlayer
         local runService = game:GetService("RunService")
 
         -- การตั้งค่า
         local MAX_DISTANCE = 500
-        local HEIGHT_ABOVE = 10 
+        local HEIGHT_ABOVE = 10 -- ระยะความสูงจากหัวมอนสเตอร์
 
-        -- สร้าง BodyVelocity เพื่อความนิ่ง
+        -- สร้าง BodyVelocity เพื่อล็อคตำแหน่งให้นิ่ง
         local bv = Instance.new("BodyVelocity")
         bv.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
         bv.Velocity = Vector3.new(0, 0, 0)
 
-        -- ฟังก์ชันหามอนสเตอร์
+        -- ฟังก์ชันหามอนสเตอร์ที่ใกล้ที่สุด
         local function getClosestMonster()
             local closestTarget = nil
             local shortestDistance = MAX_DISTANCE
@@ -148,6 +148,7 @@ Main:Toggle({
             if not myHRP then return nil end
 
             for _, obj in pairs(game.Workspace:GetDescendants()) do
+                -- ตรวจสอบว่าเป็น Model ที่มี Humanoid และไม่ใช่ผู้เล่น
                 if obj:IsA("Model") and obj:FindFirstChild("Humanoid") and obj:FindFirstChild("HumanoidRootPart") then
                     if obj ~= player.Character and not game.Players:GetPlayerFromCharacter(obj) then
                         local distance = (myHRP.Position - obj.HumanoidRootPart.Position).Magnitude
@@ -161,7 +162,7 @@ Main:Toggle({
             return closestTarget
         end
 
-        -- ลูปการทำงาน (จะทำงานเฉพาะตอนที่ _G.AutoFarm เป็น true)
+        -- ลูปการทำงาน
         task.spawn(function()
             while _G.AutoFarm do
                 local target = getClosestMonster()
@@ -169,23 +170,35 @@ Main:Toggle({
                 local myHRP = character and character:FindFirstChild("HumanoidRootPart")
 
                 if target and myHRP then
-                    -- ล็อคความเร็วให้นิ่ง
+                    -- เปิดใช้งาน BodyVelocity
                     if bv.Parent ~= myHRP then
                         bv.Parent = myHRP
                     end
-                    -- วาร์ปไปเหนือหัวเป้าหมาย
-                    myHRP.CFrame = CFrame.new(target.Position + Vector3.new(0, HEIGHT_ABOVE, 0))
+                    
+                    -- วาร์ปไปตำแหน่งเหนือมอนสเตอร์ + หมุนตัวให้นอนลง (-90 องศาที่แกน X)
+                    -- math.rad(-90) คือการทำให้ตัวละครคว่ำหน้าขนานกับพื้น
+                    local targetPos = target.Position + Vector3.new(0, HEIGHT_ABOVE, 0)
+                    myHRP.CFrame = CFrame.new(targetPos) * CFrame.Angles(math.rad(-90), 0, 0)
                 else
+                    -- ถ้าไม่เจอมอนสเตอร์ ให้ลบแรงส่งออกชั่วคราว
                     bv.Parent = nil
                 end
-                task.wait() -- ป้องกันเกมค้าง
+                task.wait() -- ป้องกันเกมค้าง (ใส่ค่า 0.1 ได้ถ้าอยากให้ลื่นขึ้น)
             end
             
-            -- เมื่อปิด Toggle ให้ล้างค่า
+            -- เมื่อปิด Toggle (Value = false)
             if bv then bv.Parent = nil end
+            
+            -- รีเซ็ตตัวละครให้กลับมาตั้งตรงเหมือนเดิม
+            local character = player.Character
+            local myHRP = character and character:FindFirstChild("HumanoidRootPart")
+            if myHRP then
+                myHRP.CFrame = CFrame.new(myHRP.Position) 
+            end
         end)
     end
 })
+
 
 local TP = Window:Tab({
     Title = "TP ",
