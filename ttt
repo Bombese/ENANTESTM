@@ -5,7 +5,7 @@ local WindUI = loadstring(game:HttpGet(
 
 -- Window
 local Window = WindUI:CreateWindow({
-    Title = "Solo Hunters Felon HUB (Premium11345)",
+    Title = "Solo Hunters Felon HUB (test version )",
     Icon = "user",
     Author = "https://discord.gg/AXTKtmUvyf",
     OpenButton = {
@@ -24,49 +24,53 @@ local Main = Window:Tab({
 Main:Section({ Title = " Player Settings " })
 Main:Toggle({
     Title = "Damage Aura",
-    Desc = "Auto damage Aura(sword) - Range 500",
-    Value = false, -- สถานะเริ่มต้น
+    Desc = "Auto damage Aura (Stable & Long-run)",
+    Value = false,
     Callback = function(v)
         _G.AutoClick = v 
         
         if v then
             print("Auto Attack: ON")
-            -- ใช้ task.spawn เพื่อให้ลูปทำงานแยกจาก UI (ไม่งั้น UI จะค้าง)
             task.spawn(function()
                 while _G.AutoClick do
                     local targetList = {}
                     local player = game.Players.LocalPlayer
                     local char = player.Character
                     
-                    -- ตรวจสอบตำแหน่งของเรา
                     if char and char:FindFirstChild("HumanoidRootPart") then
                         local myPos = char.HumanoidRootPart.Position
-                        local mobsFolder = workspace:FindFirstChild("Mobs") -- เช็คชื่อโฟลเดอร์ให้ตรงกับในเกม
+                        local mobsFolder = workspace:FindFirstChild("Mobs")
                         
                         if mobsFolder then
+                            -- กวาดมอนสเตอร์ แต่จำกัดแค่ 10-15 ตัวที่ใกล้ที่สุด เพื่อไม่ให้ Remote ตัน
+                            local count = 0
                             for _, mob in pairs(mobsFolder:GetChildren()) do
+                                if count >= 15 then break end -- จำกัดจำนวนต่อรอบ
+                                
                                 local hum = mob:FindFirstChild("Humanoid")
                                 local hrp = mob:FindFirstChild("HumanoidRootPart")
                                 
-                                -- เช็คว่ามอนสเตอร์ยังไม่ตายและอยู่ในระยะ 500
                                 if hum and hrp and hum.Health > 0 then
+                                    -- ลดระยะเหลือ 250-300 (ระยะ 500 นานๆ ไปเซิร์ฟเวอร์จะบล็อกดาเมจ)
                                     local dist = (myPos - hrp.Position).Magnitude
-                                    if dist <= 500 then
+                                    if dist <= 300 then 
                                         table.insert(targetList, mob)
+                                        count = count + 1
                                     end
                                 end
                             end
                         end
                         
-                        -- ถ้าเจอเป้าหมาย ส่ง Remote ทันที
                         if #targetList > 0 then
+                            -- ใช้ pcall กันสคริปต์หลุด
                             pcall(function()
-                                -- Remote ที่คุณหามา
+                                -- ยิง Remote แบบระบุ Path เต็มเพื่อความชัวร์
                                 game:GetService("ReplicatedStorage").RemoteServices.CombatService.RF.UseWeapon:InvokeServer(0, targetList, 1)
                             end)
                         end
                     end
-                    task.wait(0.1) -- ปรับความเร็วตรงนี้ (0.1 คือกำลังดี)
+                    -- ปรับความเร็วเป็น 0.15-0.2 เพื่อให้รันได้ยาวๆ ไม่หลุด
+                    task.wait(0.15) 
                 end
             end)
         else
