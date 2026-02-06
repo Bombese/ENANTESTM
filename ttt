@@ -5,7 +5,7 @@ local WindUI = loadstring(game:HttpGet(
 
 -- Window
 local Window = WindUI:CreateWindow({
-    Title = "Solo Hunters Felon HUB (Premium11)",
+    Title = "Solo Hunters Felon HUB (Premium11345)",
     Icon = "user",
     Author = "https://discord.gg/AXTKtmUvyf",
     OpenButton = {
@@ -121,90 +121,78 @@ Main:Button({
     end
 })
 Main:Toggle({
-    Title = "Auto Farm (Mixed Mode)",
-    Desc = "Fast Warp + Horizontal + Auto Check Health",
+    Title = "Auto Farm (Ultra Fix)",
+    Desc = "Fast Warp + Anti-Lag + Auto Target",
     Value = false,
     Callback = function(v)
         _G.AutoFarm = v 
 
         local player = game.Players.LocalPlayer
         local runService = game:GetService("RunService")
-        local heartbeatConnection -- เก็บ Connection สำหรับการปิดที่สะอาด
+        local hb -- ตัวเก็บ Connection
 
-        -- การตั้งค่า (ปรับแต่งได้ที่นี่)
-        local DISTANCE_LIMIT = 1000 -- ระยะมองเห็นมอนสเตอร์
-        local HEIGHT_OFFSET = 10    -- ระยะความสูงเหนือหัว
-        local ROTATION_ANGLE = -90  -- องศาการนอน (-90 คือนอนราบ)
+        -- ฟังก์ชันทำความสะอาดเมื่อปิด
+        local function cleanup()
+            if hb then hb:Disconnect() end
+            local char = player.Character
+            if char and char:FindFirstChild("HumanoidRootPart") then
+                -- ลบแรงส่งและคืนค่าตัวละคร
+                for _, obj in pairs(char.HumanoidRootPart:GetChildren()) do
+                    if obj:IsA("BodyVelocity") or obj:IsA("BodyGyro") then obj:Destroy() end
+                end
+                char.HumanoidRootPart.CFrame = CFrame.new(char.HumanoidRootPart.Position)
+            end
+        end
 
-        -- สร้าง BodyVelocity เพื่อล็อคตัวละครให้นิ่ง (Anti-Falling/Fling)
-        local bv = Instance.new("BodyVelocity")
-        bv.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
-        bv.Velocity = Vector3.new(0, 0, 0)
+        if not v then 
+            cleanup()
+            return 
+        end
 
-        -- ฟังก์ชันหามอนสเตอร์ที่ใกล้ที่สุดและยังมีชีวิตอยู่
-        local function getTarget()
-            local closestTarget = nil
-            local shortestDistance = DISTANCE_LIMIT
-            local character = player.Character
-            local myHRP = character and character:FindFirstChild("HumanoidRootPart")
+        -- สร้างแรงยก (ป้องกันตัวละครร่วงหรือดีด)
+        local function applyPhysics(hrp)
+            local bv = hrp:FindFirstChild("FarmBV") or Instance.new("BodyVelocity", hrp)
+            bv.Name = "FarmBV"
+            bv.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
+            bv.Velocity = Vector3.new(0, 0, 0)
+        end
 
-            if not myHRP then return nil end
+        -- เริ่มทำงาน
+        hb = runService.Heartbeat:Connect(function()
+            if not _G.AutoFarm then cleanup() return end
 
-            -- วนลูปหาใน Workspace (เน้นหาเฉพาะ Model ที่มี Humanoid)
-            for _, obj in pairs(game.Workspace:GetChildren()) do -- ใช้ GetChildren จะเร็วกว่า GetDescendants ในบางแมพ
-                local hum = obj:FindFirstChildOfClass("Humanoid")
-                local root = obj:FindFirstChild("HumanoidRootPart")
-                
-                if hum and root and hum.Health > 0 and not game.Players:GetPlayerFromCharacter(obj) then
-                    local distance = (myHRP.Position - root.Position).Magnitude
-                    if distance < shortestDistance then
-                        closestTarget = root
-                        shortestDistance = distance
+            local char = player.Character
+            local hrp = char and char:FindFirstChild("HumanoidRootPart")
+            if not hrp then return end
+
+            applyPhysics(hrp)
+
+            -- ค้นหาเป้าหมาย (เช็คทั้ง Workspace)
+            local target = nil
+            local dist = 1000 -- ระยะ
+
+            for _, m in pairs(game.Workspace:GetDescendants()) do
+                -- เงื่อนไข: เป็น Model + มี Humanoid + เลือด > 0 + ไม่ใช่ตัวเรา + ไม่ใช่ผู้เล่นคนอื่น
+                if m:IsA("Humanoid") and m.Parent:IsA("Model") and m.Health > 0 then
+                    local mHRP = m.Parent:FindFirstChild("HumanoidRootPart")
+                    if mHRP and m.Parent ~= char and not game.Players:GetPlayerFromCharacter(m.Parent) then
+                        local magnitude = (hrp.Position - mHRP.Position).Magnitude
+                        if magnitude < dist then
+                            target = mHRP
+                            dist = magnitude
+                        end
                     end
                 end
             end
-            return closestTarget
-        end
 
-        if _G.AutoFarm then
-            -- เริ่มต้นการทำงานด้วย Heartbeat (ทำงานทุก Frame)
-            heartbeatConnection = runService.Heartbeat:Connect(function()
-                if not _G.AutoFarm then 
-                    if heartbeatConnection then heartbeatConnection:Disconnect() end
-                    return 
-                end
-
-                local character = player.Character
-                local myHRP = character and character:FindFirstChild("HumanoidRootPart")
-                local target = getTarget()
-
-                if target and myHRP then
-                    -- ติดตั้งตัวล็อคความเร็ว
-                    if bv.Parent ~= myHRP then bv.Parent = myHRP end
-                    
-                    -- ผสมผสาน: วาร์ปไปตำแหน่งเป้าหมาย + ปรับองศาตัวละคร (Horizontal Mode)
-                    myHRP.CFrame = CFrame.new(target.Position + Vector3.new(0, HEIGHT_OFFSET, 0)) 
-                                 * CFrame.Angles(math.rad(ROTATION_ANGLE), 0, 0)
-                else
-                    -- ถ้าไม่มีเป้าหมาย ให้เอาตัวล็อคออกเพื่อให้ตกตามปกติหรือขยับได้
-                    bv.Parent = nil
-                end
-            end)
-        else
-            -- เมื่อกดปิด (Cleanup)
-            if heartbeatConnection then heartbeatConnection:Disconnect() end
-            if bv then bv.Parent = nil end
-            
-            -- คืนค่าตัวละครให้ตั้งตรง
-            local character = player.Character
-            local myHRP = character and character:FindFirstChild("HumanoidRootPart")
-            if myHRP then
-                myHRP.CFrame = CFrame.new(myHRP.Position) -- รีเซ็ตองศาการหมุน
+            if target then
+                -- วาร์ปไปเหนือหัว + ท่านอน (Horizontal)
+                hrp.CFrame = CFrame.new(target.Position + Vector3.new(0, 10, 0)) 
+                           * CFrame.Angles(math.rad(-90), 0, 0)
             end
-        end
+        end)
     end
 })
-
 
 local TP = Window:Tab({
     Title = "TP ",
