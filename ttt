@@ -5,7 +5,7 @@ local WindUI = loadstring(game:HttpGet(
 
 -- Window
 local Window = WindUI:CreateWindow({
-    Title = "Solo Hunters Felon HUB (Premium)",
+    Title = "Solo Hunters Felon HUB (Premium11)",
     Icon = "user",
     Author = "https://discord.gg/AXTKtmUvyf",
     OpenButton = {
