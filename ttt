@@ -193,6 +193,77 @@ Main:Toggle({
         end)
     end
 })
+-- [[ CONFIGURATION ]]
+_G.DamageAura = false
+local AuraRange = 500 -- ระยะที่คุณต้องการ
+local AttackSpeed = 0.1 -- ความเร็ว (0.1 - 0.2 กำลังดีสำหรับ InvokeServer)
+
+-- [[ CORE FUNCTION ]]
+local function getAuraTargets()
+    local targets = {}
+    local player = game.Players.LocalPlayer
+    local char = player.Character
+    
+    -- ตรวจสอบว่ามีตัวละครและจุดยืน (RootPart)
+    if not char or not char:FindFirstChild("HumanoidRootPart") then return targets end
+    
+    local mobsFolder = workspace:FindFirstChild("Mobs")
+    if mobsFolder then
+        for _, mob in pairs(mobsFolder:GetChildren()) do
+            local hum = mob:FindFirstChild("Humanoid")
+            local hrp = mob:FindFirstChild("HumanoidRootPart")
+            
+            if hum and hrp and hum.Health > 0 then
+                -- คำนวณระยะห่างระหว่างเรากับมอนสเตอร์
+                local mag = (char.HumanoidRootPart.Position - hrp.Position).Magnitude
+                if mag <= AuraRange then
+                    table.insert(targets, mob)
+                end
+            end
+        end
+    end
+    return targets
+end
+
+-- [[ UI BUTTON INTEGRATION ]]
+Main:Button({
+    Title = "Damage Aura (500)",
+    Desc = "โจมตีศัตรูรอบตัวอัตโนมัติ",
+    Callback = function()
+        -- สลับสถานะ เปิด/ปิด
+        _G.DamageAura = not _G.DamageAura
+        
+        if _G.DamageAura then
+            print("Damage Aura: ACTIVATED")
+            
+            -- เริ่มลูปการโจมตี
+            task.spawn(function()
+                while _G.DamageAura do
+                    local targetList = getAuraTargets()
+                    
+                    if #targetList > 0 then
+                        -- ส่ง Remote ตามที่คุณหามา
+                        local args = {
+                            [1] = 0,
+                            [2] = targetList, -- ใส่ตารางมอนสเตอร์ทั้งหมด
+                            [3] = 1
+                        }
+                        
+                        -- ใช้ pcall เพื่อป้องกัน Script ค้างถ้ามอนสเตอร์หายไปกระทันหัน
+                        pcall(function()
+                            game:GetService("ReplicatedStorage").RemoteServices.CombatService.RF.UseWeapon:InvokeServer(unpack(args))
+                        end)
+                    end
+                    task.wait(AttackSpeed)
+                end
+                print("Damage Aura: STOPPED")
+            end)
+        else
+            -- สั่งหยุดการทำงาน
+            _G.DamageAura = false
+        end
+    end
+})
 
 local TP = Window:Tab({
     Title = "TP ",
