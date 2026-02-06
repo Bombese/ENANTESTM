@@ -122,24 +122,25 @@ Main:Button({
 })
 Main:Toggle({
     Title = "Auto Farm",
-    Desc = "Auto Farm mob (Horizontal Mode)",
+    Desc = "Fast Warp + Horizontal Mode",
     Value = false,
     Callback = function(v)
         _G.AutoFarm = v 
 
         local player = game.Players.LocalPlayer
         local runService = game:GetService("RunService")
+        local connection -- เก็บตัวแปรไว้สำหรับตัดการทำงาน
 
         -- การตั้งค่า
         local MAX_DISTANCE = 500
-        local HEIGHT_ABOVE = 10 -- ระยะความสูงจากหัวมอนสเตอร์
+        local HEIGHT_ABOVE = 10 
 
-        -- สร้าง BodyVelocity เพื่อล็อคตำแหน่งให้นิ่ง
+        -- สร้าง BodyVelocity เพื่อความนิ่ง
         local bv = Instance.new("BodyVelocity")
         bv.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
         bv.Velocity = Vector3.new(0, 0, 0)
 
-        -- ฟังก์ชันหามอนสเตอร์ที่ใกล้ที่สุด
+        -- ฟังก์ชันหามอนสเตอร์ (ปรับให้ไวขึ้น)
         local function getClosestMonster()
             local closestTarget = nil
             local shortestDistance = MAX_DISTANCE
@@ -148,9 +149,8 @@ Main:Toggle({
             if not myHRP then return nil end
 
             for _, obj in pairs(game.Workspace:GetDescendants()) do
-                -- ตรวจสอบว่าเป็น Model ที่มี Humanoid และไม่ใช่ผู้เล่น
                 if obj:IsA("Model") and obj:FindFirstChild("Humanoid") and obj:FindFirstChild("HumanoidRootPart") then
-                    if obj ~= player.Character and not game.Players:GetPlayerFromCharacter(obj) then
+                    if obj ~= player.Character and obj.Humanoid.Health > 0 and not game.Players:GetPlayerFromCharacter(obj) then
                         local distance = (myHRP.Position - obj.HumanoidRootPart.Position).Magnitude
                         if distance <= shortestDistance then
                             closestTarget = obj.HumanoidRootPart
@@ -162,40 +162,40 @@ Main:Toggle({
             return closestTarget
         end
 
-        -- ลูปการทำงาน
-        task.spawn(function()
-            while _G.AutoFarm do
+        if _G.AutoFarm then
+            -- ใช้ Heartbeat เพื่อความเร็วสูงสุด (ทำงานทุกเฟรม)
+            connection = runService.Heartbeat:Connect(function()
+                if not _G.AutoFarm then 
+                    if connection then connection:Disconnect() end
+                    return 
+                end
+
                 local target = getClosestMonster()
                 local character = player.Character
                 local myHRP = character and character:FindFirstChild("HumanoidRootPart")
 
                 if target and myHRP then
-                    -- เปิดใช้งาน BodyVelocity
-                    if bv.Parent ~= myHRP then
-                        bv.Parent = myHRP
-                    end
+                    if bv.Parent ~= myHRP then bv.Parent = myHRP end
                     
-                    -- วาร์ปไปตำแหน่งเหนือมอนสเตอร์ + หมุนตัวให้นอนลง (-90 องศาที่แกน X)
-                    -- math.rad(-90) คือการทำให้ตัวละครคว่ำหน้าขนานกับพื้น
-                    local targetPos = target.Position + Vector3.new(0, HEIGHT_ABOVE, 0)
-                    myHRP.CFrame = CFrame.new(targetPos) * CFrame.Angles(math.rad(-90), 0, 0)
+                    -- วาร์ปแบบ Instant (เปลี่ยน CFrame ทันทีทุกเฟรม)
+                    -- math.rad(-90) คือท่านอน
+                    myHRP.CFrame = CFrame.new(target.Position + Vector3.new(0, HEIGHT_ABOVE, 0)) * CFrame.Angles(math.rad(-90), 0, 0)
                 else
-                    -- ถ้าไม่เจอมอนสเตอร์ ให้ลบแรงส่งออกชั่วคราว
                     bv.Parent = nil
                 end
-                task.wait() -- ป้องกันเกมค้าง (ใส่ค่า 0.1 ได้ถ้าอยากให้ลื่นขึ้น)
-            end
-            
-            -- เมื่อปิด Toggle (Value = false)
+            end)
+        else
+            -- เมื่อกดปิด Toggle
+            if connection then connection:Disconnect() end
             if bv then bv.Parent = nil end
             
-            -- รีเซ็ตตัวละครให้กลับมาตั้งตรงเหมือนเดิม
+            -- คืนค่าตัวละครให้ตั้งตรง
             local character = player.Character
             local myHRP = character and character:FindFirstChild("HumanoidRootPart")
             if myHRP then
-                myHRP.CFrame = CFrame.new(myHRP.Position) 
+                myHRP.CFrame = CFrame.new(myHRP.Position)
             end
-        end)
+        end
     end
 })
 
