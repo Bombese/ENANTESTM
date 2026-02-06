@@ -48,10 +48,10 @@ Main:Toggle({
                                 local hum = mob:FindFirstChild("Humanoid")
                                 local hrp = mob:FindFirstChild("HumanoidRootPart")
                                 
-                                -- เช็คว่ามอนสเตอร์ยังไม่ตายและอยู่ในระยะ 500
+                                -- เช็คว่ามอนสเตอร์ยังไม่ตายและอยู่ในระยะ 100
                                 if hum and hrp and hum.Health > 0 then
                                     local dist = (myPos - hrp.Position).Magnitude
-                                    if dist <= 500 then
+                                    if dist <= 100 then
                                         table.insert(targetList, mob)
                                     end
                                 end
