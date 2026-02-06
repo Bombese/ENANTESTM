@@ -187,7 +187,7 @@ Main:Toggle({
 
             if target then
                 -- วาร์ปไปเหนือหัว + ท่านอน (Horizontal)
-                hrp.CFrame = CFrame.new(target.Position + Vector3.new(0, 8.5, 0)) 
+                hrp.CFrame = CFrame.new(target.Position + Vector3.new(0, 8, 0)) 
                            * CFrame.Angles(math.rad(-90), 0, 0)
             end
         end)
