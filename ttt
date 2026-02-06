@@ -132,7 +132,7 @@ Main:Toggle({
         local connection -- เก็บตัวแปรไว้สำหรับตัดการทำงาน
 
         -- การตั้งค่า
-        local MAX_DISTANCE = 500
+        local MAX_DISTANCE = 5000
         local HEIGHT_ABOVE = 10 
 
         -- สร้าง BodyVelocity เพื่อความนิ่ง
