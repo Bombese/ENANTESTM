@@ -1,0 +1,316 @@
+-- Load WindUI
+local WindUI = loadstring(game:HttpGet(
+    "https://github.com/Footagesus/WindUI/releases/latest/download/main.lua"
+))()
+
+-- Window
+local Window = WindUI:CreateWindow({
+    Title = "Solo Hunters Felon HUB (Premium)",
+    Icon = "user",
+    Author = "https://discord.gg/AXTKtmUvyf",
+    OpenButton = {
+        Title = "Felon HUB",
+        Icon = "monitor",
+        Enabled = true,
+        Draggable = true,
+    }
+})
+
+local Main = Window:Tab({
+    Title = "Main",
+    Icon = "star",
+})
+
+local VirtualUser = game:GetService("VirtualUser")
+local Camera = workspace.CurrentCamera
+_G.AutoClick = false
+
+-- ฟังก์ชันสำหรับคลิก
+local function DoClick()
+    task.spawn(function()
+        while _G.AutoClick do
+            pcall(function()
+                -- คำนวณหาตำแหน่งมุมขวาบน (ลบระยะขอบออกเล็กน้อยเพื่อให้โดนปุ่มพอดี)
+                local screenWidth = Camera.ViewportSize.X
+                local rightTop = Vector2.new(screenWidth - 50, 50) 
+                
+                VirtualUser:CaptureController()
+                VirtualUser:ClickButton1(rightTop)
+            end)
+            task.wait(0.1) -- ปรับความเร็วตรงนี้ (0.1 คือ 10 ครั้งต่อวินาที)
+        end
+    end)
+end
+
+Main:Section({ Title = " Player Settings " })
+Main:Toggle({
+    Title = "Auto Attack",
+    Desc = "Auto hit (sword)",
+    Value = false,
+    Callback = function(v)
+        _G.AutoClick = v 
+        if v then
+            DoClick()
+            print("Auto Clicker (Top Right): ON")
+        else
+            print("Auto Clicker: OFF")
+        end
+    end
+})
+
+Main:Button({
+    Title = "Auto Quest (Hunter Tin)",
+    Desc = "Auto Task",
+    Callback = function()
+        local questName = "Subway" -- เปลี่ยนชื่อเควสตรงนี้จุดเดียวพอ
+
+        local rs = game:GetService("ReplicatedStorage")
+        local questRF = rs:WaitForChild("RemoteServices")
+            :WaitForChild("QuestsV2Service")
+            :WaitForChild("RF")
+            :WaitForChild("RequestQuest")
+
+        -- กันกดรัว
+        if _G.RequestingQuest then return end
+        _G.RequestingQuest = true
+
+        -- ยิงแบบกันพัง
+        local success, result = pcall(function()
+            return questRF:InvokeServer(questName)
+        end)
+
+        if success then
+            print("รับเควสสำเร็จ:", result)
+        else
+            warn("รับเควสไม่สำเร็จ:", result)
+        end
+
+        task.wait(1)
+        _G.RequestingQuest = false
+    end
+})
+--// ===== SETUP ครั้งเดียวพอ =====
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+local RemoteServices = ReplicatedStorage:WaitForChild("RemoteServices")
+local DungeonService = RemoteServices:WaitForChild("DungeonService")
+local RF = DungeonService:WaitForChild("RF")
+local StartDungeon = RF:WaitForChild("StartDungeon") -- RemoteFunction
+
+
+-- ฟังก์ชันเริ่มดันเจี้ยน
+local function startDungeon()
+    local success, result = pcall(function()
+        return StartDungeon:InvokeServer()
+    end)
+
+    if success then
+        print("Dungeon Started:", result)
+    else
+        warn("Dungeon Error:", result)
+    end
+end
+
+Main:Section({ Title = "Dungeon Setting" })
+--// ===== UI BUTTON =====
+Main:Button({
+    Title = "Start Dungeon",
+    Desc = "Start the dungeon once",
+    Callback = function()
+        startDungeon()
+    end
+})
+Main:Toggle({
+    Title = "Auto Farm",
+    Desc = "Auto Farm mob",
+    Value = false,
+    Callback = function(v)
+        _G.AutoFarm = v -- กำหนดสถานะเปิด/ปิดผ่าน Global Variable
+
+        local player = game.Players.LocalPlayer
+        local runService = game:GetService("RunService")
+
+        -- การตั้งค่า
+        local MAX_DISTANCE = 500
+        local HEIGHT_ABOVE = 10 
+
+        -- สร้าง BodyVelocity เพื่อความนิ่ง
+        local bv = Instance.new("BodyVelocity")
+        bv.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
+        bv.Velocity = Vector3.new(0, 0, 0)
+
+        -- ฟังก์ชันหามอนสเตอร์
+        local function getClosestMonster()
+            local closestTarget = nil
+            local shortestDistance = MAX_DISTANCE
+            local myHRP = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
+
+            if not myHRP then return nil end
+
+            for _, obj in pairs(game.Workspace:GetDescendants()) do
+                if obj:IsA("Model") and obj:FindFirstChild("Humanoid") and obj:FindFirstChild("HumanoidRootPart") then
+                    if obj ~= player.Character and not game.Players:GetPlayerFromCharacter(obj) then
+                        local distance = (myHRP.Position - obj.HumanoidRootPart.Position).Magnitude
+                        if distance <= shortestDistance then
+                            closestTarget = obj.HumanoidRootPart
+                            shortestDistance = distance
+                        end
+                    end
+                end
+            end
+            return closestTarget
+        end
+
+        -- ลูปการทำงาน (จะทำงานเฉพาะตอนที่ _G.AutoFarm เป็น true)
+        task.spawn(function()
+            while _G.AutoFarm do
+                local target = getClosestMonster()
+                local character = player.Character
+                local myHRP = character and character:FindFirstChild("HumanoidRootPart")
+
+                if target and myHRP then
+                    -- ล็อคความเร็วให้นิ่ง
+                    if bv.Parent ~= myHRP then
+                        bv.Parent = myHRP
+                    end
+                    -- วาร์ปไปเหนือหัวเป้าหมาย
+                    myHRP.CFrame = CFrame.new(target.Position + Vector3.new(0, HEIGHT_ABOVE, 0))
+                else
+                    bv.Parent = nil
+                end
+                task.wait() -- ป้องกันเกมค้าง
+            end
+            
+            -- เมื่อปิด Toggle ให้ล้างค่า
+            if bv then bv.Parent = nil end
+        end)
+    end
+})
+
+local TP = Window:Tab({
+    Title = "TP ",
+    Icon = "locate"          -- แก้ตรงนี้ (เลือกชื่อที่ library มีจริง)
+})
+
+-- ฟังก์ชันช่วยเหลือ (ทำให้โค้ดสั้นลงและเหมือนกันหมด)
+local function teleportTo(pos)
+    local player = game.Players.LocalPlayer
+    local char = player.Character
+    
+    if char and char:FindFirstChild("HumanoidRootPart") then
+        char.HumanoidRootPart.CFrame = CFrame.new(pos + Vector3.new(0, 3, 0)) -- บวก 3 ทุกครั้ง
+        print("Teleported to " .. tostring(pos))
+    else
+        warn("ไม่พบตัวละครหรือ HumanoidRootPart")
+    end
+end
+TP:Section({ Title = " Summon Teleport " })
+TP:Button({
+    Title = "Telepot to Summon Powers",
+    Desc = "วาปไปที่สุ่มพลัง",
+    Callback = function()
+        teleportTo(Vector3.new(61.74, -9.45, -113.31))
+    end
+})
+TP:Section({ Title = " Shop and Sell Teleport " })
+TP:Button({
+    Title = "Telepot to Sell loot here",
+    Desc = "วาปไปที่ขายไอเทม",
+    Callback = function()
+        teleportTo(Vector3.new(-24.34, -7.45, -72.88))
+    end
+})
+
+TP:Button({
+    Title = "Telepot to merchant (shop item)",
+    Desc = "วาปไปที่ซื้อไอเทม",
+    Callback = function()
+        teleportTo(Vector3.new(-45.38, -9.45, 15.51))
+    end
+})
+
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local Camera = workspace.CurrentCamera
+
+getgenv().SelectedPlayer = nil
+
+-- ===== PLAYER LIST =====
+local PlayerList = {}
+
+local function RefreshPlayers()
+    table.clear(PlayerList)
+    for _,p in pairs(Players:GetPlayers()) do
+        if p ~= LocalPlayer then
+            table.insert(PlayerList, p.Name)
+        end
+    end
+end
+
+RefreshPlayers()
+Players.PlayerAdded:Connect(RefreshPlayers)
+Players.PlayerRemoving:Connect(RefreshPlayers)
+
+-- ===== SPECTATE =====
+local function Spectate(plr)
+    if plr and plr.Character and plr.Character:FindFirstChild("Humanoid") then
+        Camera.CameraSubject = plr.Character.Humanoid
+    end
+end
+
+local function UnSpectate()
+    if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
+        Camera.CameraSubject = LocalPlayer.Character.Humanoid
+    end
+end
+
+-- ===== TP INSTANT =====
+local function TPToPlayer(plr)
+    if plr and plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
+        LocalPlayer.Character.HumanoidRootPart.CFrame =
+            plr.Character.HumanoidRootPart.CFrame * CFrame.new(0, 0, -3)
+    end
+end
+
+-- Services
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+-- Remote (เตรียมไว้ครั้งเดียว ไม่ต้องหาใหม่ทุกกด)
+local RequestQuest = ReplicatedStorage
+    :WaitForChild("RemoteServices")
+    :WaitForChild("QuestsV2Service")
+    :WaitForChild("RF")
+    :WaitForChild("RequestQuest")
+
+-- Tab
+local Quest = Window:Tab({
+    Title = "Quest",
+    Icon = "scroll",
+})
+
+-- กันกดรัว
+local debounce = false
+
+-- Button
+Quest:Button({
+    Title = "Get Quest (Rubble Doug)",
+    Desc = "รับเควสเลเวล 20",
+    Callback = function()
+
+        if debounce then return end
+        debounce = true
+
+        local success, err = pcall(function()
+            RequestQuest:InvokeServer("Caves")
+        end)
+
+        if success then
+            print("รับเควสสำเร็จ")
+        else
+            warn("ผิดพลาด: " .. tostring(err))
+        end
+
+        task.wait(2) -- หน่วงกันสแปม
+        debounce = false
+    end
+})
