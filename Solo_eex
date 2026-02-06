@@ -229,6 +229,13 @@ TP:Button({
 })
 
 TP:Button({
+    Title = "To enter the code (game code)",
+    Desc = "วาปไปหามอนที่ใส่โค้ด",
+    Callback = function()
+        teleportTo(Vector3.new(-63.6, -9.6, 1438.7))
+    end
+})
+TP:Button({
     Title = "Telepot to merchant (shop item)",
     Desc = "วาปไปที่ซื้อไอเทม",
     Callback = function()
