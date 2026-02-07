@@ -482,6 +482,7 @@ HackTab:Toggle({
         end
     end
 })
+
 local AdditionalsTab = Window:Tab({
     Title = "Additionals",
     Icon = "plus"
@@ -604,10 +605,12 @@ AdditionalsTab:Button({
         end
     end
 })
+
 local ESPBotTab = Window:Tab({
     Title = "ESP Bot",
     Icon = "eye"
-})ESPBotTab:Button({
+})
+ESPBotTab:Button({
     Title = "มองเน็กบอท",
     Desc = "เปิด / ปิด ESP Nextbot",
     Callback = function()
