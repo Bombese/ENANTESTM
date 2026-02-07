@@ -10,7 +10,7 @@ local Window = WindUI:CreateWindow({
     Author = "https://discord.gg/AXTKtmUvyf",
     OpenButton = {
         Title = "Felon HUB",
-        Icon = "monitor",
+        Icon = "sword",
         Enabled = true,
         Draggable = true,
     }
