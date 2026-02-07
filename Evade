@@ -5,7 +5,7 @@ local WindUI = loadstring(game:HttpGet(
 
 -- Window
 local Window = WindUI:CreateWindow({
-    Title = "Evade Script Felon HUB (Premium)",
+    Title = "Evade Script Felon HUB (Premium1)",
     Icon = "user",
     Author = "https://discord.gg/AXTKtmUvyf",
     OpenButton = {
