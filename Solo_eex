@@ -186,7 +186,7 @@ Main:Toggle({
 
             -- ค้นหาเป้าหมาย (เช็คทั้ง Workspace)
             local target = nil
-            local dist = 1000 -- ระยะ
+            local dist = 650 -- ระยะ
 
             for _, m in pairs(game.Workspace:GetDescendants()) do
                 -- เงื่อนไข: เป็น Model + มี Humanoid + เลือด > 0 + ไม่ใช่ตัวเรา + ไม่ใช่ผู้เล่นคนอื่น
