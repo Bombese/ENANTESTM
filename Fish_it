@@ -11,7 +11,7 @@ local Window = WindUI:CreateWindow({
 
     OpenButton = {
         Title = "Felon HUB",
-        Icon = "menu",
+        Icon = "Fish",
         CornerRadius = UDim.new(0,16),
         StrokeThickness = 2,
         Enabled = true,
