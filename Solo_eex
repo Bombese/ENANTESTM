@@ -51,7 +51,7 @@ Main:Toggle({
                                 -- เช็คว่ามอนสเตอร์ยังไม่ตายและอยู่ในระยะ 100
                                 if hum and hrp and hum.Health > 0 then
                                     local dist = (myPos - hrp.Position).Magnitude
-                                    if dist <= 100 then
+                                    if dist <= 50 then
                                         table.insert(targetList, mob)
                                     end
                                 end
