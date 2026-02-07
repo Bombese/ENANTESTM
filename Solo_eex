@@ -345,3 +345,4 @@ Quest:Button({
         debounce = false
     end
 })
+Main:Select()
