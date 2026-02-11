@@ -148,16 +148,21 @@ Main:Toggle({
         local runService = game:GetService("RunService")
         local hb -- ตัวเก็บ Connection
 
-        -- ฟังก์ชันทำความสะอาดเมื่อปิด
+        -- ฟังก์ชันทำความสะอาด (ปิดไฮไลท์และลบแรงส่ง)
         local function cleanup()
             if hb then hb:Disconnect() end
             local char = player.Character
-            if char and char:FindFirstChild("HumanoidRootPart") then
+            if char then
+                -- ลบ Highlight
+                local oldHighlight = char:FindFirstChild("FarmHighlight")
+                if oldHighlight then oldHighlight:Destroy() end
+
                 -- ลบแรงส่งและคืนค่าตัวละคร
-                for _, obj in pairs(char.HumanoidRootPart:GetChildren()) do
-                    if obj:IsA("BodyVelocity") or obj:IsA("BodyGyro") then obj:Destroy() end
+                if char:FindFirstChild("HumanoidRootPart") then
+                    for _, obj in pairs(char.HumanoidRootPart:GetChildren()) do
+                        if obj:IsA("BodyVelocity") or obj:IsA("BodyGyro") then obj:Destroy() end
+                    end
                 end
-                char.HumanoidRootPart.CFrame = CFrame.new(char.HumanoidRootPart.Position)
             end
         end
 
@@ -166,12 +171,27 @@ Main:Toggle({
             return 
         end
 
-        -- สร้างแรงยก (ป้องกันตัวละครร่วงหรือดีด)
-        local function applyPhysics(hrp)
+        -- ฟังก์ชันจัดการฟิสิกส์และใส่ไฮไลท์สีฟ้า
+        local function applyEffects(char)
+            local hrp = char:FindFirstChild("HumanoidRootPart")
+            if not hrp then return end
+
+            -- สร้างแรงยก
             local bv = hrp:FindFirstChild("FarmBV") or Instance.new("BodyVelocity", hrp)
             bv.Name = "FarmBV"
             bv.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
             bv.Velocity = Vector3.new(0, 0, 0)
+
+            -- สร้าง Highlight สีฟ้า
+            if not char:FindFirstChild("FarmHighlight") then
+                local highlight = Instance.new("Highlight")
+                highlight.Name = "FarmHighlight"
+                highlight.Parent = char
+                highlight.FillColor = Color3.fromRGB(0, 170, 255) -- สีฟ้า
+                highlight.OutlineColor = Color3.fromRGB(255, 255, 255) -- ขอบขาว
+                highlight.FillTransparency = 0.5 -- ความโปร่งใสของสี (0-1)
+                highlight.OutlineTransparency = 0 -- ความชัดของขอบ
+            end
         end
 
         -- เริ่มทำงาน
@@ -179,17 +199,18 @@ Main:Toggle({
             if not _G.AutoFarm then cleanup() return end
 
             local char = player.Character
-            local hrp = char and char:FindFirstChild("HumanoidRootPart")
+            if not char then return end
+            
+            local hrp = char:FindFirstChild("HumanoidRootPart")
             if not hrp then return end
 
-            applyPhysics(hrp)
+            applyEffects(char)
 
-            -- ค้นหาเป้าหมาย (เช็คทั้ง Workspace)
+            -- ค้นหาเป้าหมาย
             local target = nil
-            local dist = 650 -- ระยะ
+            local dist = 650 
 
             for _, m in pairs(game.Workspace:GetDescendants()) do
-                -- เงื่อนไข: เป็น Model + มี Humanoid + เลือด > 0 + ไม่ใช่ตัวเรา + ไม่ใช่ผู้เล่นคนอื่น
                 if m:IsA("Humanoid") and m.Parent:IsA("Model") and m.Health > 0 then
                     local mHRP = m.Parent:FindFirstChild("HumanoidRootPart")
                     if mHRP and m.Parent ~= char and not game.Players:GetPlayerFromCharacter(m.Parent) then
@@ -203,7 +224,7 @@ Main:Toggle({
             end
 
             if target then
-                -- วาร์ปไปเหนือหัว + ท่านอน (Horizontal)
+                -- วาร์ปไปเหนือหัว + ท่านอน
                 hrp.CFrame = CFrame.new(target.Position + Vector3.new(0, 10, 0)) 
                            * CFrame.Angles(math.rad(-90), 0, 0)
             end
