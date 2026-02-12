@@ -22,58 +22,42 @@ local Main = Window:Tab({
 })
 
 Main:Section({ Title = " Player Settings " })
+
+local VirtualUser = game:GetService("VirtualUser")
+_G.AutoClick = false -- ตั้งค่าเริ่มต้นให้เป็น False
+
+-- ฟังก์ชันสำหรับคลิก
+local function DoClick()
+    task.spawn(function()
+        while _G.AutoClick do 
+            pcall(function()
+                -- คลิกซ้ายรัวๆ
+                VirtualUser:CaptureController()
+                VirtualUser:ClickButton1(Vector2.new(0, 0))
+            end)
+            task.wait(0.1) -- ความเร็วในการกด (10 ครั้งต่อวินาที)
+        end
+    end)
+end
+
+-- ส่วนของ UI Toggle
 Main:Toggle({
-    Title = "Damage Aura",
-    Desc = "Auto damage Aura (sword)",
-    Value = false, -- สถานะเริ่มต้น
+    Title = "Auto Attack",
+    Desc = "Auto hit (Sword)",
+    Value = false,
     Callback = function(v)
-        _G.AutoClick = v 
+        _G.AutoClick = v -- กำหนดค่าตามปุ่มเปิด/ปิด (true หรือ false)
         
         if v then
-            print("Auto Attack: ON")
-            -- ใช้ task.spawn เพื่อให้ลูปทำงานแยกจาก UI (ไม่งั้น UI จะค้าง)
-            task.spawn(function()
-                while _G.AutoClick do
-                    local targetList = {}
-                    local player = game.Players.LocalPlayer
-                    local char = player.Character
-                    
-                    -- ตรวจสอบตำแหน่งของเรา
-                    if char and char:FindFirstChild("HumanoidRootPart") then
-                        local myPos = char.HumanoidRootPart.Position
-                        local mobsFolder = workspace:FindFirstChild("Mobs") -- เช็คชื่อโฟลเดอร์ให้ตรงกับในเกม
-                        
-                        if mobsFolder then
-                            for _, mob in pairs(mobsFolder:GetChildren()) do
-                                local hum = mob:FindFirstChild("Humanoid")
-                                local hrp = mob:FindFirstChild("HumanoidRootPart")
-                                
-                                -- เช็คว่ามอนสเตอร์ยังไม่ตายและอยู่ในระยะ 100
-                                if hum and hrp and hum.Health > 0 then
-                                    local dist = (myPos - hrp.Position).Magnitude
-                                    if dist <= 50 then
-                                        table.insert(targetList, mob)
-                                    end
-                                end
-                            end
-                        end
-                        
-                        -- ถ้าเจอเป้าหมาย ส่ง Remote ทันที
-                        if #targetList > 0 then
-                            pcall(function()
-                                -- Remote ที่คุณหามา
-                                game:GetService("ReplicatedStorage").RemoteServices.CombatService.RF.UseWeapon:InvokeServer(0, targetList, 1)
-                            end)
-                        end
-                    end
-                    task.wait(0.1) -- ปรับความเร็วตรงนี้ (0.1 คือกำลังดี)
-                end
-            end)
+            DoClick() -- ถ้าเปิด (v = true) ให้เริ่มรัน Loop ใน DoClick
+            print("Auto Clicker: ON")
         else
-            print("Auto Attack: OFF")
+            -- เมื่อ v เป็น false ลูป 'while _G.AutoClick' จะหยุดทำงานเอง
+            print("Auto Clicker: OFF")
         end
     end
 })
+
 
 Main:Button({
     Title = "Auto Quest (Hunter Tin)",
