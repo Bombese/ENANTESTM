@@ -1,353 +1,222 @@
--- Load WindUI
-local WindUI = loadstring(game:HttpGet(
-    "https://github.com/Footagesus/WindUI/releases/latest/download/main.lua"
-))()
+local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
 
--- Window
-local Window = WindUI:CreateWindow({
-    Title = "Solo Hunters Felon HUB (Premium)",
-    Icon = "user",
-    Author = "https://discord.gg/AXTKtmUvyf",
-    OpenButton = {
-        Title = "Felon HUB",
-        Icon = "sword",
-        Enabled = true,
-        Draggable = true,
-    }
-})
-
-local Main = Window:Tab({
-    Title = "Main",
-    Icon = "star",
-})
-
-Main:Section({ Title = " Player Settings " })
-
+--// Services
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local VirtualUser = game:GetService("VirtualUser")
-_G.AutoClick = false -- ตั้งค่าเริ่มต้นให้เป็น False
+local lp = Players.LocalPlayer
 
--- ฟังก์ชันสำหรับคลิก
-local function DoClick()
+--// Variables Setup
+_G.AutoClick = false
+_G.AutoFarm = false
+_G.RequestingQuest = false
+
+--// Remote Paths
+local RemoteServices = ReplicatedStorage:WaitForChild("RemoteServices")
+local QuestRF = RemoteServices:WaitForChild("QuestsV2Service"):WaitForChild("RF"):WaitForChild("RequestQuest")
+local StartDungeonRF = RemoteServices:WaitForChild("DungeonService"):WaitForChild("RF"):WaitForChild("StartDungeon")
+
+--// Window Setup
+local Window = Fluent:CreateWindow({
+    Title = "Solo Hunters Felon HUB",
+    SubTitle = "Premium Edition",
+    TabWidth = 160,
+    Size = UDim2.fromOffset(580, 460),
+    Acrylic = true,
+    Theme = "Dark",
+    MinimizeKey = Enum.KeyCode.LeftControl
+})
+
+-------------------------------------------------------------------------------
+-- [ CUSTOM FLOATING BUTTON ]
+-------------------------------------------------------------------------------
+local ScreenGui = Instance.new("ScreenGui")
+local OpenBtn = Instance.new("TextButton")
+local UICorner = Instance.new("UICorner")
+local UIStroke = Instance.new("UIStroke")
+
+ScreenGui.Name = "FelonButtonGui"
+ScreenGui.Parent = (gethui and gethui()) or game:GetService("CoreGui")
+
+OpenBtn.Name = "OpenBtn"
+OpenBtn.Parent = ScreenGui
+OpenBtn.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+OpenBtn.Position = UDim2.new(0, 10, 0, 200)
+OpenBtn.Size = UDim2.new(0, 80, 0, 40)
+OpenBtn.Font = Enum.Font.GothamBold
+OpenBtn.Text = "Felon"
+OpenBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+OpenBtn.TextSize = 16
+OpenBtn.Active = true
+OpenBtn.Draggable = true 
+
+UICorner.CornerRadius = UDim.new(0, 10)
+UICorner.Parent = OpenBtn
+
+UIStroke.Color = Color3.fromRGB(0, 170, 255)
+UIStroke.Thickness = 2
+UIStroke.Parent = OpenBtn
+
+OpenBtn.MouseButton1Click:Connect(function()
+    Window:Minimize()
+end)
+
+-------------------------------------------------------------------------------
+-- [ TABS DEFINITION ]
+-------------------------------------------------------------------------------
+local Tabs = {
+    Main = Window:AddTab({ Title = "Main", Icon = "star" }),
+    Quest = Window:AddTab({ Title = "Quest", Icon = "scroll" }),
+    TP = Window:AddTab({ Title = "Teleport", Icon = "map-pin" })
+}
+
+-------------------------------------------------------------------------------
+-- [ MAIN TAB: PLAYER & FARM ]
+-------------------------------------------------------------------------------
+Tabs.Main:AddSection("Player Settings")
+
+Tabs.Main:AddToggle("AutoAttack", {
+    Title = "Auto Attack", 
+    Description = "คลิกซ้ายรัวๆ เพื่อโจมตีอัตโนมัติ (Auto Clicker)",
+    Default = false 
+}):OnChanged(function(Value)
+    _G.AutoClick = Value
+    if Value then
+        task.spawn(function()
+            while _G.AutoClick do
+                pcall(function()
+                    VirtualUser:CaptureController()
+                    VirtualUser:ClickButton1(Vector2.new(0, 0))
+                end)
+                task.wait(0.1)
+            end
+        end)
+    end
+end)
+
+Tabs.Main:AddToggle("AutoFarm", {
+    Title = "Auto Farm (Fast)", 
+    Description = "ฟาร์มมอนสเตอร์อัตโนมัติ โดยการวาร์ปไปเหนือหัวและกดมุดดิน",
+    Default = false 
+}):OnChanged(function(v)
+    _G.AutoFarm = v
+    local function cleanup()
+        local char = lp.Character
+        if char then
+            if char:FindFirstChild("FarmHighlight") then char.FarmHighlight:Destroy() end
+            if char:FindFirstChild("HumanoidRootPart") then
+                for _, obj in pairs(char.HumanoidRootPart:GetChildren()) do
+                    if obj.Name == "FarmBV" or obj:IsA("BodyVelocity") or obj:IsA("BodyGyro") then obj:Destroy() end
+                end
+            end
+        end
+    end
+    if not v then cleanup() return end
+
     task.spawn(function()
-        while _G.AutoClick do 
-            pcall(function()
-                -- คลิกซ้ายรัวๆ
-                VirtualUser:CaptureController()
-                VirtualUser:ClickButton1(Vector2.new(0, 0))
-            end)
-            task.wait(0.1) -- ความเร็วในการกด (10 ครั้งต่อวินาที)
+        while _G.AutoFarm do
+            local char = lp.Character
+            local hrp = char and char:FindFirstChild("HumanoidRootPart")
+            if hrp then
+                if not hrp:FindFirstChild("FarmBV") then
+                    local bv = Instance.new("BodyVelocity", hrp)
+                    bv.Name = "FarmBV"; bv.MaxForce = Vector3.new(math.huge, math.huge, math.huge); bv.Velocity = Vector3.zero
+                end
+                if not char:FindFirstChild("FarmHighlight") then
+                    local h = Instance.new("Highlight", char); h.Name = "FarmHighlight"; h.FillColor = Color3.fromRGB(0, 170, 255); h.FillTransparency = 0.5
+                end
+                local target = nil; local dist = 650
+                for _, m in pairs(workspace:GetDescendants()) do
+                    if m:IsA("Humanoid") and m.Parent:IsA("Model") and m.Health > 0 then
+                        local mHRP = m.Parent:FindFirstChild("HumanoidRootPart")
+                        if mHRP and m.Parent ~= char and not Players:GetPlayerFromCharacter(m.Parent) then
+                            local mag = (hrp.Position - mHRP.Position).Magnitude
+                            if mag < dist then target = mHRP; dist = mag end
+                        end
+                    end
+                end
+                if target then
+                    hrp.CFrame = CFrame.new(target.Position + Vector3.new(0, 10, 0)) * CFrame.Angles(math.rad(-90), 0, 0)
+                end
+            end
+            task.wait()
         end
+        cleanup()
     end)
-end
+end)
 
--- ส่วนของ UI Toggle
-Main:Toggle({
-    Title = "Auto Attack",
-    Desc = "Auto hit (Sword)",
-    Value = false,
-    Callback = function(v)
-        _G.AutoClick = v -- กำหนดค่าตามปุ่มเปิด/ปิด (true หรือ false)
-        
-        if v then
-            DoClick() -- ถ้าเปิด (v = true) ให้เริ่มรัน Loop ใน DoClick
-            print("Auto Clicker: ON")
-        else
-            -- เมื่อ v เป็น false ลูป 'while _G.AutoClick' จะหยุดทำงานเอง
-            print("Auto Clicker: OFF")
-        end
+Tabs.Main:AddSection("Dungeon")
+
+Tabs.Main:AddButton({
+    Title = "Start Dungeon",
+    Description = "ส่งคำสั่งเริ่มดันเจี้ยนทันทีโดยไม่ต้องรอ",
+    Callback = function() 
+        pcall(function() StartDungeonRF:InvokeServer() end)
+        Fluent:Notify({Title = "Dungeon", Content = "Dungeon Starting...", Duration = 2})
     end
 })
 
+-------------------------------------------------------------------------------
+-- [ QUEST TAB: AUTO REQUEST ]
+-------------------------------------------------------------------------------
+Tabs.Quest:AddSection("Request Quest Services")
 
-Main:Button({
-    Title = "Auto Quest (Hunter Tin)",
-    Desc = "Auto Task",
+Tabs.Quest:AddButton({
+    Title = "Get Quest (Subway)",
+    Description = "รับเควสจาก Hunter Tin (บริเวณสถานีรถไฟ)",
     Callback = function()
-        local questName = "Subway" -- เปลี่ยนชื่อเควสตรงนี้จุดเดียวพอ
-
-        local rs = game:GetService("ReplicatedStorage")
-        local questRF = rs:WaitForChild("RemoteServices")
-            :WaitForChild("QuestsV2Service")
-            :WaitForChild("RF")
-            :WaitForChild("RequestQuest")
-
-        -- กันกดรัว
         if _G.RequestingQuest then return end
         _G.RequestingQuest = true
-
-        -- ยิงแบบกันพัง
-        local success, result = pcall(function()
-            return questRF:InvokeServer(questName)
-        end)
-
-        if success then
-            print("รับเควสสำเร็จ:", result)
-        else
-            warn("รับเควสไม่สำเร็จ:", result)
-        end
-
+        pcall(function() QuestRF:InvokeServer("Subway") end)
         task.wait(1)
         _G.RequestingQuest = false
     end
 })
---// ===== SETUP ครั้งเดียวพอ =====
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
-local RemoteServices = ReplicatedStorage:WaitForChild("RemoteServices")
-local DungeonService = RemoteServices:WaitForChild("DungeonService")
-local RF = DungeonService:WaitForChild("RF")
-local StartDungeon = RF:WaitForChild("StartDungeon") -- RemoteFunction
-
-
--- ฟังก์ชันเริ่มดันเจี้ยน
-local function startDungeon()
-    local success, result = pcall(function()
-        return StartDungeon:InvokeServer()
-    end)
-
-    if success then
-        print("Dungeon Started:", result)
-    else
-        warn("Dungeon Error:", result)
-    end
-end
-
-Main:Section({ Title = "Dungeon Setting" })
---// ===== UI BUTTON =====
-Main:Button({
-    Title = "Start Dungeon",
-    Desc = "Start the dungeon once",
+Tabs.Quest:AddButton({
+    Title = "Get Quest (Caves)",
+    Description = "รับเควสจาก Rubble Doug (เควสถ้ำเลเวล 20+)",
     Callback = function()
-        startDungeon()
-    end
-})
-Main:Toggle({
-    Title = "Auto Farm (fast)",
-    Desc = "Auto Farm mob",
-    Value = false,
-    Callback = function(v)
-        _G.AutoFarm = v 
-
-        local player = game.Players.LocalPlayer
-        local runService = game:GetService("RunService")
-        local hb -- ตัวเก็บ Connection
-
-        -- ฟังก์ชันทำความสะอาด (ปิดไฮไลท์และลบแรงส่ง)
-        local function cleanup()
-            if hb then hb:Disconnect() end
-            local char = player.Character
-            if char then
-                -- ลบ Highlight
-                local oldHighlight = char:FindFirstChild("FarmHighlight")
-                if oldHighlight then oldHighlight:Destroy() end
-
-                -- ลบแรงส่งและคืนค่าตัวละคร
-                if char:FindFirstChild("HumanoidRootPart") then
-                    for _, obj in pairs(char.HumanoidRootPart:GetChildren()) do
-                        if obj:IsA("BodyVelocity") or obj:IsA("BodyGyro") then obj:Destroy() end
-                    end
-                end
-            end
-        end
-
-        if not v then 
-            cleanup()
-            return 
-        end
-
-        -- ฟังก์ชันจัดการฟิสิกส์และใส่ไฮไลท์สีฟ้า
-        local function applyEffects(char)
-            local hrp = char:FindFirstChild("HumanoidRootPart")
-            if not hrp then return end
-
-            -- สร้างแรงยก
-            local bv = hrp:FindFirstChild("FarmBV") or Instance.new("BodyVelocity", hrp)
-            bv.Name = "FarmBV"
-            bv.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
-            bv.Velocity = Vector3.new(0, 0, 0)
-
-            -- สร้าง Highlight สีฟ้า
-            if not char:FindFirstChild("FarmHighlight") then
-                local highlight = Instance.new("Highlight")
-                highlight.Name = "FarmHighlight"
-                highlight.Parent = char
-                highlight.FillColor = Color3.fromRGB(0, 170, 255) -- สีฟ้า
-                highlight.OutlineColor = Color3.fromRGB(255, 255, 255) -- ขอบขาว
-                highlight.FillTransparency = 0.5 -- ความโปร่งใสของสี (0-1)
-                highlight.OutlineTransparency = 0 -- ความชัดของขอบ
-            end
-        end
-
-        -- เริ่มทำงาน
-        hb = runService.Heartbeat:Connect(function()
-            if not _G.AutoFarm then cleanup() return end
-
-            local char = player.Character
-            if not char then return end
-            
-            local hrp = char:FindFirstChild("HumanoidRootPart")
-            if not hrp then return end
-
-            applyEffects(char)
-
-            -- ค้นหาเป้าหมาย
-            local target = nil
-            local dist = 650 
-
-            for _, m in pairs(game.Workspace:GetDescendants()) do
-                if m:IsA("Humanoid") and m.Parent:IsA("Model") and m.Health > 0 then
-                    local mHRP = m.Parent:FindFirstChild("HumanoidRootPart")
-                    if mHRP and m.Parent ~= char and not game.Players:GetPlayerFromCharacter(m.Parent) then
-                        local magnitude = (hrp.Position - mHRP.Position).Magnitude
-                        if magnitude < dist then
-                            target = mHRP
-                            dist = magnitude
-                        end
-                    end
-                end
-            end
-
-            if target then
-                -- วาร์ปไปเหนือหัว + ท่านอน
-                hrp.CFrame = CFrame.new(target.Position + Vector3.new(0, 10, 0)) 
-                           * CFrame.Angles(math.rad(-90), 0, 0)
-            end
-        end)
+        if _G.RequestingQuest then return end
+        _G.RequestingQuest = true
+        pcall(function() QuestRF:InvokeServer("Caves") end)
+        task.wait(2)
+        _G.RequestingQuest = false
     end
 })
 
-local TP = Window:Tab({
-    Title = "TP ",
-    Icon = "locate"          -- แก้ตรงนี้ (เลือกชื่อที่ library มีจริง)
-})
-
--- ฟังก์ชันช่วยเหลือ (ทำให้โค้ดสั้นลงและเหมือนกันหมด)
+-------------------------------------------------------------------------------
+-- [ TP TAB: TELEPORT LOCATIONS ]
+-------------------------------------------------------------------------------
 local function teleportTo(pos)
-    local player = game.Players.LocalPlayer
-    local char = player.Character
-    
-    if char and char:FindFirstChild("HumanoidRootPart") then
-        char.HumanoidRootPart.CFrame = CFrame.new(pos + Vector3.new(0, 3, 0)) -- บวก 3 ทุกครั้ง
-        print("Teleported to " .. tostring(pos))
-    else
-        warn("ไม่พบตัวละครหรือ HumanoidRootPart")
-    end
-end
-TP:Section({ Title = " Summon Teleport " })
-TP:Button({
-    Title = "Telepot to Summon Powers",
-    Desc = "วาปไปที่สุ่มพลัง",
-    Callback = function()
-        teleportTo(Vector3.new(61.74, -9.45, -113.31))
-    end
-})
-TP:Section({ Title = " Shop and Sell Teleport " })
-TP:Button({
-    Title = "Telepot to Sell loot here",
-    Desc = "วาปไปที่ขายไอเทม",
-    Callback = function()
-        teleportTo(Vector3.new(-24.34, -7.45, -72.88))
-    end
-})
-
-TP:Button({
-    Title = "To enter the code (game code)",
-    Desc = "วาปไปหามอนที่ใส่โค้ด",
-    Callback = function()
-        teleportTo(Vector3.new(-63.6, -9.6, 1438.7))
-    end
-})
-TP:Button({
-    Title = "Telepot to merchant (shop item)",
-    Desc = "วาปไปที่ซื้อไอเทม",
-    Callback = function()
-        teleportTo(Vector3.new(-45.38, -9.45, 15.51))
-    end
-})
-
-local Players = game:GetService("Players")
-local LocalPlayer = Players.LocalPlayer
-local Camera = workspace.CurrentCamera
-
-getgenv().SelectedPlayer = nil
-
--- ===== PLAYER LIST =====
-local PlayerList = {}
-
-local function RefreshPlayers()
-    table.clear(PlayerList)
-    for _,p in pairs(Players:GetPlayers()) do
-        if p ~= LocalPlayer then
-            table.insert(PlayerList, p.Name)
-        end
-    end
+    local hrp = lp.Character and lp.Character:FindFirstChild("HumanoidRootPart")
+    if hrp then hrp.CFrame = CFrame.new(pos + Vector3.new(0, 3, 0)) end
 end
 
-RefreshPlayers()
-Players.PlayerAdded:Connect(RefreshPlayers)
-Players.PlayerRemoving:Connect(RefreshPlayers)
+Tabs.TP:AddSection("Important Locations")
 
--- ===== SPECTATE =====
-local function Spectate(plr)
-    if plr and plr.Character and plr.Character:FindFirstChild("Humanoid") then
-        Camera.CameraSubject = plr.Character.Humanoid
-    end
-end
-
-local function UnSpectate()
-    if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
-        Camera.CameraSubject = LocalPlayer.Character.Humanoid
-    end
-end
-
--- ===== TP INSTANT =====
-local function TPToPlayer(plr)
-    if plr and plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
-        LocalPlayer.Character.HumanoidRootPart.CFrame =
-            plr.Character.HumanoidRootPart.CFrame * CFrame.new(0, 0, -3)
-    end
-end
-
--- Services
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-
--- Remote (เตรียมไว้ครั้งเดียว ไม่ต้องหาใหม่ทุกกด)
-local RequestQuest = ReplicatedStorage
-    :WaitForChild("RemoteServices")
-    :WaitForChild("QuestsV2Service")
-    :WaitForChild("RF")
-    :WaitForChild("RequestQuest")
-
--- Tab
-local Quest = Window:Tab({
-    Title = "Quest",
-    Icon = "scroll",
+Tabs.TP:AddButton({
+    Title = "Summon Powers",
+    Description = "วาร์ปไปจุดสุ่มพลัง (Summoning Area)",
+    Callback = function() teleportTo(Vector3.new(61.74, -9.45, -113.31)) end
 })
 
--- กันกดรัว
-local debounce = false
-
--- Button
-Quest:Button({
-    Title = "Get Quest (Rubble Doug)",
-    Desc = "รับเควสเลเวล 20",
-    Callback = function()
-
-        if debounce then return end
-        debounce = true
-
-        local success, err = pcall(function()
-            RequestQuest:InvokeServer("Caves")
-        end)
-
-        if success then
-            print("รับเควสสำเร็จ")
-        else
-            warn("ผิดพลาด: " .. tostring(err))
-        end
-
-        task.wait(2) -- หน่วงกันสแปม
-        debounce = false
-    end
+Tabs.TP:AddButton({
+    Title = "Sell Loot Here",
+    Description = "วาร์ปไปหา NPC รับซื้อไอเทม เพื่อขายของในตัว",
+    Callback = function() teleportTo(Vector3.new(-24.34, -7.45, -72.88)) end
 })
-Main:Select()
+
+Tabs.TP:AddButton({
+    Title = "Merchant Shop",
+    Description = "วาร์ปไปร้านค้าขายไอเทมทั่วไป",
+    Callback = function() teleportTo(Vector3.new(-45.38, -9.45, 15.51)) end
+})
+
+Tabs.TP:AddButton({
+    Title = "Game Code NPC",
+    Description = "วาร์ปไปหา NPC สำหรับใส่ Code รับของรางวัล",
+    Callback = function() teleportTo(Vector3.new(-63.6, -9.6, 1438.7)) end
+})
+
+Window:SelectTab(1)
