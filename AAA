@@ -1,0 +1,179 @@
+local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
+
+--// Services
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Players = game:GetService("Players")
+local lp = Players.LocalPlayer
+
+--// Remotes
+local PurchaseRF = ReplicatedStorage:WaitForChild("RemoteEvents"):WaitForChild("PurchaseShopItem")
+local SellRF = ReplicatedStorage:WaitForChild("RemoteEvents"):WaitForChild("SellItems")
+
+--// Config
+local SelectedSeed = "Carrot Seed"
+local BuyPos = Vector3.new(176, 204.0, 672)
+local SellPos = Vector3.new(149.4, 204.0, 672)
+
+--// Window Setup
+local Window = Fluent:CreateWindow({
+    Title = "Felon HUB : Market",
+    SubTitle = "Premium Auto System",
+    TabWidth = 160,
+    Size = UDim2.fromOffset(450, 380),
+    Acrylic = true,
+    Theme = "Dark",
+    MinimizeKey = Enum.KeyCode.LeftControl
+})
+
+-------------------------------------------------------------------------------
+-- [ Floating Toggle Button : Felon ]
+-------------------------------------------------------------------------------
+local ScreenGui = Instance.new("ScreenGui", (gethui and gethui()) or game:GetService("CoreGui"))
+local OpenBtn = Instance.new("TextButton", ScreenGui)
+local UICorner = Instance.new("UICorner", OpenBtn)
+local UIStroke = Instance.new("UIStroke", OpenBtn)
+
+OpenBtn.Size = UDim2.new(0, 80, 0, 40)
+OpenBtn.Position = UDim2.new(0, 10, 0, 200)
+OpenBtn.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+OpenBtn.Text = "Felon"
+OpenBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+OpenBtn.Font = Enum.Font.GothamBold
+OpenBtn.Active = true
+OpenBtn.Draggable = true
+
+UICorner.CornerRadius = UDim.new(0, 10)
+UIStroke.Color = Color3.fromRGB(0, 170, 255)
+UIStroke.Thickness = 2
+
+OpenBtn.MouseButton1Click:Connect(function() 
+    Window:Minimize() 
+end)
+
+-------------------------------------------------------------------------------
+-- [ MARKET TAB ]
+-------------------------------------------------------------------------------
+local Tab = Window:AddTab({ Title = "Market", Icon = "shopping-cart" })
+
+-- Section: Seed Shop System
+Tab:AddSection("Seed Shop System (ระบบซื้อเมล็ด)")
+
+local SeedList = {
+    "Carrot Seed", "Corn Seed", "Onion Seed", "Strawberry Seed", 
+    "Mushroom Seed", "Beetroot Seed", "Tomato Seed", "Apple Seed", 
+    "Rose Seed", "Wheat Seed", "Banana Seed", "Plum Seed", 
+    "Potato Seed", "Cabbage Seed", "Cherry Seed"
+}
+
+Tab:AddDropdown("SeedSelector", {
+    Title = "Select Seeds (เลือกเมล็ด)",
+    Description = "Choose seed type you want to buy.",
+    Values = SeedList,
+    Default = "Carrot Seed",
+    Callback = function(v) SelectedSeed = v end
+})
+
+Tab:AddButton({
+    Title = "Confirm Purchase (ยืนยันการซื้อ)",
+    Description = "Auto TP to Shop and Buy selected seeds.",
+    Callback = function()
+        local char = lp.Character
+        local hrp = char and char:FindFirstChild("HumanoidRootPart")
+        if hrp then
+            local oldCFrame = hrp.CFrame
+            hrp.CFrame = CFrame.new(BuyPos)
+            task.wait(0.25)
+            
+            pcall(function()
+                PurchaseRF:InvokeServer("SeedShop", SelectedSeed)
+            end)
+            
+            hrp.CFrame = oldCFrame
+            Fluent:Notify({Title = "Market System", Content = "Purchase Completed! (ซื้อสำเร็จ)", Duration = 2})
+        end
+    end
+})
+
+-- Section: Sell System
+Tab:AddSection("Sell System (ระบบขายไอเทม)")
+
+Tab:AddButton({
+    Title = "Sell All Items (ขายของทั้งหมด)",
+    Description = "Auto TP to Sell point and Return to original position.",
+    Callback = function()
+        local char = lp.Character
+        local hrp = char and char:FindFirstChild("HumanoidRootPart")
+        if hrp then
+            local oldCFrame = hrp.CFrame
+            hrp.CFrame = CFrame.new(SellPos)
+            task.wait(0.25)
+            
+            pcall(function()
+                SellRF:InvokeServer("SellAll")
+            end)
+            
+            hrp.CFrame = oldCFrame
+            Fluent:Notify({Title = "Sell System", Content = "Sell Success! (ขายไอเทมเรียบร้อย)", Duration = 2})
+        end
+    end
+})
+
+Window:SelectTab(1)
+
+-------------------------------------------------------------------------------
+-- [ TAB: GEAR SHOP ]
+-------------------------------------------------------------------------------
+local GearTab = Window:AddTab({ Title = "Gear Shop", Icon = "wrench" })
+
+GearTab:AddSection("Gear & Tools (ซื้ออุปกรณ์)")
+
+local GearList = {
+    "Watering Can",
+    "Basic Sprinkler",
+    "Turbo Sprinkler",
+    "Super Sprinkler",
+    "Favorite Tool",
+    "Harvest Bell"
+}
+
+local SelectedGear = "Watering Can"
+
+GearTab:AddDropdown("GearSelector", {
+    Title = "Select Gear (เลือกอุปกรณ์)",
+    Description = "Choose tool you want to buy.",
+    Values = GearList,
+    Default = "Watering Can",
+    Callback = function(v) 
+        SelectedGear = v 
+    end
+})
+
+GearTab:AddButton({
+    Title = "Purchase Gear (ยืนยันซื้ออุปกรณ์)",
+    Description = "Auto TP to Shop and Buy selected gear.",
+    Callback = function()
+        local char = lp.Character
+        local hrp = char and char:FindFirstChild("HumanoidRootPart")
+        if hrp then
+            local oldCFrame = hrp.CFrame
+            
+            -- [ แก้พิกัดเป็นจุดใหม่ที่ต้องการ ]
+            hrp.CFrame = CFrame.new(212.0, 204.0, 607) 
+            
+            task.wait(0.25)
+            
+            pcall(function()
+                -- เรียกใช้ GearShop ตามที่คุณระบุ
+                PurchaseRF:InvokeServer("GearShop", SelectedGear)
+            end)
+            
+            hrp.CFrame = oldCFrame -- วาร์ปกลับที่เดิม
+            Fluent:Notify({
+                Title = "Gear Shop", 
+                Content = "Purchase Completed! (ซื้ออุปกรณ์สำเร็จ)", 
+                Duration = 2
+            })
+        end
+    end
+})
+
