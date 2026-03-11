@@ -18,7 +18,7 @@ local StartDungeonRF = RemoteServices:WaitForChild("DungeonService"):WaitForChil
 
 --// Window Setup
 local Window = Fluent:CreateWindow({
-    Title = "Solo Hunters Felon HUB",
+    Title = "Solo Hunters Felon HUB (not updated)",
     SubTitle = "Premium Edition",
     TabWidth = 160,
     Size = UDim2.fromOffset(580, 460),
