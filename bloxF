@@ -337,12 +337,6 @@ end)
 task.spawn(function()
     while task.wait() do
         if AutoFarmValue then
-local lv = Players.LocalPlayer.Data.Level.Value
-if lv >= 700 then
-    AutoFarmValue = false
-    warn("ถึงเลเวล 700 แล้ว หยุดฟาร์มโลก 1")
-    break
-end
             pcall(function()
                 checkLevel()
                 local player = Players.LocalPlayer
