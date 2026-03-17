@@ -382,7 +382,7 @@ local AutoSecondSea = false
 
 -- ปุ่ม UI
 MainTab:AddToggle("AutoSecondSea", {
-    Title = "Auto Unlock Second Sea",
+    Title = "Auto Unlock Second Sea(Lv700)",
     Default = false,
     Callback = function(v)
         AutoSecondSea = v
