@@ -54,6 +54,34 @@ local function checkLevel()
         NM, NQ, Number = "Gorilla", "JungleQuest", 2
         PQ = CFrame.new(-1602, 36, 154)
         MF = CFrame.new(-1142, 40, -515)
+elseif lv >= 30 and lv <= 40 then
+    NM, NQ, Number = "Pirate", "BuggyQuest1", 1
+    PQ = CFrame.new(-1140, 4, 3825)
+    MF = CFrame.new(-1100, 14, 3930)
+elseif lv >= 40 and lv <= 60 then
+    NM, NQ, Number = "Brute", "BuggyQuest1", 2
+    PQ = CFrame.new(-1140, 4, 3825)
+    MF = CFrame.new(-930, 15, 4300)
+
+elseif lv >= 60 and lv <= 75 then
+    NM, NQ, Number = "Desert Bandit", "DesertQuest", 1
+    PQ = CFrame.new(896, 6, 4390)
+    MF = CFrame.new(984, 16, 4417)
+
+elseif lv >= 75 and lv <= 90 then
+    NM, NQ, Number = "Desert Officer", "DesertQuest", 2
+    PQ = CFrame.new(896, 6, 4390)
+    MF = CFrame.new(1547, 14, 4381)
+
+elseif lv >= 90 and lv <= 100 then
+    NM, NQ, Number = "Snow Bandit", "SnowQuest", 1
+    PQ = CFrame.new(1389, 87, -1298)
+    MF = CFrame.new(1350, 105, -1320)
+
+elseif lv >= 100 and lv <= 120 then
+    NM, NQ, Number = "Snowman", "SnowQuest", 2
+    PQ = CFrame.new(1389, 87, -1298)
+    MF = CFrame.new(1200, 138, -1550)
     end
 end
 
