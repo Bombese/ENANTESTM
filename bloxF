@@ -273,5 +273,76 @@ task.spawn(function()
         end
     end
 end)
+local AutoSecondSea = false
+
+-- ปุ่ม UI
+MainTab:AddToggle("AutoSecondSea", {
+    Title = "Auto Unlock Second Sea",
+    Default = false,
+    Callback = function(v)
+        AutoSecondSea = v
+    end
+})
+
+-- ตำแหน่ง
+local DETECTIVE = CFrame.new(4848, 5, 740) -- Prison
+local ICE_BOSS = CFrame.new(1348, 87, -1390) -- Ice Admiral
+
+-- ฟังก์ชันหาบอส
+local function getIceBoss()
+    for _, v in pairs(workspace.Enemies:GetChildren()) do
+        if v.Name == "Ice Admiral" and v:FindFirstChild("Humanoid") and v.Humanoid.Health > 0 then
+            return v
+        end
+    end
+end
+
+-- LOOP
+task.spawn(function()
+    while task.wait(1) do
+        if AutoSecondSea then
+            pcall(function()
+                local player = Players.LocalPlayer
+
+                -- ไปหา Detective
+                flyTo(DETECTIVE)
+                task.wait(1)
+                CommF:InvokeServer("Talk", "Military Detective")
+
+                -- ไปหาบอส
+                local boss = getIceBoss()
+                if not boss then
+                    flyTo(ICE_BOSS)
+                    repeat task.wait()
+                        boss = getIceBoss()
+                    until boss or not AutoSecondSea
+                end
+
+                -- ตีบอส
+                if boss then
+                    local root = boss:FindFirstChild("HumanoidRootPart")
+                    repeat task.wait()
+                        if not AutoSecondSea then break end
+
+                        if root then
+                            player.Character.HumanoidRootPart.CFrame = root.CFrame * CFrame.new(0, 25, 0)
+                        end
+
+                        if AttackRemote and HitRemote then
+                            AttackRemote:FireServer(0.5)
+                            HitRemote:FireServer(root, {}, nil, HIT_KEY)
+                        end
+
+                    until boss.Humanoid.Health <= 0 or not AutoSecondSea
+                end
+
+                -- กลับไปคุย Detective
+                flyTo(DETECTIVE)
+                task.wait(1)
+                CommF:InvokeServer("Talk", "Military Detective")
+            end)
+        end
+    end
+end)
 
 Window:SelectTab(1)
