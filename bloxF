@@ -116,6 +116,56 @@ elseif lv >= 275 and lv <= 300 then
     NM, NQ, Number = "Gladiator", "ColosseumQuest", 2
     PQ = CFrame.new(-1576, 7, -2985)
     MF = CFrame.new(-1290, 50, -3300)
+
+elseif lv >= 300 and lv <= 325 then
+    NM, NQ, Number = "Military Soldier", "MagmaQuest", 1
+    PQ = CFrame.new(-5316, 12, 8517)
+    MF = CFrame.new(-5360, 61, 8550)
+
+elseif lv >= 325 and lv <= 375 then
+    NM, NQ, Number = "Military Spy", "MagmaQuest", 2
+    PQ = CFrame.new(-5316, 12, 8517)
+    MF = CFrame.new(-5800, 85, 8820)
+
+elseif lv >= 375 and lv <= 400 then
+    NM, NQ, Number = "Fishman Warrior", "FishmanQuest", 1
+    PQ = CFrame.new(61123, 18, 1567)
+    MF = CFrame.new(60878, 18, 1500)
+
+elseif lv >= 400 and lv <= 450 then
+    NM, NQ, Number = "Fishman Commando", "FishmanQuest", 2
+    PQ = CFrame.new(61123, 18, 1567)
+    MF = CFrame.new(61850, 18, 1500)
+
+elseif lv >= 450 and lv <= 475 then
+    NM, NQ, Number = "God's Guard", "SkyExp1Quest", 1
+    PQ = CFrame.new(-4721, 845, -1954)
+    MF = CFrame.new(-4710, 845, -1920)
+
+elseif lv >= 475 and lv <= 525 then
+    NM, NQ, Number = "Shanda", "SkyExp1Quest", 2
+    PQ = CFrame.new(-7862, 5545, -380)
+    MF = CFrame.new(-7685, 5600, -440)
+
+elseif lv >= 525 and lv <= 550 then
+    NM, NQ, Number = "Royal Squad", "SkyExp2Quest", 1
+    PQ = CFrame.new(-7900, 5635, -1410)
+    MF = CFrame.new(-7650, 5600, -1400)
+
+elseif lv >= 550 and lv <= 625 then
+    NM, NQ, Number = "Royal Soldier", "SkyExp2Quest", 2
+    PQ = CFrame.new(-7900, 5635, -1410)
+    MF = CFrame.new(-7800, 5600, -1700)
+
+elseif lv >= 625 and lv <= 650 then
+    NM, NQ, Number = "Galley Pirate", "FountainQuest", 1
+    PQ = CFrame.new(5259, 38, 4050)
+    MF = CFrame.new(5550, 152, 3990)
+
+elseif lv >= 650 and lv <= 700 then
+    NM, NQ, Number = "Galley Captain", "FountainQuest", 2
+    PQ = CFrame.new(5259, 38, 4050)
+    MF = CFrame.new(5700, 152, 4600)
     end
 end
 
