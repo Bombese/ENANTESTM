@@ -166,6 +166,111 @@ elseif lv >= 650 and lv <= 700 then
     NM, NQ, Number = "Galley Captain", "FountainQuest", 2
     PQ = CFrame.new(5259, 38, 4050)
     MF = CFrame.new(5700, 152, 4600)
+
+elseif lv >= 700 and lv <= 725 then
+    NM, NQ, Number = "Raider", "Area1Quest", 1
+    PQ = CFrame.new(-429, 72, 1836)
+    MF = CFrame.new(-728, 52, 2345)
+
+elseif lv >= 725 and lv <= 775 then
+    NM, NQ, Number = "Mercenary", "Area1Quest", 2
+    PQ = CFrame.new(-429, 72, 1836)
+    MF = CFrame.new(-1004, 80, 1424)
+
+elseif lv >= 775 and lv <= 800 then
+    NM, NQ, Number = "Swan Pirate", "Area2Quest", 1
+    PQ = CFrame.new(638, 72, 918)
+    MF = CFrame.new(1065, 137, 1322)
+
+elseif lv >= 800 and lv <= 875 then
+    NM, NQ, Number = "Factory Staff", "Area2Quest", 2
+    PQ = CFrame.new(638, 72, 918)
+    MF = CFrame.new(295, 73, -56)
+
+elseif lv >= 875 and lv <= 900 then
+    NM, NQ, Number = "Marine Lieutenant", "MarineQuest3", 1
+    PQ = CFrame.new(-2440, 72, -3216)
+    MF = CFrame.new(-2840, 72, -2970)
+
+elseif lv >= 900 and lv <= 950 then
+    NM, NQ, Number = "Marine Captain", "MarineQuest3", 2
+    PQ = CFrame.new(-2440, 72, -3216)
+    MF = CFrame.new(-1860, 72, -3320)
+
+elseif lv >= 950 and lv <= 975 then
+    NM, NQ, Number = "Zombie", "ZombieQuest", 1
+    PQ = CFrame.new(-5494, 48, -794)
+    MF = CFrame.new(-5620, 126, -697)
+
+elseif lv >= 975 and lv <= 1000 then
+    NM, NQ, Number = "Vampire", "ZombieQuest", 2
+    PQ = CFrame.new(-5494, 48, -794)
+    MF = CFrame.new(-6030, 7, -1310)
+
+elseif lv >= 1000 and lv <= 1050 then
+    NM, NQ, Number = "Snow Trooper", "SnowMountainQuest", 1
+    PQ = CFrame.new(605, 401, -5370)
+    MF = CFrame.new(540, 401, -5300)
+
+elseif lv >= 1050 and lv <= 1100 then
+    NM, NQ, Number = "Winter Warrior", "SnowMountainQuest", 2
+    PQ = CFrame.new(605, 401, -5370)
+    MF = CFrame.new(1150, 430, -5180)
+
+elseif lv >= 1100 and lv <= 1125 then
+    NM, NQ, Number = "Lab Subordinate", "IceSideQuest", 1
+    PQ = CFrame.new(-6060, 16, -4900)
+    MF = CFrame.new(-5700, 42, -4500)
+
+elseif lv >= 1125 and lv <= 1175 then
+    NM, NQ, Number = "Horned Warrior", "IceSideQuest", 2
+    PQ = CFrame.new(-6060, 16, -4900)
+    MF = CFrame.new(-6400, 24, -5800)
+
+elseif lv >= 1175 and lv <= 1200 then
+    NM, NQ, Number = "Magma Ninja", "FireSideQuest", 1
+    PQ = CFrame.new(-5430, 16, -5290)
+    MF = CFrame.new(-5400, 78, -4700)
+
+elseif lv >= 1200 and lv <= 1250 then
+    NM, NQ, Number = "Lava Pirate", "FireSideQuest", 2
+    PQ = CFrame.new(-5430, 16, -5290)
+    MF = CFrame.new(-5150, 50, -4800)
+
+elseif lv >= 1250 and lv <= 1300 then
+    NM, NQ, Number = "Ship Deckhand", "ShipQuest1", 1
+    PQ = CFrame.new(1040, 125, 32910)
+    MF = CFrame.new(1210, 150, 33000)
+
+elseif lv >= 1300 and lv <= 1325 then
+    NM, NQ, Number = "Ship Engineer", "ShipQuest1", 2
+    PQ = CFrame.new(1040, 125, 32910)
+    MF = CFrame.new(950, 80, 33100)
+
+elseif lv >= 1325 and lv <= 1350 then
+    NM, NQ, Number = "Ship Steward", "ShipQuest2", 1
+    PQ = CFrame.new(968, 125, 33245)
+    MF = CFrame.new(900, 130, 33400)
+
+elseif lv >= 1350 and lv <= 1375 then
+    NM, NQ, Number = "Ship Officer", "ShipQuest2", 2
+    PQ = CFrame.new(968, 125, 33245)
+    MF = CFrame.new(1100, 180, 33500)
+
+elseif lv >= 1375 and lv <= 1425 then
+    NM, NQ, Number = "Arctic Warrior", "FrostQuest", 1
+    PQ = CFrame.new(5668, 28, -6484)
+    MF = CFrame.new(5930, 77, -6470)
+
+elseif lv >= 1425 and lv <= 1450 then
+    NM, NQ, Number = "Snow Lurker", "FrostQuest", 2
+    PQ = CFrame.new(5668, 28, -6484)
+    MF = CFrame.new(5500, 60, -6800)
+
+elseif lv >= 1450 and lv <= 1500 then
+    NM, NQ, Number = "Sea Soldier", "ForgottenQuest", 1
+    PQ = CFrame.new(-3054, 237, -10147)
+    MF = CFrame.new(-3180, 58, -9660)
     end
 end
 
