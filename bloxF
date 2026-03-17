@@ -82,6 +82,40 @@ elseif lv >= 100 and lv <= 120 then
     NM, NQ, Number = "Snowman", "SnowQuest", 2
     PQ = CFrame.new(1389, 87, -1298)
     MF = CFrame.new(1200, 138, -1550)
+elseif lv >= 120 and lv <= 150 then
+    NM, NQ, Number = "Chief Petty Officer", "MarineQuest2", 1
+    PQ = CFrame.new(-5039, 29, 4324)
+    MF = CFrame.new(-4880, 23, 4270)
+
+elseif lv >= 150 and lv <= 175 then
+    NM, NQ, Number = "Sky Bandit", "SkyQuest", 1
+    PQ = CFrame.new(-4842, 718, -2623)
+    MF = CFrame.new(-4955, 365, -2908)
+
+elseif lv >= 175 and lv <= 200 then
+    NM, NQ, Number = "Dark Master", "SkyQuest", 2
+    PQ = CFrame.new(-4842, 718, -2623)
+    MF = CFrame.new(-5220, 430, -2278)
+
+elseif lv >= 200 and lv <= 225 then
+    NM, NQ, Number = "Prisoner", "PrisonerQuest", 1
+    PQ = CFrame.new(5308, 1, 475)
+    MF = CFrame.new(5200, 0, 480)
+
+elseif lv >= 225 and lv <= 250 then
+    NM, NQ, Number = "Dangerous Prisoner", "PrisonerQuest", 2
+    PQ = CFrame.new(5308, 1, 475)
+    MF = CFrame.new(5100, 0, 480)
+
+elseif lv >= 250 and lv <= 275 then
+    NM, NQ, Number = "Toga Warrior", "ColosseumQuest", 1
+    PQ = CFrame.new(-1576, 7, -2985)
+    MF = CFrame.new(-1820, 50, -2740)
+
+elseif lv >= 275 and lv <= 300 then
+    NM, NQ, Number = "Gladiator", "ColosseumQuest", 2
+    PQ = CFrame.new(-1576, 7, -2985)
+    MF = CFrame.new(-1290, 50, -3300)
     end
 end
 
