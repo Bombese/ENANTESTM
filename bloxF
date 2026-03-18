@@ -522,4 +522,88 @@ MainTab:AddButton({
     end
 })
 
+-- ==============================
+-- 💠 CONFIG
+-- ==============================
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+
+local HEIGHT = 25
+local SPEED = 400
+local AutoChest = false
+
+-- ==============================
+-- 💠 ฟังก์ชันหา Chest
+-- ==============================
+local function getChests()
+    local list = {}
+    for _, v in pairs(workspace:GetDescendants()) do
+        if string.find(v.Name, "Chest") and v:IsA("BasePart") then
+            table.insert(list, v)
+        end
+    end
+    return list
+end
+
+-- ==============================
+-- 💠 ฟังก์ชันบินไป Chest แบบไม่ Tween
+-- ==============================
+local function flyTo(cf)
+    local player = Players.LocalPlayer
+    local char = player.Character
+    if not char or not char:FindFirstChild("HumanoidRootPart") then return end
+
+    local hrp = char.HumanoidRootPart
+    local dir = (cf.Position - hrp.Position).Unit
+    local dist = (cf.Position - hrp.Position).Magnitude
+    local time = dist / SPEED
+
+    local startTime = tick()
+    while tick() - startTime < time do
+        hrp.CFrame = CFrame.new(hrp.Position + dir * SPEED * RunService.Heartbeat:Wait())
+    end
+    hrp.CFrame = cf
+end
+
+-- ==============================
+-- 💠 Fluent UI Toggle
+-- ==============================
+-- ใส่ใน Tab ของนาย เช่น MainTab
+MainTab:AddToggle("AutoChest", {
+    Title = "Auto Chest",
+    Default = false,
+    Callback = function(v)
+        AutoChest = v
+    end
+})
+
+-- ==============================
+-- 💠 LOOP ออโต้เก็บ Chest
+-- ==============================
+task.spawn(function()
+    while task.wait(0.5) do
+        if AutoChest then
+            pcall(function()
+                local player = Players.LocalPlayer
+                local char = player.Character
+                if not char or not char:FindFirstChild("HumanoidRootPart") then return end
+
+                for _, chest in pairs(getChests()) do
+                    if not AutoChest then break end
+
+                    local cf = chest.CFrame * CFrame.new(0, HEIGHT, 0)
+
+                    -- 🕊 บินไป Chest
+                    flyTo(cf)
+
+                    -- 📦 วาร์ปลงเก็บ + ลอยขึ้น
+                    char.HumanoidRootPart.CFrame = chest.CFrame
+                    task.wait(0.2)
+                    char.HumanoidRootPart.CFrame = cf
+                end
+            end)
+        end
+    end
+end)
+
 Window:SelectTab(1)
