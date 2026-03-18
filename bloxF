@@ -453,4 +453,49 @@ task.spawn(function()
     end
 end)
 
+MainTab:AddButton({
+    Title = "Auto Go To World 3",
+    Description = "ไปโลก 3 อัตโนมัติ",
+    Callback = function()
+
+        task.spawn(function()
+            local player = Players.LocalPlayer
+            local lv = player.Data.Level.Value
+
+            if lv < 1500 then
+                warn("เลเวลยังไม่ถึง 1500")
+                return
+            end
+
+            if game.PlaceId ~= 4442272183 then
+                warn("ต้องอยู่โลก 2 ก่อน")
+                return
+            end
+
+            warn("เริ่มไปโลก 3...")
+
+            pcall(function()
+                -- 🧠 Bartilo
+                CommF:InvokeServer("BartiloQuestProgress", "Bartilo")
+
+                -- 🏴 Mansion
+                flyTo(CFrame.new(-390, 332, 673))
+                task.wait(2)
+
+                CommF:InvokeServer("TalkTrevor", "1")
+                task.wait(2)
+
+                -- 🔬 Scientist
+                flyTo(CFrame.new(-1180, 15, 1738))
+                task.wait(2)
+
+                -- 🌍 ไปโลก 3
+                CommF:InvokeServer("TravelZou")
+            end)
+
+        end)
+
+    end
+})
+
 Window:SelectTab(1)
