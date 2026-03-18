@@ -381,11 +381,11 @@ end)
 
 MainTab:AddSection("Quest World Settings (เควสโลก2-3)")
 
+-- Toggle
 local AutoSecondSea = false
 
--- ปุ่ม UI
 MainTab:AddToggle("AutoSecondSea", {
-    Title = "Auto Unlock Second Sea(Lv700)",
+    Title = "Auto Unlock Second Sea (Lv700)",
     Default = false,
     Callback = function(v)
         AutoSecondSea = v
@@ -393,10 +393,10 @@ MainTab:AddToggle("AutoSecondSea", {
 })
 
 -- ตำแหน่ง
-local DETECTIVE = CFrame.new(4848, 5, 740) -- Prison
-local ICE_BOSS = CFrame.new(1348, 87, -1390) -- Ice Admiral
+local DETECTIVE = CFrame.new(4848, 5, 740)
+local ICE_BOSS = CFrame.new(1348, 87, -1390)
 
--- ฟังก์ชันหาบอส
+-- หา Ice Admiral
 local function getIceBoss()
     for _, v in pairs(workspace.Enemies:GetChildren()) do
         if v.Name == "Ice Admiral" and v:FindFirstChild("Humanoid") and v.Humanoid.Health > 0 then
@@ -405,19 +405,39 @@ local function getIceBoss()
     end
 end
 
+-- เช็คเควส
+local function isSecondSeaDone()
+    local result = CommF:InvokeServer("DressrosaQuestProgress", "Detective")
+    return result == 2
+end
+
 -- LOOP
 task.spawn(function()
     while task.wait(1) do
         if AutoSecondSea then
+
+            -- 🌍 ทำเฉพาะโลก 1
+            if game.PlaceId ~= 2753915549 then
+                task.wait(2)
+                continue
+            end
+
+            -- ✅ ถ้าเสร็จแล้ว → ปิด
+            if isSecondSeaDone() then
+                warn("ปลดล็อคโลก 2 แล้ว")
+                AutoSecondSea = false
+                break
+            end
+
             pcall(function()
                 local player = Players.LocalPlayer
 
-                -- ไปหา Detective
+                -- 🕵️ ไปหา Detective
                 flyTo(DETECTIVE)
                 task.wait(1)
                 CommF:InvokeServer("Talk", "Military Detective")
 
-                -- ไปหาบอส
+                -- ❄️ หาบอส
                 local boss = getIceBoss()
                 if not boss then
                     flyTo(ICE_BOSS)
@@ -426,25 +446,27 @@ task.spawn(function()
                     until boss or not AutoSecondSea
                 end
 
-                -- ตีบอส
+                -- ⚔️ ตีบอส
                 if boss then
                     local root = boss:FindFirstChild("HumanoidRootPart")
                     repeat task.wait()
                         if not AutoSecondSea then break end
 
-                        if root then
+                        if root and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
                             player.Character.HumanoidRootPart.CFrame = root.CFrame * CFrame.new(0, 25, 0)
                         end
 
-                        if AttackRemote and HitRemote then
+                        if AttackRemote then
                             AttackRemote:FireServer(0.5)
+                        end
+                        if HitRemote then
                             HitRemote:FireServer(root, {}, nil, HIT_KEY)
                         end
 
                     until boss.Humanoid.Health <= 0 or not AutoSecondSea
                 end
 
-                -- กลับไปคุย Detective
+                -- 🔁 กลับไปคุย Detective
                 flyTo(DETECTIVE)
                 task.wait(1)
                 CommF:InvokeServer("Talk", "Military Detective")
