@@ -546,23 +546,38 @@ local function getChests()
 end
 
 -- ==============================
+-- 💠 ฟังก์ชันรับตัวละครใหม่ (กันรีตัว)
+-- ==============================
+local function getChar()
+    local player = Players.LocalPlayer
+    local char = player.Character
+    if not char or not char:FindFirstChild("HumanoidRootPart") then
+        char = player.CharacterAdded:Wait()
+        char:WaitForChild("HumanoidRootPart")
+    end
+    return char
+end
+
+-- ==============================
 -- 💠 ฟังก์ชันบินไป Chest แบบไม่ Tween
 -- ==============================
 local function flyTo(cf)
-    local player = Players.LocalPlayer
-    local char = player.Character
-    if not char or not char:FindFirstChild("HumanoidRootPart") then return end
+    local char = getChar()
+    local hrp = char:FindFirstChild("HumanoidRootPart")
+    if not hrp then return end
 
-    local hrp = char.HumanoidRootPart
     local dir = (cf.Position - hrp.Position).Unit
     local dist = (cf.Position - hrp.Position).Magnitude
     local time = dist / SPEED
 
     local startTime = tick()
     while tick() - startTime < time do
+        if not hrp.Parent then break end -- ถ้ารีตัวกลางทาง
         hrp.CFrame = CFrame.new(hrp.Position + dir * SPEED * RunService.Heartbeat:Wait())
     end
-    hrp.CFrame = cf
+    if hrp.Parent then
+        hrp.CFrame = cf
+    end
 end
 
 -- ==============================
@@ -584,9 +599,9 @@ task.spawn(function()
     while task.wait(0.5) do
         if AutoChest then
             pcall(function()
-                local player = Players.LocalPlayer
-                local char = player.Character
-                if not char or not char:FindFirstChild("HumanoidRootPart") then return end
+                local char = getChar()
+                local hrp = char:FindFirstChild("HumanoidRootPart")
+                if not hrp then return end
 
                 for _, chest in pairs(getChests()) do
                     if not AutoChest then break end
@@ -597,9 +612,11 @@ task.spawn(function()
                     flyTo(cf)
 
                     -- 📦 วาร์ปลงเก็บ + ลอยขึ้น
-                    char.HumanoidRootPart.CFrame = chest.CFrame
-                    task.wait(0.2)
-                    char.HumanoidRootPart.CFrame = cf
+                    if hrp.Parent then
+                        hrp.CFrame = chest.CFrame
+                        task.wait(0.2)
+                        hrp.CFrame = cf
+                    end
                 end
             end)
         end
