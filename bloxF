@@ -378,6 +378,9 @@ task.spawn(function()
         end
     end
 end)
+
+MainTab:AddSection("Quest World Settings (เควสโลก2-3)")
+
 local AutoSecondSea = false
 
 -- ปุ่ม UI
