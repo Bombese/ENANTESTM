@@ -7,7 +7,7 @@ local TweenService = game:GetService("TweenService")
 local RunService = game:GetService("RunService")
 
 -- [[ CONFIG ]] --
-local SPEED = 250
+local SPEED = 300
 local HEIGHT = 15
 local RANGE = 30
 local ATTACK_PER_FRAME = 2
