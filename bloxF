@@ -39,6 +39,8 @@ local Window = Fluent:CreateWindow({
 -- ✅ Tab เดียว
 local MainTab = Window:AddTab({ Title = "Main", Icon = "home" })
 
+MainTab:AddSection("Farm Settings (ตั้งค่าการฟาร์ม)")
+
 -- [[ CHECK LEVEL ]] --
 local function checkLevel()
     local lv = Players.LocalPlayer.Data.Level.Value
