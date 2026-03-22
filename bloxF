@@ -36,6 +36,82 @@ local Window = Fluent:CreateWindow({
     MinimizeKey = Enum.KeyCode.LeftControl
 })
 
+-- ==============================
+-- 💠 TAB ใหม่
+-- ==============================
+local FarmTab = Window:AddTab({ Title = "Farm Settings", Icon = "settings" })
+
+-- ==============================
+-- 💠 STATE
+-- ==============================
+local AutoMelee = false
+local AutoSword = false
+
+-- ==============================
+-- 💠 UI
+-- ==============================
+FarmTab:AddToggle("AutoMelee", {
+    Title = "Auto Equip Melee",
+    Default = false,
+    Callback = function(v)
+        AutoMelee = v
+    end
+})
+
+FarmTab:AddToggle("AutoSword", {
+    Title = "Auto Equip Sword (All)",
+    Default = false,
+    Callback = function(v)
+        AutoSword = v
+    end
+})
+
+-- ==============================
+-- 💠 LIST หมัด
+-- ==============================
+local MeleeList = {
+    "Combat","Black Leg","Electro","Fishman Karate",
+    "Dragon Breath","Superhuman","Death Step",
+    "Sharkman Karate","Electric Claw","Dragon Talon","Godhuman"
+}
+
+-- ==============================
+-- 💠 LOOP ถืออาวุธ
+-- ==============================
+task.spawn(function()
+    while task.wait(0.5) do
+        pcall(function()
+            local player = game.Players.LocalPlayer
+            local char = player.Character or player.CharacterAdded:Wait()
+
+            -- 🥊 Auto หมัด
+            if AutoMelee then
+                for _, tool in pairs(player.Backpack:GetChildren()) do
+                    if tool:IsA("Tool") then
+                        for _, name in pairs(MeleeList) do
+                            if tool.Name == name then
+                                char.Humanoid:EquipTool(tool)
+                            end
+                        end
+                    end
+                end
+            end
+
+            -- 🗡 Auto ดาบ (ไม่ต้องระบุชื่อ)
+            if AutoSword then
+                for _, tool in pairs(player.Backpack:GetChildren()) do
+                    if tool:IsA("Tool") then
+                        if tool.ToolTip == "Sword" then
+                            char.Humanoid:EquipTool(tool)
+                        end
+                    end
+                end
+            end
+
+        end)
+    end
+end)
+
 -- ✅ Tab เดียว
 local MainTab = Window:AddTab({ Title = "Main", Icon = "home" })
 
