@@ -860,21 +860,26 @@ local player = Players.LocalPlayer
 -- SubTab
 local SubTab = Window:AddTab({ Title = "SubTab", Icon = "star" })
 
--- Dropdown เลือก Stat
-local StatDropdown = SubTab:AddDropdown({
+-- ตัวแปรเก็บ Stat ที่เลือก
+local SelectedStat = "Melee"
+
+-- Dropdown แบบเดียวกับตัวอย่าง SelectWeapon
+SubTab:AddDropdown("SelectStat", {
     Title = "Select Stat",
-    Options = { "Melee", "Defense", "Sword", "Gun", "Devil Fruit" },
-    Default = "Melee",
-    Callback = function(selected)
-        print("Selected Stat:", selected)
+    Values = {"Melee", "Defense", "Sword", "Gun", "DevilFruit"},
+    Multi = false,
+    Default = 1,
+    Callback = function(v)
+        SelectedStat = v
+        print("Selected Stat:", SelectedStat)
     end
 })
 
 -- ตัวแปรควบคุม Auto
 local AutoUpgrade = false
 
--- Toggle เปิด/ปิด Auto
-local ToggleButton = SubTab:AddToggle({
+-- Toggle Auto Upgrade
+SubTab:AddToggle({
     Title = "Auto Upgrade",
     Default = false,
     Callback = function(state)
@@ -882,14 +887,13 @@ local ToggleButton = SubTab:AddToggle({
         if AutoUpgrade then
             spawn(function()
                 while AutoUpgrade do
-                    wait(0.5) -- เวลาระหว่างอัพ
-                    local stat = StatDropdown:GetValue()
-                    -- ตรวจสอบ Remote จริง
+                    wait(0.5)
                     local success, err = pcall(function()
-                        ReplicatedStorage.Remotes.StatUpgrade:InvokeServer(stat)
+                        local upgradeRemote = ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("StatUpgrade")
+                        upgradeRemote:InvokeServer(SelectedStat)
                     end)
                     if not success then
-                        warn("Error upgrading:", err)
+                        warn("Error upgrading stat:", err)
                     end
                 end
             end)
