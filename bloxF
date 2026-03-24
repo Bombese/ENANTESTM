@@ -853,32 +853,46 @@ task.spawn(function()
     end
 end)
 
-local SubTab = Window:AddTab({ Title = "SubTab", Icon = "star" }) 
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local player = Players.LocalPlayer
 
--- เก็บค่าพลังที่เลือก
-local selectedPower = nil
+-- SubTab
+local SubTab = Window:AddTab({ Title = "SubTab", Icon = "star" })
 
--- Dropdown เลือกพลัง
-SubTab:CreateDropdown({
-    Name = "Select Power",
-    Options = {"Melee", "Defense", "Sword", "Gun", "Blox Fruit"},
-    Callback = function(option)
-        selectedPower = option
-        print("Selected power:", option)
+-- Dropdown เลือก Stat
+local StatDropdown = SubTab:AddDropdown({
+    Title = "Select Stat",
+    Options = { "Melee", "Defense", "Sword", "Gun", "Devil Fruit" },
+    Default = "Melee",
+    Callback = function(selected)
+        print("Selected Stat:", selected)
     end
 })
 
--- ปุ่มอัพพลัง
-SubTab:CreateButton({
-    Name = "Upgrade Power",
-    Callback = function()
-        if selectedPower then
-            -- เรียก RemoteEvent ของเกม (เปลี่ยนชื่อเป็น RemoteEvent จริง)
-            local StatusEvent = game:GetService("ReplicatedStorage"):WaitForChild("StatusUpdate")
-            StatusEvent:FireServer(selectedPower)
-            print("Upgrading power:", selectedPower)
-        else
-            print("Please select a power first!")
+-- ตัวแปรควบคุม Auto
+local AutoUpgrade = false
+
+-- Toggle เปิด/ปิด Auto
+local ToggleButton = SubTab:AddToggle({
+    Title = "Auto Upgrade",
+    Default = false,
+    Callback = function(state)
+        AutoUpgrade = state
+        if AutoUpgrade then
+            spawn(function()
+                while AutoUpgrade do
+                    wait(0.5) -- เวลาระหว่างอัพ
+                    local stat = StatDropdown:GetValue()
+                    -- ตรวจสอบ Remote จริง
+                    local success, err = pcall(function()
+                        ReplicatedStorage.Remotes.StatUpgrade:InvokeServer(stat)
+                    end)
+                    if not success then
+                        warn("Error upgrading:", err)
+                    end
+                end
+            end)
         end
     end
 })
