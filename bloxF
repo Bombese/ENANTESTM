@@ -50,7 +50,7 @@ local SelectedWeapon = "Melee"
 -- 💠 UI Dropdown
 -- ==============================
 FarmTab:AddDropdown("SelectWeapon", {
-    Title = "Select Auto Weapon",
+    Title = "Select",
     Values = {"Melee", "Sword", "Gun", "Fruit"},
     Multi = false,
     Default = 1,
@@ -115,6 +115,8 @@ task.spawn(function()
     end
 end)
 
+FarmTab:AddSection("Skill Settings (ตั้งค่าสกิล)")
+
 -- ==============================
 -- 💠 STATE
 -- ==============================
@@ -143,11 +145,13 @@ FarmTab:AddDropdown("SkillSelect", {
     Title = "Select Skills",
     Values = {"Z","X","C","V"},
     Multi = true,
-    Default = {"Z"},
+    Default = {"Z","X","C","V"},
     Callback = function(v)
         SelectedSkills = v
     end
 })
+
+FarmTab:AddSection("Delay Settings (ตั้งค่าดีเรสกิล)")
 
 -- 🎯 Slider แยกแต่ละสกิล
 FarmTab:AddSlider("DelayZ", {
