@@ -856,75 +856,80 @@ end)
 Window:SelectTab(1)
 
 -- ==============================
--- 💠 UI BUTTON (Felon HUB) - OLD RGB & GLOW (FULL FIX)
+-- 💠 UI BUTTON (Felon HUB) - RGB & AURA (NO NOTIFY)
 -- ==============================
-local UIS = game:GetService("UserInputService")
-local RS = game:GetService("RunService")
-local TS = game:GetService("TweenService")
+local UserInputService = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
+local TweenService = game:GetService("TweenService")
 local VIM = game:GetService("VirtualInputManager")
 
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "FelonUIButton"
 ScreenGui.Parent = (gethui and gethui()) or game:GetService("CoreGui") or game:GetService("Players").LocalPlayer.PlayerGui
 
--- 🔘 ตัวปุ่ม
+-- 🔘 ตัวปุ่ม (ToggleBtn)
 local ToggleBtn = Instance.new("TextButton")
 ToggleBtn.Parent = ScreenGui
-ToggleBtn.Size = UDim2.new(0, 60, 0, 60) -- ปรับขนาดให้ใหญ่ขึ้นเล็กน้อย (วงกลม)
-ToggleBtn.Position = UDim2.new(0, 15, 0.5, -30) -- กลางจอฝั่งซ้าย
-ToggleBtn.BackgroundColor3 = Color3.fromRGB(10, 10, 10)
+ToggleBtn.Size = UDim2.new(0, 50, 0, 50)
+ToggleBtn.Position = UDim2.new(0, 20, 0.5, -25)
+ToggleBtn.BackgroundColor3 = Color3.fromRGB(10,10,10)
 ToggleBtn.Text = "FH"
-ToggleBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+ToggleBtn.TextColor3 = Color3.fromRGB(255,255,255)
 ToggleBtn.Font = Enum.Font.GothamBold
 ToggleBtn.TextScaled = true
 ToggleBtn.ZIndex = 10
 ToggleBtn.Active = true
-ToggleBtn.Draggable = true -- ✅ ทำให้ลากได้แบบ Solo Hunters เป๊ะๆ
+ToggleBtn.Draggable = true -- ✅ ลากได้ลื่นๆ
 
--- 🟣 ขอบมน (ทำให้เป็นวงกลม)
+-- 🟣 ขอบมน
 local Corner = Instance.new("UICorner")
 Corner.Parent = ToggleBtn
-Corner.CornerRadius = UDim.new(1, 0) -- ทำให้เป็นวงกลม 100%
+Corner.CornerRadius = UDim.new(0, 10)
 
--- 🌈 ขอบ RGB
+-- 🌈 ขอบ RGB (Stroke)
 local Stroke = Instance.new("UIStroke")
 Stroke.Parent = ToggleBtn
-Stroke.Thickness = 3
+Stroke.Thickness = 2
 Stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
 
--- ✨ ออร่า/Glow (เรืองแสงรอบปุ่ม)
+-- ✨ Aura (แสงเรืองรอบๆ)
 local Glow = Instance.new("ImageLabel")
 Glow.Parent = ToggleBtn
-Glow.Size = UDim2.new(1.8, 0, 1.8, 0) -- ออร่าใหญ่ขึ้น
-Glow.Position = UDim2.new(-0.4, 0, -0.4, 0) -- จัดตำแหน่งออร่าให้กลาง
+Glow.Size = UDim2.new(1.8, 0, 1.8, 0)
+Glow.Position = UDim2.new(-0.4, 0, -0.4, 0)
 Glow.BackgroundTransparency = 1
-Glow.Image = "rbxassetid://5028857084" -- รูปออร่าวงกลม
-Glow.ImageTransparency = 0.6 -- ความโปร่งแสงออร่า
-Glow.ZIndex = 9 -- อยู่ใต้ปุ่มเล็กน้อย
+Glow.Image = "rbxassetid://5028857084" 
+Glow.ImageTransparency = 0.5
+Glow.ZIndex = 9
 
--- 🌈 ระบบ RGB วิ่ง (ลื่นไหลขึ้น)
-RS.RenderStepped:Connect(function()
-    local color = Color3.fromHSV((tick() * 0.5) % 1, 0.8, 1) -- สีรุ้งแบบนวลๆ
+-- 🌈 ระบบ RGB วิ่ง
+RunService.RenderStepped:Connect(function()
+    local t = tick()
+    local color = Color3.fromHSV((t * 0.3) % 1, 0.8, 1)
     Stroke.Color = color
-    Glow.ImageColor3 = color -- ออร่าเปลี่ยนสีตามขอบ
+    Glow.ImageColor3 = color
 end)
 
--- 🟢 ระบบเปิด/ปิด (แก้ไขจุดนี้ให้กดติด 100%)
-ToggleBtn.MouseButton1Click:Connect(function()
-    -- Effect ตอนกด
-    TS:Create(ToggleBtn, TweenInfo.new(0.08), {Size = UDim2.new(0, 55, 0, 55)}):Play()
-    task.wait(0.08)
-    TS:Create(ToggleBtn, TweenInfo.new(0.15, Enum.EasingStyle.Back), {Size = UDim2.new(0, 60, 0, 60)}):Play()
+-- ==============================
+-- 💠 Animation & Toggle (เปิด/ปิด)
+-- ==============================
+local function clickAnimation()
+    local info = TweenInfo.new(0.1, Enum.EasingStyle.Back, Enum.EasingDirection.Out)
+    ToggleBtn.Text = "Felon\nHUB"
+    
+    TweenService:Create(ToggleBtn, info, {Size = UDim2.new(0, 45, 0, 45)}):Play()
+    task.wait(0.1)
+    TweenService:Create(ToggleBtn, info, {Size = UDim2.new(0, 50, 0, 50)}):Play()
 
-    -- ✅ จำลองการกด LeftControl เพื่อเปิด/ปิดหน้าต่าง
+    task.wait(0.5)
+    ToggleBtn.Text = "FH"
+end
+
+ToggleBtn.MouseButton1Click:Connect(function()
+    task.spawn(clickAnimation)
+
+    -- ✅ จำลองกด LeftControl เพื่อเปิด/ปิดเมนู (ชัวร์ที่สุด)
     VIM:SendKeyEvent(true, Enum.KeyCode.LeftControl, false, game)
     task.wait(0.05)
     VIM:SendKeyEvent(false, Enum.KeyCode.LeftControl, false, game)
 end)
-
--- แจ้งเตือนเมื่อสคริปต์รันเสร็จ
-Fluent:Notify({
-    Title = "Felon HUB",
-    Content = "ปุ่ม RGB + ออร่า พร้อมใช้งานแล้ว (ลากได้)",
-    Duration = 3
-})
