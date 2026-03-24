@@ -855,41 +855,66 @@ end)
 
 Window:SelectTab(1)
 
+-- ==============================
+-- 💠 UI BUTTON (Felon HUB) - FULL FIXED
+-- ==============================
+local UIS = game:GetService("UserInputService")
 local ScreenGui = Instance.new("ScreenGui")
 local OpenBtn = Instance.new("TextButton")
 local UICorner = Instance.new("UICorner")
 local UIStroke = Instance.new("UIStroke")
 
+-- ตั้งค่าที่เก็บปุ่ม (กันลบ)
 ScreenGui.Name = "FelonButtonGui"
-ScreenGui.Parent = (gethui and gethui()) or game:GetService("CoreGui")
+ScreenGui.Parent = (gethui and gethui()) or game:GetService("CoreGui") or game:GetService("Players").LocalPlayer.PlayerGui
 
+-- ตั้งค่าหน้าตาปุ่ม
 OpenBtn.Name = "OpenBtn"
 OpenBtn.Parent = ScreenGui
-OpenBtn.BackgroundColor3 = Color3.fromRGB(10, 10, 10) -- สีดำเท่ๆ
-OpenBtn.Position = UDim2.new(0, 10, 0, 200)
-OpenBtn.Size = UDim2.new(0, 60, 0, 60) -- ขนาดวงกลม
+OpenBtn.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+OpenBtn.Position = UDim2.new(0, 15, 0.5, -30) -- กลางจอฝั่งซ้าย
+OpenBtn.Size = UDim2.new(0, 60, 0, 60)
 OpenBtn.Font = Enum.Font.GothamBold
 OpenBtn.Text = "FH"
 OpenBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
 OpenBtn.TextSize = 18
 OpenBtn.Active = true
-OpenBtn.Draggable = true -- ✅ ทำให้ลากได้แบบ Solo Hunters เป๊ะๆ
+OpenBtn.Draggable = true -- ลากได้เหมือน Solo Hunters
 
-UICorner.CornerRadius = UDim.new(1, 0) -- ทำให้เป็นวงกลม
+-- ทำปุ่มกลม + ขอบฟ้า
+UICorner.CornerRadius = UDim.new(1, 0)
 UICorner.Parent = OpenBtn
 
-UIStroke.Color = Color3.fromRGB(0, 170, 255) -- ขอบฟ้า
+UIStroke.Color = Color3.fromRGB(0, 170, 255)
 UIStroke.Thickness = 3
+UIStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
 UIStroke.Parent = OpenBtn
 
--- ระบบเปิด/ปิดหน้าต่าง
-local IsOpen = true
+-- 🟢 ระบบเปิด/ปิด (แก้ไขจุดนี้ให้กดติด 100%)
+local IsVisible = true
+
 OpenBtn.MouseButton1Click:Connect(function()
-    IsOpen = not IsOpen
-    if Window then
-        Window:SetVisible(IsOpen)
-    elseif _G.Window then
-        _G.Window:SetVisible(IsOpen)
+    IsVisible = not IsVisible
+    
+    -- 1. พยายามหา Window จากตัวแปรในสคริปต์
+    -- 2. ถ้าไม่เจอ พยายามหาจาก _G (Global)
+    local MainUI = Window or _G.Window
+    
+    if MainUI then
+        pcall(function()
+            MainUI:SetVisible(IsVisible)
+        end)
+    else
+        -- 3. ถ้าหาไม่เจอจริงๆ ให้จำลองการกดปุ่ม LeftControl (ปุ่มลัดของ Fluent)
+        pcall(function()
+            game:GetService("VirtualInputManager"):SendKeyEvent(true, Enum.KeyCode.LeftControl, false, game)
+        end)
     end
 end)
 
+-- แจ้งเตือนเมื่อสคริปต์รันเสร็จ
+Fluent:Notify({
+    Title = "Felon HUB",
+    Content = "ปุ่ม FH พร้อมใช้งานแล้ว (ลากได้)",
+    Duration = 3
+})
