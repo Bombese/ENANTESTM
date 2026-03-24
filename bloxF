@@ -36,8 +36,6 @@ local Window = Fluent:CreateWindow({
     MinimizeKey = Enum.KeyCode.LeftControl
 })
 
-_G.Window = Window
-
 -- ==============================
 -- 💠 TAB ใหม่
 -- ==============================
@@ -857,78 +855,41 @@ end)
 
 Window:SelectTab(1)
 
--- ==============================
--- 💠 UI BUTTON (Felon HUB) - FIX VERSION
--- ==============================
-local UIS = game:GetService("UserInputService")
-local RS = game:GetService("RunService")
-local TS = game:GetService("TweenService")
-
 local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "FelonUIButton"
-ScreenGui.Parent = game:GetService("CoreGui") or game:GetService("Players").LocalPlayer.PlayerGui
+local OpenBtn = Instance.new("TextButton")
+local UICorner = Instance.new("UICorner")
+local UIStroke = Instance.new("UIStroke")
 
-local ToggleBtn = Instance.new("TextButton")
-ToggleBtn.Parent = ScreenGui
-ToggleBtn.Size = UDim2.new(0, 50, 0, 50)
-ToggleBtn.Position = UDim2.new(0, 20, 0.5, -25)
-ToggleBtn.BackgroundColor3 = Color3.fromRGB(10,10,10)
-ToggleBtn.Text = "FH"
-ToggleBtn.TextColor3 = Color3.fromRGB(255,255,255)
-ToggleBtn.Font = Enum.Font.GothamBold
-ToggleBtn.TextScaled = true
-ToggleBtn.ZIndex = 10
+ScreenGui.Name = "FelonButtonGui"
+ScreenGui.Parent = (gethui and gethui()) or game:GetService("CoreGui")
 
-local Corner = Instance.new("UICorner")
-Corner.Parent = ToggleBtn
-Corner.CornerRadius = UDim.new(0, 10)
+OpenBtn.Name = "OpenBtn"
+OpenBtn.Parent = ScreenGui
+OpenBtn.BackgroundColor3 = Color3.fromRGB(10, 10, 10) -- สีดำเท่ๆ
+OpenBtn.Position = UDim2.new(0, 10, 0, 200)
+OpenBtn.Size = UDim2.new(0, 60, 0, 60) -- ขนาดวงกลม
+OpenBtn.Font = Enum.Font.GothamBold
+OpenBtn.Text = "FH"
+OpenBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+OpenBtn.TextSize = 18
+OpenBtn.Active = true
+OpenBtn.Draggable = true -- ✅ ทำให้ลากได้แบบ Solo Hunters เป๊ะๆ
 
-local Stroke = Instance.new("UIStroke")
-Stroke.Parent = ToggleBtn
-Stroke.Thickness = 2
+UICorner.CornerRadius = UDim.new(1, 0) -- ทำให้เป็นวงกลม
+UICorner.Parent = OpenBtn
 
--- RGB EFFECT
-RS.RenderStepped:Connect(function()
-    local color = Color3.fromHSV((tick() * 0.5) % 1, 0.8, 1)
-    Stroke.Color = color
-end)
+UIStroke.Color = Color3.fromRGB(0, 170, 255) -- ขอบฟ้า
+UIStroke.Thickness = 3
+UIStroke.Parent = OpenBtn
 
-local UIVisible = true
-ToggleBtn.MouseButton1Click:Connect(function()
-    -- Effect ตอนกด
-    TS:Create(ToggleBtn, TweenInfo.new(0.1), {Size = UDim2.new(0, 45, 0, 45)}):Play()
-    task.wait(0.1)
-    TS:Create(ToggleBtn, TweenInfo.new(0.1), {Size = UDim2.new(0, 50, 0, 50)}):Play()
-
-    UIVisible = not UIVisible
-    
-    -- 🛠️ วิธีสั่งเปิดปิดแบบ Force (ใช้ได้กับทุกจุด)
-    pcall(function()
-        if Window then
-            Window:SetVisible(UIVisible)
-        elseif _G.Window then
-            _G.Window:SetVisible(UIVisible)
-        end
-    end)
-end)
-
--- 💠 ระบบลาก (Drag) แบบลื่นๆ
-local dragging, dragInput, dragStart, startPos
-ToggleBtn.InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-        dragging = true
-        dragStart = input.Position
-        startPos = ToggleBtn.Position
+-- ระบบเปิด/ปิดหน้าต่าง
+local IsOpen = true
+OpenBtn.MouseButton1Click:Connect(function()
+    IsOpen = not IsOpen
+    if Window then
+        Window:SetVisible(IsOpen)
+    elseif _G.Window then
+        _G.Window:SetVisible(IsOpen)
     end
 end)
-UIS.InputChanged:Connect(function(input)
-    if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
-        local delta = input.Position - dragStart
-        ToggleBtn.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
-    end
-end)
-UIS.InputEnded:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-        dragging = false
-    end
-end)
+
