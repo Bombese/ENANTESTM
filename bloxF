@@ -36,6 +36,118 @@ local Window = Fluent:CreateWindow({
     MinimizeKey = Enum.KeyCode.LeftControl
 })
 
+local UserInputService = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
+
+-- ==============================
+-- 💠 GUI
+-- ==============================
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "FelonUIButton"
+ScreenGui.Parent = game.CoreGui
+
+-- 🔘 ปุ่มหลัก (ขนาดเล็กกำลังดี)
+local ToggleBtn = Instance.new("TextButton")
+ToggleBtn.Parent = ScreenGui
+ToggleBtn.Size = UDim2.new(0, 50, 0, 50)
+ToggleBtn.Position = UDim2.new(0, 20, 0.5, -25)
+ToggleBtn.BackgroundColor3 = Color3.fromRGB(10,10,10)
+ToggleBtn.Text = "FH"
+ToggleBtn.TextColor3 = Color3.fromRGB(255,255,255)
+ToggleBtn.Font = Enum.Font.GothamBold
+ToggleBtn.TextSize = 18
+
+-- 🟣 ขอบมน
+local Corner = Instance.new("UICorner")
+Corner.Parent = ToggleBtn
+Corner.CornerRadius = UDim.new(0, 10)
+
+-- 🌈 ขอบ RGB
+local Stroke = Instance.new("UIStroke")
+Stroke.Parent = ToggleBtn
+Stroke.Thickness = 2
+
+-- ✨ Aura เรืองแสง
+local Glow = Instance.new("ImageLabel")
+Glow.Parent = ToggleBtn
+Glow.Size = UDim2.new(1.5, 0, 1.5, 0)
+Glow.Position = UDim2.new(-0.25, 0, -0.25, 0)
+Glow.BackgroundTransparency = 1
+Glow.Image = "rbxassetid://5028857084"
+Glow.ImageTransparency = 0.5
+
+local GlowCorner = Instance.new("UICorner")
+GlowCorner.Parent = Glow
+GlowCorner.CornerRadius = UDim.new(1,0)
+
+-- 🌈 RGB Loop
+RunService.RenderStepped:Connect(function()
+    local t = tick()
+    local r = math.sin(t * 2) * 127 + 128
+    local g = math.sin(t * 2 + 2) * 127 + 128
+    local b = math.sin(t * 2 + 4) * 127 + 128
+
+    local color = Color3.fromRGB(r, g, b)
+    Stroke.Color = color
+    Glow.ImageColor3 = color
+end)
+
+-- ==============================
+-- 💠 เปิด/ปิด Fluent UI
+-- ==============================
+local UIVisible = true
+
+ToggleBtn.MouseButton1Click:Connect(function()
+    UIVisible = not UIVisible
+
+    for _, v in pairs(game.CoreGui:GetChildren()) do
+        if v.Name:find("Fluent") then
+            v.Enabled = UIVisible
+        end
+    end
+end)
+
+-- ==============================
+-- 💠 DRAG (ลากได้)
+-- ==============================
+local dragging = false
+local dragInput, mousePos, framePos
+
+ToggleBtn.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 
+    or input.UserInputType == Enum.UserInputType.Touch then
+        dragging = true
+        mousePos = input.Position
+        framePos = ToggleBtn.Position
+    end
+end)
+
+ToggleBtn.InputChanged:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseMovement 
+    or input.UserInputType == Enum.UserInputType.Touch then
+        dragInput = input
+    end
+end)
+
+UserInputService.InputChanged:Connect(function(input)
+    if input == dragInput and dragging then
+        local delta = input.Position - mousePos
+        ToggleBtn.Position = UDim2.new(
+            framePos.X.Scale,
+            framePos.X.Offset + delta.X,
+            framePos.Y.Scale,
+            framePos.Y.Offset + delta.Y
+        )
+    end
+end)
+
+UserInputService.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 
+    or input.UserInputType == Enum.UserInputType.Touch then
+        dragging = false
+    end
+end)
+
 -- ==============================
 -- 💠 TAB ใหม่
 -- ==============================
@@ -854,115 +966,3 @@ task.spawn(function()
 end)
 
 Window:SelectTab(1)
-
-local UserInputService = game:GetService("UserInputService")
-local RunService = game:GetService("RunService")
-
--- ==============================
--- 💠 GUI
--- ==============================
-local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "FelonUIButton"
-ScreenGui.Parent = game.CoreGui
-
--- 🔘 ปุ่มหลัก (ขนาดเล็กกำลังดี)
-local ToggleBtn = Instance.new("TextButton")
-ToggleBtn.Parent = ScreenGui
-ToggleBtn.Size = UDim2.new(0, 50, 0, 50)
-ToggleBtn.Position = UDim2.new(0, 20, 0.5, -25)
-ToggleBtn.BackgroundColor3 = Color3.fromRGB(10,10,10)
-ToggleBtn.Text = "FH"
-ToggleBtn.TextColor3 = Color3.fromRGB(255,255,255)
-ToggleBtn.Font = Enum.Font.GothamBold
-ToggleBtn.TextSize = 18
-
--- 🟣 ขอบมน
-local Corner = Instance.new("UICorner")
-Corner.Parent = ToggleBtn
-Corner.CornerRadius = UDim.new(0, 10)
-
--- 🌈 ขอบ RGB
-local Stroke = Instance.new("UIStroke")
-Stroke.Parent = ToggleBtn
-Stroke.Thickness = 2
-
--- ✨ Aura เรืองแสง
-local Glow = Instance.new("ImageLabel")
-Glow.Parent = ToggleBtn
-Glow.Size = UDim2.new(1.5, 0, 1.5, 0)
-Glow.Position = UDim2.new(-0.25, 0, -0.25, 0)
-Glow.BackgroundTransparency = 1
-Glow.Image = "rbxassetid://5028857084"
-Glow.ImageTransparency = 0.5
-
-local GlowCorner = Instance.new("UICorner")
-GlowCorner.Parent = Glow
-GlowCorner.CornerRadius = UDim.new(1,0)
-
--- 🌈 RGB Loop
-RunService.RenderStepped:Connect(function()
-    local t = tick()
-    local r = math.sin(t * 2) * 127 + 128
-    local g = math.sin(t * 2 + 2) * 127 + 128
-    local b = math.sin(t * 2 + 4) * 127 + 128
-
-    local color = Color3.fromRGB(r, g, b)
-    Stroke.Color = color
-    Glow.ImageColor3 = color
-end)
-
--- ==============================
--- 💠 เปิด/ปิด Fluent UI
--- ==============================
-local UIVisible = true
-
-ToggleBtn.MouseButton1Click:Connect(function()
-    UIVisible = not UIVisible
-
-    for _, v in pairs(game.CoreGui:GetChildren()) do
-        if v.Name:find("Fluent") then
-            v.Enabled = UIVisible
-        end
-    end
-end)
-
--- ==============================
--- 💠 DRAG (ลากได้)
--- ==============================
-local dragging = false
-local dragInput, mousePos, framePos
-
-ToggleBtn.InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 
-    or input.UserInputType == Enum.UserInputType.Touch then
-        dragging = true
-        mousePos = input.Position
-        framePos = ToggleBtn.Position
-    end
-end)
-
-ToggleBtn.InputChanged:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseMovement 
-    or input.UserInputType == Enum.UserInputType.Touch then
-        dragInput = input
-    end
-end)
-
-UserInputService.InputChanged:Connect(function(input)
-    if input == dragInput and dragging then
-        local delta = input.Position - mousePos
-        ToggleBtn.Position = UDim2.new(
-            framePos.X.Scale,
-            framePos.X.Offset + delta.X,
-            framePos.Y.Scale,
-            framePos.Y.Offset + delta.Y
-        )
-    end
-end)
-
-UserInputService.InputEnded:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 
-    or input.UserInputType == Enum.UserInputType.Touch then
-        dragging = false
-    end
-end)
