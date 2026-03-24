@@ -697,7 +697,7 @@ local function getChests()
 end
 
 -- ==============================
--- 💠 ฟังก์ชันรับตัวละครใหม่ (กันรีตัว)
+-- 💠 ฟังก์ชันรับตัวละคร (กันรีตัว)
 -- ==============================
 local function getChar()
     local player = Players.LocalPlayer
@@ -710,7 +710,7 @@ local function getChar()
 end
 
 -- ==============================
--- 💠 ฟังก์ชันบินไป Chest แบบไม่ Tween
+-- 💠 บินไป Chest (หยุดทันทีเมื่อปิด)
 -- ==============================
 local function flyTo(cf)
     local char = getChar()
@@ -723,10 +723,15 @@ local function flyTo(cf)
 
     local startTime = tick()
     while tick() - startTime < time do
-        if not hrp.Parent then break end -- ถ้ารีตัวกลางทาง
-        hrp.CFrame = CFrame.new(hrp.Position + dir * SPEED * RunService.Heartbeat:Wait())
+        if not hrp.Parent then break end
+        if not AutoChest then return end -- 🔥 หยุดทันที
+
+        hrp.CFrame = CFrame.new(
+            hrp.Position + dir * SPEED * RunService.Heartbeat:Wait()
+        )
     end
-    if hrp.Parent then
+
+    if hrp.Parent and AutoChest then
         hrp.CFrame = cf
     end
 end
@@ -734,7 +739,6 @@ end
 -- ==============================
 -- 💠 Fluent UI Toggle
 -- ==============================
--- ใส่ใน Tab ของนาย เช่น MainTab
 MainTab:AddToggle("AutoChest", {
     Title = "Auto Chest",
     Default = false,
@@ -756,13 +760,15 @@ task.spawn(function()
 
                 for _, chest in pairs(getChests()) do
                     if not AutoChest then break end
+                    if not chest:IsA("BasePart") then continue end
 
                     local cf = chest.CFrame * CFrame.new(0, HEIGHT, 0)
 
-                    -- 🕊 บินไป Chest
+                    -- 🕊 บินไป
                     flyTo(cf)
+                    if not AutoChest then return end -- 🔥 หยุดทันทีหลังบิน
 
-                    -- 📦 วาร์ปลงเก็บ + ลอยขึ้น
+                    -- 📦 เก็บ
                     if hrp.Parent then
                         hrp.CFrame = chest.CFrame
                         task.wait(0.2)
