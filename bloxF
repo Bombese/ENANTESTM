@@ -51,7 +51,7 @@ local SelectedWeapon = "Melee"
 -- ==============================
 FarmTab:AddDropdown("SelectWeapon", {
     Title = "Select",
-    Values = {"Melee", "Sword", "Gun", "Fruit"},
+    Values = {"None", "Melee", "Sword", "Gun", "Fruit"},
     Multi = false,
     Default = 1,
     Callback = function(v)
