@@ -961,13 +961,28 @@ end
 -- 💠 เปิด/ปิด UI
 -- ==============================
 local UIVisible = true
+local FluentUI = nil
 
+-- 🔍 หา UI ของ Fluent ครั้งเดียว
+task.spawn(function()
+    task.wait(1)
+    for _, v in pairs(game.CoreGui:GetChildren()) do
+        if v:IsA("ScreenGui") and v.Name:lower():find("fluent") then
+            FluentUI = v
+        end
+    end
+end)
+
+-- 🔘 ปุ่มกด
 ToggleBtn.MouseButton1Click:Connect(function()
     task.spawn(clickAnimation)
 
     UIVisible = not UIVisible
-    if Window then
-        Window:Toggle(UIVisible)
+
+    if FluentUI then
+        FluentUI.Enabled = UIVisible
+    else
+        warn("ไม่เจอ Fluent UI")
     end
 end)
 
