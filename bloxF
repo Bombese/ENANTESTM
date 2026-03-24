@@ -115,6 +115,75 @@ task.spawn(function()
     end
 end)
 
+-- ==============================
+-- 💠 STATE
+-- ==============================
+local AutoSkill = false
+local SelectedSkills = {"Z"}
+local SkillDelay = 0.5
+
+local VIM = game:GetService("VirtualInputManager")
+
+-- ==============================
+-- 💠 UI
+-- ==============================
+FarmTab:AddToggle("AutoSkill", {
+    Title = "Auto Skill",
+    Default = false,
+    Callback = function(v)
+        AutoSkill = v
+    end
+})
+
+FarmTab:AddDropdown("SkillSelect", {
+    Title = "Select Skills",
+    Values = {"Z","X","C","V"},
+    Multi = true, -- ✅ เลือกได้หลายอัน
+    Default = {"Z"},
+    Callback = function(v)
+        SelectedSkills = v
+    end
+})
+
+FarmTab:AddSlider("SkillDelay", {
+    Title = "Skill Delay (Seconds)",
+    Description = "0 - 5 วิ",
+    Default = 0.5,
+    Min = 0,
+    Max = 5,
+    Rounding = 1,
+    Callback = function(v)
+        SkillDelay = v
+    end
+})
+
+local function pressKey(key)
+    VIM:SendKeyEvent(true, key, false, game)
+    task.wait(0.05)
+    VIM:SendKeyEvent(false, key, false, game)
+end
+
+task.spawn(function()
+    while task.wait() do
+        if AutoSkill then
+            pcall(function()
+
+                -- 🔁 วนตามที่เลือก
+                for _, keyName in pairs(SelectedSkills) do
+                    if not AutoSkill then break end
+
+                    local key = Enum.KeyCode[keyName]
+                    if key then
+                        pressKey(key)
+                        task.wait(SkillDelay) -- ⏱ ดีเลย์ตามที่ตั้ง
+                    end
+                end
+
+            end)
+        end
+    end
+end)
+
 -- ✅ Tab เดียว
 local MainTab = Window:AddTab({ Title = "Main", Icon = "home" })
 
