@@ -854,3 +854,47 @@ task.spawn(function()
 end)
 
 Window:SelectTab(1)
+
+-- ==============================
+-- 💠 BUTTON เปิด/ปิด UI
+-- ==============================
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "FelonUIButton"
+ScreenGui.Parent = game.CoreGui
+
+-- 🔘 ปุ่ม
+local ToggleBtn = Instance.new("TextButton")
+ToggleBtn.Parent = ScreenGui
+ToggleBtn.Size = UDim2.new(0, 140, 0, 45)
+ToggleBtn.Position = UDim2.new(0, 20, 0.5, -25)
+ToggleBtn.BackgroundColor3 = Color3.fromRGB(20,20,20)
+ToggleBtn.Text = "Felon HUB"
+ToggleBtn.TextColor3 = Color3.fromRGB(255,255,255)
+ToggleBtn.TextScaled = true
+ToggleBtn.Font = Enum.Font.GothamBold
+
+-- 🔲 กรอบเท่ๆ
+local Stroke = Instance.new("UIStroke")
+Stroke.Parent = ToggleBtn
+Stroke.Color = Color3.fromRGB(150,150,150)
+Stroke.Thickness = 2
+
+local Corner = Instance.new("UICorner")
+Corner.Parent = ToggleBtn
+Corner.CornerRadius = UDim.new(0, 8)
+
+-- ==============================
+-- 💠 เปิด/ปิด Fluent UI
+-- ==============================
+local UIVisible = true
+
+ToggleBtn.MouseButton1Click:Connect(function()
+    UIVisible = not UIVisible
+
+    -- 🔥 ซ่อน/แสดงหน้าหลัก
+    for _, v in pairs(game.CoreGui:GetChildren()) do
+        if v.Name:find("Fluent") then
+            v.Enabled = UIVisible
+        end
+    end
+end)
