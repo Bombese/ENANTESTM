@@ -534,56 +534,53 @@ end)
 
 MainTab:AddSection("Quest World Settings (เควสโลก2-3)")
 
--- Toggle
-local AutoSecondSea = false
+MainTab:AddButton({
+    Title = "Unlock Second Sea (Lv700)",
+    Callback = function()
 
-MainTab:AddToggle("AutoSecondSea", {
-    Title = "Auto Unlock Second Sea (Lv700)",
-    Default = false,
-    Callback = function(v)
-        AutoSecondSea = v
-    end
-})
+        local player = Players.LocalPlayer
+        local lv = player.Data.Level.Value
 
--- ตำแหน่ง
-local DETECTIVE = CFrame.new(4848, 5, 740)
-local ICE_BOSS = CFrame.new(1348, 87, -1390)
-
--- หา Ice Admiral
-local function getIceBoss()
-    for _, v in pairs(workspace.Enemies:GetChildren()) do
-        if v.Name == "Ice Admiral" and v:FindFirstChild("Humanoid") and v.Humanoid.Health > 0 then
-            return v
+        -- ❌ เช็คเลเวลก่อน
+        if lv < 700 then
+            warn("ต้องเลเวล 700 ก่อน! ตอนนี้: "..lv)
+            return
         end
-    end
-end
 
--- เช็คเควส
-local function isSecondSeaDone()
-    local result = CommF:InvokeServer("DressrosaQuestProgress", "Detective")
-    return result == 2
-end
+        -- 🌍 เช็คโลก 1
+        if game.PlaceId ~= 2753915549 then
+            warn("ต้องอยู่โลก 1 เท่านั้น")
+            return
+        end
 
--- LOOP
-task.spawn(function()
-    while task.wait(1) do
-        if AutoSecondSea then
+        -- เช็คเควส
+        local function isSecondSeaDone()
+            local result = CommF:InvokeServer("DressrosaQuestProgress", "Detective")
+            return result == 2
+        end
 
-            -- 🌍 ทำเฉพาะโลก 1
-            if game.PlaceId ~= 2753915549 then
-                task.wait(2)
-                continue
+        -- หา Ice Admiral
+        local function getIceBoss()
+            for _, v in pairs(workspace.Enemies:GetChildren()) do
+                if v.Name == "Ice Admiral" and v:FindFirstChild("Humanoid") and v.Humanoid.Health > 0 then
+                    return v
+                end
             end
+        end
 
-            -- ✅ ถ้าเสร็จแล้ว → ปิด
-            if isSecondSeaDone() then
-                warn("ปลดล็อคโลก 2 แล้ว")
-                AutoSecondSea = false
-                break
-            end
+        -- ตำแหน่ง
+        local DETECTIVE = CFrame.new(4848, 5, 740)
+        local ICE_BOSS = CFrame.new(1348, 87, -1390)
 
+        -- 🚀 เริ่มทำงาน
+        task.spawn(function()
             pcall(function()
-                local player = Players.LocalPlayer
+
+                -- ✅ ถ้าทำเสร็จแล้ว
+                if isSecondSeaDone() then
+                    warn("ปลดล็อคโลก 2 แล้ว")
+                    return
+                end
 
                 -- 🕵️ ไปหา Detective
                 flyTo(DETECTIVE)
@@ -596,15 +593,13 @@ task.spawn(function()
                     flyTo(ICE_BOSS)
                     repeat task.wait()
                         boss = getIceBoss()
-                    until boss or not AutoSecondSea
+                    until boss
                 end
 
                 -- ⚔️ ตีบอส
                 if boss then
                     local root = boss:FindFirstChild("HumanoidRootPart")
                     repeat task.wait()
-                        if not AutoSecondSea then break end
-
                         if root and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
                             player.Character.HumanoidRootPart.CFrame = root.CFrame * CFrame.new(0, 25, 0)
                         end
@@ -616,17 +611,19 @@ task.spawn(function()
                             HitRemote:FireServer(root, {}, nil, HIT_KEY)
                         end
 
-                    until boss.Humanoid.Health <= 0 or not AutoSecondSea
+                    until boss.Humanoid.Health <= 0
                 end
 
                 -- 🔁 กลับไปคุย Detective
                 flyTo(DETECTIVE)
                 task.wait(1)
                 CommF:InvokeServer("Talk", "Military Detective")
+
+                warn("ทำเควสโลก 2 เสร็จแล้ว")
             end)
-        end
+        end)
     end
-end)
+})
 
 MainTab:AddButton({
     Title = "Auto Go To World 3",
