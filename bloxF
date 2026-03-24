@@ -120,7 +120,11 @@ end)
 -- ==============================
 local AutoSkill = false
 local SelectedSkills = {"Z"}
-local SkillDelay = 0.5
+
+local DelayZ = 0.3
+local DelayX = 0.3
+local DelayC = 0.3
+local DelayV = 0.3
 
 local VIM = game:GetService("VirtualInputManager")
 
@@ -138,22 +142,55 @@ FarmTab:AddToggle("AutoSkill", {
 FarmTab:AddDropdown("SkillSelect", {
     Title = "Select Skills",
     Values = {"Z","X","C","V"},
-    Multi = true, -- ✅ เลือกได้หลายอัน
+    Multi = true,
     Default = {"Z"},
     Callback = function(v)
         SelectedSkills = v
     end
 })
 
-FarmTab:AddSlider("SkillDelay", {
-    Title = "Skill Delay (Seconds)",
-    Description = "0 - 5 วิ",
-    Default = 0.5,
+-- 🎯 Slider แยกแต่ละสกิล
+FarmTab:AddSlider("DelayZ", {
+    Title = "Delay Z",
+    Default = 0.3,
     Min = 0,
     Max = 5,
     Rounding = 1,
     Callback = function(v)
-        SkillDelay = v
+        DelayZ = v
+    end
+})
+
+FarmTab:AddSlider("DelayX", {
+    Title = "Delay X",
+    Default = 0.3,
+    Min = 0,
+    Max = 5,
+    Rounding = 1,
+    Callback = function(v)
+        DelayX = v
+    end
+})
+
+FarmTab:AddSlider("DelayC", {
+    Title = "Delay C",
+    Default = 0.3,
+    Min = 0,
+    Max = 5,
+    Rounding = 1,
+    Callback = function(v)
+        DelayC = v
+    end
+})
+
+FarmTab:AddSlider("DelayV", {
+    Title = "Delay V",
+    Default = 0.3,
+    Min = 0,
+    Max = 5,
+    Rounding = 1,
+    Callback = function(v)
+        DelayV = v
     end
 })
 
@@ -163,19 +200,26 @@ local function pressKey(key)
     VIM:SendKeyEvent(false, key, false, game)
 end
 
+local function getDelay(key)
+    if key == "Z" then return DelayZ end
+    if key == "X" then return DelayX end
+    if key == "C" then return DelayC end
+    if key == "V" then return DelayV end
+    return 0.3
+end
+
 task.spawn(function()
     while task.wait() do
         if AutoSkill then
             pcall(function()
 
-                -- 🔁 วนตามที่เลือก
                 for _, keyName in pairs(SelectedSkills) do
                     if not AutoSkill then break end
 
                     local key = Enum.KeyCode[keyName]
                     if key then
                         pressKey(key)
-                        task.wait(SkillDelay) -- ⏱ ดีเลย์ตามที่ตั้ง
+                        task.wait(getDelay(keyName)) -- ⏱ ใช้ delay ของปุ่มนั้น
                     end
                 end
 
