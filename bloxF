@@ -858,8 +858,12 @@ end)
 Window:SelectTab(1)
 
 -- ==============================
--- 💠 UI BUTTON (Felon HUB) - แก้ไขให้เปิดปิดได้จริง
+-- 💠 UI BUTTON (Felon HUB) - FIX VERSION
 -- ==============================
+local UIS = game:GetService("UserInputService")
+local RS = game:GetService("RunService")
+local TS = game:GetService("TweenService")
+
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "FelonUIButton"
 ScreenGui.Parent = game:GetService("CoreGui") or game:GetService("Players").LocalPlayer.PlayerGui
@@ -883,67 +887,47 @@ local Stroke = Instance.new("UIStroke")
 Stroke.Parent = ToggleBtn
 Stroke.Thickness = 2
 
-local Glow = Instance.new("ImageLabel")
-Glow.Parent = ToggleBtn
-Glow.Size = UDim2.new(1.5, 0, 1.5, 0)
-Glow.Position = UDim2.new(-0.25, 0, -0.25, 0)
-Glow.BackgroundTransparency = 1
-Glow.Image = "rbxassetid://5028857084"
-Glow.ImageTransparency = 0.5
-Glow.ZIndex = 9
-
--- RGB Loop
-RunService.RenderStepped:Connect(function()
-    local t = tick()
-    local color = Color3.fromHSV((t * 0.5) % 1, 0.8, 1)
+-- RGB EFFECT
+RS.RenderStepped:Connect(function()
+    local color = Color3.fromHSV((tick() * 0.5) % 1, 0.8, 1)
     Stroke.Color = color
-    Glow.ImageColor3 = color
 end)
-
-local function clickAnimation()
-    local oldText = ToggleBtn.Text
-    ToggleBtn.Text = "Felon"
-    local shrink = TweenService:Create(ToggleBtn, TweenInfo.new(0.08), {Size = UDim2.new(0, 45, 0, 45)})
-    local expand = TweenService:Create(ToggleBtn, TweenInfo.new(0.15, Enum.EasingStyle.Back), {Size = UDim2.new(0, 50, 0, 50)})
-    shrink:Play()
-    shrink.Completed:Wait()
-    expand:Play()
-    task.wait(0.5)
-    ToggleBtn.Text = oldText
-end
 
 local UIVisible = true
 ToggleBtn.MouseButton1Click:Connect(function()
-    task.spawn(clickAnimation)
+    -- Effect ตอนกด
+    TS:Create(ToggleBtn, TweenInfo.new(0.1), {Size = UDim2.new(0, 45, 0, 45)}):Play()
+    task.wait(0.1)
+    TS:Create(ToggleBtn, TweenInfo.new(0.1), {Size = UDim2.new(0, 50, 0, 50)}):Play()
+
     UIVisible = not UIVisible
     
-    -- เช็คตัวแปร Window จากด้านบน
-    if _G.Window then 
-        _G.Window:SetVisible(UIVisible)
-    elseif Window then
-        Window:SetVisible(UIVisible)
-    end
+    -- 🛠️ วิธีสั่งเปิดปิดแบบ Force (ใช้ได้กับทุกจุด)
+    pcall(function()
+        if Window then
+            Window:SetVisible(UIVisible)
+        elseif _G.Window then
+            _G.Window:SetVisible(UIVisible)
+        end
+    end)
 end)
 
--- เพื่อความชัวร์ ให้ส่งตัวแปร Window ออกเป็น Global (เพิ่มบรรทัดนี้ใต้บรรทัดที่สร้าง Window)
--- _G.Window = Window
-
--- [[ ระบบ Drag คัดลอกมาจากของเดิมของคุณ ซึ่งถูกต้องแล้ว ]] --
-local dragging, dragInput, mousePos, framePos
+-- 💠 ระบบลาก (Drag) แบบลื่นๆ
+local dragging, dragInput, dragStart, startPos
 ToggleBtn.InputBegan:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
         dragging = true
-        mousePos = input.Position
-        framePos = ToggleBtn.Position
+        dragStart = input.Position
+        startPos = ToggleBtn.Position
     end
 end)
-UserInputService.InputChanged:Connect(function(input)
+UIS.InputChanged:Connect(function(input)
     if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
-        local delta = input.Position - mousePos
-        ToggleBtn.Position = UDim2.new(framePos.X.Scale, framePos.X.Offset + delta.X, framePos.Y.Scale, framePos.Y.Offset + delta.Y)
+        local delta = input.Position - dragStart
+        ToggleBtn.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
     end
 end)
-UserInputService.InputEnded:Connect(function(input)
+UIS.InputEnded:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
         dragging = false
     end
