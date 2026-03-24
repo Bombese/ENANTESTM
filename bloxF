@@ -36,6 +36,8 @@ local Window = Fluent:CreateWindow({
     MinimizeKey = Enum.KeyCode.LeftControl
 })
 
+_G.Window = Window
+
 -- ==============================
 -- 💠 TAB ใหม่
 -- ==============================
@@ -856,18 +858,12 @@ end)
 Window:SelectTab(1)
 
 -- ==============================
--- 💠 UI BUTTON (Felon HUB) - วางไว้ล่างสุดของสคริปต์
+-- 💠 UI BUTTON (Felon HUB) - แก้ไขให้เปิดปิดได้จริง
 -- ==============================
-local UserInputService = game:GetService("UserInputService")
-local RunService = game:GetService("RunService")
-local TweenService = game:GetService("TweenService")
-
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "FelonUIButton"
--- ใช้ CoreGui ถ้าเป็น Executor ทั่วไป หรือใช้ PlayerGui ถ้าทดสอบใน Studio
 ScreenGui.Parent = game:GetService("CoreGui") or game:GetService("Players").LocalPlayer.PlayerGui
 
--- 🔘 ตัวปุ่ม
 local ToggleBtn = Instance.new("TextButton")
 ToggleBtn.Parent = ScreenGui
 ToggleBtn.Size = UDim2.new(0, 50, 0, 50)
@@ -877,19 +873,16 @@ ToggleBtn.Text = "FH"
 ToggleBtn.TextColor3 = Color3.fromRGB(255,255,255)
 ToggleBtn.Font = Enum.Font.GothamBold
 ToggleBtn.TextScaled = true
-ToggleBtn.ZIndex = 10 -- ให้ปุ่มอยู่บนสุดเสมอ
+ToggleBtn.ZIndex = 10
 
--- 🟣 ขอบมน
 local Corner = Instance.new("UICorner")
 Corner.Parent = ToggleBtn
 Corner.CornerRadius = UDim.new(0, 10)
 
--- 🌈 ขอบ RGB
 local Stroke = Instance.new("UIStroke")
 Stroke.Parent = ToggleBtn
 Stroke.Thickness = 2
 
--- ✨ Aura/Glow
 local Glow = Instance.new("ImageLabel")
 Glow.Parent = ToggleBtn
 Glow.Size = UDim2.new(1.5, 0, 1.5, 0)
@@ -899,50 +892,43 @@ Glow.Image = "rbxassetid://5028857084"
 Glow.ImageTransparency = 0.5
 Glow.ZIndex = 9
 
--- 🌈 ระบบ RGB วิ่ง
+-- RGB Loop
 RunService.RenderStepped:Connect(function()
     local t = tick()
-    local r = math.sin(t * 2) * 127 + 128
-    local g = math.sin(t * 2 + 2) * 127 + 128
-    local b = math.sin(t * 2 + 4) * 127 + 128
-
-    local color = Color3.fromRGB(r, g, b)
+    local color = Color3.fromHSV((t * 0.5) % 1, 0.8, 1)
     Stroke.Color = color
     Glow.ImageColor3 = color
 end)
 
--- 💠 Animation ตอนกด
 local function clickAnimation()
     local oldText = ToggleBtn.Text
-    ToggleBtn.Text = "Felon\nHUB"
-    
+    ToggleBtn.Text = "Felon"
     local shrink = TweenService:Create(ToggleBtn, TweenInfo.new(0.08), {Size = UDim2.new(0, 45, 0, 45)})
     local expand = TweenService:Create(ToggleBtn, TweenInfo.new(0.15, Enum.EasingStyle.Back), {Size = UDim2.new(0, 50, 0, 50)})
-
     shrink:Play()
     shrink.Completed:Wait()
     expand:Play()
-
     task.wait(0.5)
     ToggleBtn.Text = oldText
 end
 
--- 💠 ฟังชั่น เปิด/ปิด (สำคัญมาก: ตรวจสอบชื่อตัวแปร Window ให้ตรงกับ UI หลัก)
 local UIVisible = true
-
 ToggleBtn.MouseButton1Click:Connect(function()
     task.spawn(clickAnimation)
     UIVisible = not UIVisible
     
-    -- ตรวจสอบว่ามีตัวแปร Window หรือยังก่อนจะสั่ง SetVisible
-    if Window then
+    -- เช็คตัวแปร Window จากด้านบน
+    if _G.Window then 
+        _G.Window:SetVisible(UIVisible)
+    elseif Window then
         Window:SetVisible(UIVisible)
-    else
-        warn("ไม่พบตัวแปร Window! กรุณาเช็คชื่อตัวแปรที่ใช้สร้าง UI")
     end
 end)
 
--- 💠 ระบบลากปุ่ม (Drag)
+-- เพื่อความชัวร์ ให้ส่งตัวแปร Window ออกเป็น Global (เพิ่มบรรทัดนี้ใต้บรรทัดที่สร้าง Window)
+-- _G.Window = Window
+
+-- [[ ระบบ Drag คัดลอกมาจากของเดิมของคุณ ซึ่งถูกต้องแล้ว ]] --
 local dragging, dragInput, mousePos, framePos
 ToggleBtn.InputBegan:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
