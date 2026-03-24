@@ -853,6 +853,36 @@ task.spawn(function()
     end
 end)
 
+local SubTab = Window:AddTab({ Title = "SubTab", Icon = "star" }) 
+
+-- เก็บค่าพลังที่เลือก
+local selectedPower = nil
+
+-- Dropdown เลือกพลัง
+SubTab:CreateDropdown({
+    Name = "Select Power",
+    Options = {"Melee", "Defense", "Sword", "Gun", "Blox Fruit"},
+    Callback = function(option)
+        selectedPower = option
+        print("Selected power:", option)
+    end
+})
+
+-- ปุ่มอัพพลัง
+SubTab:CreateButton({
+    Name = "Upgrade Power",
+    Callback = function()
+        if selectedPower then
+            -- เรียก RemoteEvent ของเกม (เปลี่ยนชื่อเป็น RemoteEvent จริง)
+            local StatusEvent = game:GetService("ReplicatedStorage"):WaitForChild("StatusUpdate")
+            StatusEvent:FireServer(selectedPower)
+            print("Upgrading power:", selectedPower)
+        else
+            print("Please select a power first!")
+        end
+    end
+})
+
 Window:SelectTab(1)
 
 -- ==============================
