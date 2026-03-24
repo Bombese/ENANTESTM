@@ -853,53 +853,53 @@ task.spawn(function()
     end
 end)
 
-local Players = game:GetService("Players")
+local Players = game:GetService("Players") -- แก้จาก Local เป็น local
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local player = Players.LocalPlayer
 
--- SubTab
+-- ดึง Remote ไว้รอเลย (ป้องกัน Error ใน Loop)
+local StatRemote = ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("StatUpgrade")
+
 local SubTab = Window:AddTab({ Title = "SubTab", Icon = "star" })
-
--- ตัวแปรเก็บ Stat ที่เลือก
 local SelectedStat = "Melee"
+local AutoUpgrade = false
 
--- Dropdown แบบเดียวกับตัวอย่าง SelectWeapon
 SubTab:AddDropdown("SelectStat", {
     Title = "Select Stat",
     Values = {"Melee", "Defense", "Sword", "Gun", "DevilFruit"},
     Multi = false,
-    Default = 1,
+    Default = "Melee", -- ใส่เป็นชื่อค่าเริ่มต้นจะชัดเจนกว่า
     Callback = function(v)
         SelectedStat = v
-        print("Selected Stat:", SelectedStat)
     end
 })
 
--- ตัวแปรควบคุม Auto
-local AutoUpgrade = false
-
--- Toggle Auto Upgrade
-SubTab:AddToggle({
+SubTab:AddToggle("AutoUpgradeToggle", { -- ควรใส่ ID ให้ Toggle ด้วย
     Title = "Auto Upgrade",
     Default = false,
     Callback = function(state)
         AutoUpgrade = state
+        
         if AutoUpgrade then
-            spawn(function()
+            -- ใช้ task.spawn เพื่อไม่ให้ขัดจังหวะการทำงานหลักของ UI
+            task.spawn(function()
                 while AutoUpgrade do
-                    wait(0.5)
+                    -- ใช้ pcall เผื่อกรณีตัดการเชื่อมต่อหรือ Remote มีปัญหา
                     local success, err = pcall(function()
-                        local upgradeRemote = ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("StatUpgrade")
-                        upgradeRemote:InvokeServer(SelectedStat)
+                        StatRemote:InvokeServer(SelectedStat, 1) -- เพิ่มจำนวน Point ที่ต้องการอัพ (ปกติเกมมักจะถามว่าอัพกี่แต้ม)
                     end)
+                    
                     if not success then
-                        warn("Error upgrading stat:", err)
+                        warn("Upgrade failed:", err)
                     end
+                    
+                    task.wait(0.5) -- หน่วงเวลาเพื่อไม่ให้ Spam จนเด้ง
                 end
             end)
         end
     end
 })
+
 
 Window:SelectTab(1)
 
