@@ -1,8 +1,8 @@
--- [[ 1. ส่วนสมอง (Logic) - ต้องวางไว้บนสุด ]]
+-- [[ แก้ไขส่วนสมองให้ปลอดภัยขึ้น - กันจอบัค ]]
 local AntiAFKEnabled = true
 local AntiKickEnabled = true
 
--- ฟังก์ชันกันเด้ง AFK
+-- ระบบป้องกัน AFK (ตัวนี้ไม่ทำให้จอบัค)
 game:GetService("Players").LocalPlayer.Idled:Connect(function()
     if AntiAFKEnabled then
         game:GetService("VirtualUser"):CaptureController()
@@ -10,19 +10,26 @@ game:GetService("Players").LocalPlayer.Idled:Connect(function()
     end
 end)
 
--- ฟังก์ชันดักจับการ Kick
+-- ระบบป้องกันการโดนเตะ (เวอร์ชันแก้บัคจอ)
 local mt = getrawmetatable(game)
-local old = mt.__namecall
+local oldNamecall = mt.__namecall
 setreadonly(mt, false)
 
 mt.__namecall = newcclosure(function(self, ...)
     local method = getnamecallmethod()
+    local args = {...} -- ต้องดึง args มาใช้ด้วย
+
+    -- เช็คให้ละเอียดขึ้น: ต้องเป็น Method Kick และเป้าหมายต้องเป็นตัวเราเท่านั้น
     if AntiKickEnabled and (method == "Kick" or method == "kick") and self == game:GetService("Players").LocalPlayer then
-        return nil
+        return nil -- บล็อกแค่ Kick
     end
-    return old(self, unpack(args))
+
+    -- ถ้าไม่ใช่การ Kick ให้ส่งค่ากลับไปทำงานตามปกติ (ป้องกันจอบัค)
+    return oldNamecall(self, unpack(args))
 end)
+
 setreadonly(mt, true)
+
 
 local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
 
