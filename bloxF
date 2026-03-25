@@ -927,14 +927,13 @@ local SelectedStat = "Melee"
 -- ==============================
 -- 💠 UI
 -- ==============================
-SubTab:AddSection("⚡ Auto Stats")
 
 -- 📜 เลือก Stat (อยู่บน)
 SubTab:AddDropdown("SelectStat", {
     Title = "Select Stat",
     Values = {"Melee", "Defense", "Sword", "Gun", "Blox Fruit"},
     Multi = false,
-    Default = 1,
+    Default = 10,
     Callback = function(v)
         SelectedStat = v
     end
@@ -964,6 +963,8 @@ task.spawn(function()
         end
     end
 end)
+
+SubTab:AddSection("test")
 
 Window:SelectTab(1)
 
