@@ -964,50 +964,6 @@ task.spawn(function()
     end
 end)
 
--- ==============================
--- 💠 Haki Settings (SubTab)
--- ==============================
-SubTab:AddSection("Haki Settings")
-
-local AutoHaki = false
-local AutoKen = false
-
-SubTab:AddToggle("AutoHaki", {
-    Title = "Auto Haki (J)",
-    Default = false,
-    Callback = function(v)
-        AutoHaki = v
-    end
-})
-
-SubTab:AddToggle("AutoKen", {
-    Title = "Auto Ken (E)",
-    Default = false,
-    Callback = function(v)
-        AutoKen = v
-    end
-})
-
--- ==============================
--- 💠 LOOP (ใช้ของเดิมทั้งหมด)
--- ==============================
-task.spawn(function()
-    while task.wait(1) do
-        pcall(function()
-            local char = game.Players.LocalPlayer.Character
-            if not char then return end
-
-            if AutoHaki and not char:FindFirstChild("HasBuso") then
-                pressKey(Enum.KeyCode.J)
-            end
-
-            if AutoKen and not char:FindFirstChild("HasObservation") then
-                pressKey(Enum.KeyCode.E)
-            end
-        end)
-    end
-end)
-
 Window:SelectTab(1)
 
 -- ==============================
