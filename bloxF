@@ -1,35 +1,31 @@
--- [[ แก้ไขส่วนสมองให้ปลอดภัยขึ้น - กันจอบัค ]]
+
+-- [[ 1. ส่วนสมองแบบใหม่ (Safe Version - ไม่ทำจอบัค) ]]
 local AntiAFKEnabled = true
 local AntiKickEnabled = true
 
--- ระบบป้องกัน AFK (ตัวนี้ไม่ทำให้จอบัค)
+-- ระบบป้องกัน AFK (ตัวนี้ปลอดภัยอยู่แล้ว)
+local VirtualUser = game:GetService("VirtualUser")
 game:GetService("Players").LocalPlayer.Idled:Connect(function()
     if AntiAFKEnabled then
-        game:GetService("VirtualUser"):CaptureController()
-        game:GetService("VirtualUser"):ClickButton2(Vector2.new())
+        VirtualUser:CaptureController()
+        VirtualUser:ClickButton2(Vector2.new())
     end
 end)
 
--- ระบบป้องกันการโดนเตะ (เวอร์ชันแก้บัคจอ)
-local mt = getrawmetatable(game)
-local oldNamecall = mt.__namecall
-setreadonly(mt, false)
-
-mt.__namecall = newcclosure(function(self, ...)
+-- ระบบป้องกันการโดนเตะแบบใหม่ (Hook เฉพาะฟังก์ชัน Kick ตรงๆ)
+local LocalPlayer = game:GetService("Players").LocalPlayer
+local oldKick
+oldKick = hookmetamethod(game, "__namecall", function(self, ...)
     local method = getnamecallmethod()
-    local args = {...} -- ต้องดึง args มาใช้ด้วย
+    local args = {...}
 
-    -- เช็คให้ละเอียดขึ้น: ต้องเป็น Method Kick และเป้าหมายต้องเป็นตัวเราเท่านั้น
-    if AntiKickEnabled and (method == "Kick" or method == "kick") and self == game:GetService("Players").LocalPlayer then
-        return nil -- บล็อกแค่ Kick
+    if AntiKickEnabled and (method == "Kick" or method == "kick") and self == LocalPlayer then
+        warn("FELON AI: Blocked a kick attempt!")
+        return nil
     end
 
-    -- ถ้าไม่ใช่การ Kick ให้ส่งค่ากลับไปทำงานตามปกติ (ป้องกันจอบัค)
-    return oldNamecall(self, unpack(args))
+    return oldKick(self, unpack(args))
 end)
-
-setreadonly(mt, true)
-
 
 local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
 
