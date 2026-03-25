@@ -908,22 +908,24 @@ task.spawn(function()
     end
 end)
 
-local StatsTab = Window:AddTab({ Title = "Stats", Icon = "bar-chart-2" })
+-- ==============================
+-- 💠 CREATE TAB
+-- ==============================
+local SubTab = Window:AddTab({ Title = "SubTab", Icon = "layers" })
 
-StatsTab:AddSection("Auto Stats")
-
+-- ==============================
+-- 💠 STATE
+-- ==============================
 local AutoStats = false
 local SelectedStat = "Melee"
 
-StatsTab:AddToggle("AutoStats", {
-    Title = "Auto Add Stats",
-    Default = false,
-    Callback = function(v)
-        AutoStats = v
-    end
-})
+-- ==============================
+-- 💠 UI
+-- ==============================
+SubTab:AddSection("⚡ Auto Stats")
 
-StatsTab:AddDropdown("SelectStat", {
+-- 📜 เลือก Stat (อยู่บน)
+SubTab:AddDropdown("SelectStat", {
     Title = "Select Stat",
     Values = {"Melee", "Defense", "Sword", "Gun", "Blox Fruit"},
     Multi = false,
@@ -933,38 +935,30 @@ StatsTab:AddDropdown("SelectStat", {
     end
 })
 
+-- 🔘 ปุ่มเปิด/ปิด (อยู่ล่าง)
+SubTab:AddToggle("AutoStats", {
+    Title = "Auto Add Stats",
+    Default = false,
+    Callback = function(v)
+        AutoStats = v
+    end
+})
+
+-- ==============================
+-- 💠 LOOP
+-- ==============================
 task.spawn(function()
     while task.wait(0.3) do
         if AutoStats then
             pcall(function()
-
-                local args = {
-                    [1] = "AddPoint",
-                    [2] = SelectedStat,
-                    [3] = 1 -- เพิ่มทีละ 1
-                }
-
                 game:GetService("ReplicatedStorage")
                     :WaitForChild("Remotes")
                     :WaitForChild("CommF_")
-                    :InvokeServer(unpack(args))
-
+                    :InvokeServer("AddPoint", SelectedStat, 1)
             end)
         end
     end
 end)
-
-StatsTab:AddButton({
-    Title = "Add 10 Points",
-    Callback = function()
-        for i = 1,10 do
-            game:GetService("ReplicatedStorage")
-                :WaitForChild("Remotes")
-                :WaitForChild("CommF_")
-                :InvokeServer("AddPoint", SelectedStat, 1)
-        end
-    end
-})
 
 Window:SelectTab(1)
 
