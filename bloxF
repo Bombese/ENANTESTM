@@ -959,6 +959,61 @@ task.spawn(function()
     end
 end)
 
+-- ==============================
+-- 💠 Haki Settings (SubTab)
+-- ==============================
+SubTab:AddSection("Haki Settings")
+
+local AutoHaki = false
+local AutoKen = false
+
+local VIM = game:GetService("VirtualInputManager")
+
+SubTab:AddToggle("AutoHaki", {
+    Title = "Auto Haki (J)",
+    Default = false,
+    Callback = function(v)
+        AutoHaki = v
+    end
+})
+
+SubTab:AddToggle("AutoKen", {
+    Title = "Auto Ken (E)",
+    Default = false,
+    Callback = function(v)
+        AutoKen = v
+    end
+})
+
+local function pressKey(key)
+    VIM:SendKeyEvent(true, key, false, game)
+    task.wait(0.1)
+    VIM:SendKeyEvent(false, key, false, game)
+end
+
+task.spawn(function()
+    while task.wait(1) do
+        pcall(function()
+            local char = game.Players.LocalPlayer.Character
+            if not char then return end
+
+            -- 🟣 Haki
+            if AutoHaki then
+                if not char:FindFirstChild("HasBuso") then
+                    pressKey(Enum.KeyCode.J)
+                end
+            end
+
+            -- 🔵 Ken
+            if AutoKen then
+                if not char:FindFirstChild("HasObservation") then
+                    pressKey(Enum.KeyCode.E)
+                end
+            end
+        end)
+    end
+end)
+
 Window:SelectTab(1)
 
 -- ==============================
