@@ -1034,12 +1034,12 @@ task.spawn(function()
 end)
 
 -- ==============================
--- 💀 AUTO FARM BONE (FULL)
+-- 💀 AUTO FARM BONE (3 SPAWN)
 -- ==============================
 local AutoBone = false
 
 MainTab:AddToggle("AutoBone", {
-    Title = "Auto Farm Bone (Fully)",
+    Title = "Auto Farm Bone (Full)",
     Default = false,
     Callback = function(v)
         AutoBone = v
@@ -1052,10 +1052,18 @@ MainTab:AddToggle("AutoBone", {
 local HEIGHT = 25
 local SPEED = 300
 
+-- 🧟 มอน
 local BoneMobs = {
     "Reborn Skeleton",
     "Living Zombie",
     "Demonic Soul"
+}
+
+-- 📍 3 จุดเกิด (ใส่พิกัดจริงได้)
+local BoneSpawns = {
+    CFrame.new(-9500, 140, 6100),
+    CFrame.new(-9700, 140, 6200),
+    CFrame.new(-9300, 140, 6000)
 }
 
 -- ==============================
@@ -1074,7 +1082,7 @@ end
 -- 💠 GET CHAR
 -- ==============================
 local function getChar()
-    local player = Players.LocalPlayer
+    local player = game.Players.LocalPlayer
     local char = player.Character
     if not char or not char:FindFirstChild("HumanoidRootPart") then
         char = player.CharacterAdded:Wait()
@@ -1084,7 +1092,7 @@ local function getChar()
 end
 
 -- ==============================
--- 💠 FLY SYSTEM (สำคัญ)
+-- 💠 FLY
 -- ==============================
 local function flyTo(cf)
     local char = getChar()
@@ -1093,9 +1101,8 @@ local function flyTo(cf)
 
     while (hrp.Position - cf.Position).Magnitude > 5 do
         if not AutoBone then return end
-
         local dir = (cf.Position - hrp.Position).Unit
-        hrp.CFrame = hrp.CFrame + dir * SPEED * RunService.Heartbeat:Wait()
+        hrp.CFrame = hrp.CFrame + dir * SPEED * game:GetService("RunService").Heartbeat:Wait()
     end
 
     if hrp.Parent then
@@ -1104,48 +1111,45 @@ local function flyTo(cf)
 end
 
 -- ==============================
--- 💠 LOOP FARM
+-- 💠 หา mob
+-- ==============================
+local function getTarget()
+    for _, v in pairs(workspace.Enemies:GetChildren()) do
+        if isBoneMob(v.Name)
+        and v:FindFirstChild("Humanoid")
+        and v.Humanoid.Health > 0 then
+            return v
+        end
+    end
+end
+
+-- ==============================
+-- 💠 LOOP
 -- ==============================
 task.spawn(function()
     while task.wait(0.2) do
         if AutoBone then
             pcall(function()
 
-                local char = getChar()
-                local hrp = char:FindFirstChild("HumanoidRootPart")
-                if not hrp then return end
+                local target = getTarget()
 
-                local target
-
-                -- 🔍 หาเป้าหมาย
-                for _, v in pairs(workspace.Enemies:GetChildren()) do
-                    if isBoneMob(v.Name) 
-                    and v:FindFirstChild("Humanoid") 
-                    and v.Humanoid.Health > 0 then
-                        target = v
-                        break
-                    end
-                end
-
-                -- 🎯 ถ้าเจอมอน
+                -- 🎯 ถ้าเจอมอน → ตีเลย
                 if target and target:FindFirstChild("HumanoidRootPart") then
                     local root = target.HumanoidRootPart
 
-                    -- 🕊 บินไปหา
                     flyTo(root.CFrame * CFrame.new(0, HEIGHT, 0))
 
                     repeat task.wait()
                         if not AutoBone then break end
                         if not target or target.Humanoid.Health <= 0 then break end
 
-                        char = getChar()
-                        hrp = char:FindFirstChild("HumanoidRootPart")
+                        local char = getChar()
+                        local hrp = char:FindFirstChild("HumanoidRootPart")
 
                         if hrp then
                             hrp.CFrame = root.CFrame * CFrame.new(0, HEIGHT, 0)
                         end
 
-                        -- ⚔️ ตี
                         if AttackRemote then
                             AttackRemote:FireServer(0.5)
                         end
@@ -1156,8 +1160,22 @@ task.spawn(function()
                     until target.Humanoid.Health <= 0 or not AutoBone
 
                 else
-                    -- ❌ ไม่เจอมอน → รอ
-                    task.wait(0.5)
+                    -- ❌ ไม่เจอ → วน 3 จุด
+                    for _, spawnCF in pairs(BoneSpawns) do
+                        if not AutoBone then break end
+
+                        flyTo(spawnCF)
+
+                        -- ⏳ รอให้มอนเกิด
+                        local waitTime = 0
+                        repeat task.wait(0.5)
+                            waitTime += 0.5
+                        until getTarget() or waitTime >= 3 or not AutoBone
+
+                        if getTarget() then
+                            break
+                        end
+                    end
                 end
 
             end)
