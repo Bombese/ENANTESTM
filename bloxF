@@ -1270,8 +1270,12 @@ local function magnetMobs(centerCF)
             local root = v.HumanoidRootPart
 
             if (root.Position - centerCF.Position).Magnitude <= MAGNET_RANGE then
-                root.CFrame = centerCF
+                
+                -- 🔥 ล็อคตำแหน่งจริง (ใช้ Velocity)
                 root.CanCollide = false
+                root.Velocity = Vector3.new(0,0,0)
+                root.CFrame = centerCF
+
             end
         end
     end
