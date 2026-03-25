@@ -232,6 +232,35 @@ task.spawn(function()
     end
 end)
 
+-- เพิ่มหัวข้อในหน้า UI
+FarmTab:AddSection("Security & Connection")
+
+-- ปุ่มเปิด-ปิด Anti-AFK
+local ToggleAFK = FarmTab:AddToggle("AntiAFK", {
+    Title = "Anti-AFK (20 Mins)", 
+    Default = true 
+})
+
+ToggleAFK:OnChanged(function()
+    AntiAFKEnabled = ToggleAFK.Value
+end)
+
+-- ปุ่มเปิด-ปิด Anti-Kick
+local ToggleKick = FarmTab:AddToggle("AntiKick", {
+    Title = "Anti-Kick (Local)", 
+    Default = true 
+})
+
+ToggleKick:OnChanged(function()
+    AntiKickEnabled = ToggleKick.Value
+end)
+
+-- แสดงสถานะการรัน
+FarmTab:AddParagraph({
+    Title = "Service Status",
+    Content = "Anti-AFK & Anti-Kick are currently active in the background."
+})
+
 -- ✅ Tab เดียว
 local MainTab = Window:AddTab({ Title = "Main", Icon = "home" })
 
