@@ -1,3 +1,29 @@
+-- [[ 1. ส่วนสมอง (Logic) - ต้องวางไว้บนสุด ]]
+local AntiAFKEnabled = true
+local AntiKickEnabled = true
+
+-- ฟังก์ชันกันเด้ง AFK
+game:GetService("Players").LocalPlayer.Idled:Connect(function()
+    if AntiAFKEnabled then
+        game:GetService("VirtualUser"):CaptureController()
+        game:GetService("VirtualUser"):ClickButton2(Vector2.new())
+    end
+end)
+
+-- ฟังก์ชันดักจับการ Kick
+local mt = getrawmetatable(game)
+local old = mt.__namecall
+setreadonly(mt, false)
+
+mt.__namecall = newcclosure(function(self, ...)
+    local method = getnamecallmethod()
+    if AntiKickEnabled and (method == "Kick" or method == "kick") and self == game:GetService("Players").LocalPlayer then
+        return nil
+    end
+    return old(self, unpack(args))
+end)
+setreadonly(mt, true)
+
 local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
 
 -- [[ SERVICES ]] --
