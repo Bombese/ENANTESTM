@@ -956,6 +956,84 @@ task.spawn(function()
 end)
 
 -- ==============================
+-- 💀 AUTO FARM BONE
+-- ==============================
+local AutoBone = false
+
+MainTab:AddToggle("AutoBone", {
+    Title = "Auto Farm Bone",
+    Default = false,
+    Callback = function(v)
+        AutoBone = v
+    end
+})
+
+-- มอน Bone
+local BoneMobs = {
+    "Reborn Skeleton",
+    "Living Zombie",
+    "Demonic Soul"
+}
+
+-- เช็คมอนที่ใช่
+local function isBoneMob(name)
+    for _, v in pairs(BoneMobs) do
+        if name == v then
+            return true
+        end
+    end
+    return false
+end
+
+-- LOOP
+task.spawn(function()
+    while task.wait(0.2) do
+        if AutoBone then
+            pcall(function()
+
+                local player = Players.LocalPlayer
+                local char = player.Character
+                local hrp = char and char:FindFirstChild("HumanoidRootPart")
+                if not hrp then return end
+
+                local target
+
+                for _, v in pairs(workspace.Enemies:GetChildren()) do
+                    if isBoneMob(v.Name) and v:FindFirstChild("Humanoid") and v.Humanoid.Health > 0 then
+                        target = v
+                        break
+                    end
+                end
+
+                if target and target:FindFirstChild("HumanoidRootPart") then
+                    local root = target.HumanoidRootPart
+
+                    -- 🕊 ลอยตี
+                    hrp.CFrame = root.CFrame * CFrame.new(0, 25, 0)
+
+                    repeat task.wait()
+                        if not AutoBone then break end
+                        if target.Humanoid.Health <= 0 then break end
+
+                        hrp.CFrame = root.CFrame * CFrame.new(0, 25, 0)
+
+                        -- ⚔️ ตี
+                        if AttackRemote then
+                            AttackRemote:FireServer(0.5)
+                        end
+                        if HitRemote then
+                            HitRemote:FireServer(root, {}, nil, "824d3559")
+                        end
+
+                    until target.Humanoid.Health <= 0 or not AutoBone
+
+                end
+            end)
+        end
+    end
+end)
+
+-- ==============================
 -- 💠 CREATE TAB
 -- ==============================
 local SubTab = Window:AddTab({ Title = "SubTab", Icon = "layers" })
