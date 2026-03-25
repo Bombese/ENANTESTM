@@ -1053,6 +1053,12 @@ MainTab:AddToggle("AutoBone", {
 -- ==============================
 -- 💠 CONFIG
 -- ==============================
+
+if game.PlaceId ~= 7449423635 then
+            warn("ต้องอยู่โลก 3")
+            return
+        end
+
 local HEIGHT = 25
 local SPEED = 300
 
