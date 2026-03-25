@@ -964,8 +964,6 @@ task.spawn(function()
     end
 end)
 
-SubTab:AddSection("Haki Settings")
-
 -- ==============================
 -- 💠 Haki Settings (SubTab)
 -- ==============================
