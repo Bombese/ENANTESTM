@@ -909,6 +909,53 @@ task.spawn(function()
 end)
 
 -- ==============================
+-- 💠 AUTO CHEST TP (RISK)
+-- ==============================
+local AutoChestTP = false
+
+-- หา Chest
+local function getChests()
+    local list = {}
+    for _, v in pairs(workspace:GetDescendants()) do
+        if v:IsA("BasePart") and string.find(v.Name, "Chest") then
+            table.insert(list, v)
+        end
+    end
+    return list
+end
+
+-- UI Toggle
+MainTab:AddToggle("AutoChestTP", {
+    Title = "Auto Chest TP (Risk)",
+    Default = false,
+    Callback = function(v)
+        AutoChestTP = v
+    end
+})
+
+-- LOOP วาป
+task.spawn(function()
+    while task.wait(0.1) do
+        if AutoChestTP then
+            pcall(function()
+                local char = Players.LocalPlayer.Character
+                local hrp = char and char:FindFirstChild("HumanoidRootPart")
+                if not hrp then return end
+
+                for _, chest in pairs(getChests()) do
+                    if not AutoChestTP then break end
+                    if not chest or not chest:IsDescendantOf(workspace) then continue end
+
+                    -- 💀 วาปตรง
+                    hrp.CFrame = chest.CFrame
+                    task.wait(0.15)
+                end
+            end)
+        end
+    end
+end)
+
+-- ==============================
 -- 💠 CREATE TAB
 -- ==============================
 local SubTab = Window:AddTab({ Title = "SubTab", Icon = "layers" })
