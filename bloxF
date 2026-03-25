@@ -27,10 +27,15 @@ end)
 local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
 
 -- [[ SERVICES ]] --
-local Players = game:GetService("Players")
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local TweenService = game:GetService("TweenService")
-local RunService = game:GetService("RunService")
+local Net = nil
+pcall(function()
+    Net = ReplicatedStorage:WaitForChild("Modules"):WaitForChild("Net")
+end)
+
+local CommF = ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("CommF_")
+
+local AttackRemote = Net and Net:FindFirstChild("RE/RegisterAttack")
+local HitRemote = Net and Net:FindFirstChild("RE/RegisterHit")
 
 -- [[ CONFIG ]] --
 local SPEED = 300
