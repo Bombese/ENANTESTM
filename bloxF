@@ -989,7 +989,7 @@ SubTab:AddToggle("AutoKen", {
 })
 
 -- ==============================
--- 💠 LOOP (ใช้ pressKey เดิม!)
+-- 💠 LOOP (ใช้ของเดิมทั้งหมด)
 -- ==============================
 task.spawn(function()
     while task.wait(1) do
@@ -997,16 +997,12 @@ task.spawn(function()
             local char = game.Players.LocalPlayer.Character
             if not char then return end
 
-            if AutoHaki then
-                if not char:FindFirstChild("HasBuso") then
-                    pressKey(Enum.KeyCode.J)
-                end
+            if AutoHaki and not char:FindFirstChild("HasBuso") then
+                pressKey(Enum.KeyCode.J)
             end
 
-            if AutoKen then
-                if not char:FindFirstChild("HasObservation") then
-                    pressKey(Enum.KeyCode.E)
-                end
+            if AutoKen and not char:FindFirstChild("HasObservation") then
+                pressKey(Enum.KeyCode.E)
             end
         end)
     end
