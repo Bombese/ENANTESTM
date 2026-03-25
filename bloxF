@@ -908,6 +908,64 @@ task.spawn(function()
     end
 end)
 
+local StatsTab = Window:AddTab({ Title = "Stats", Icon = "bar-chart-2" })
+
+StatsTab:AddSection("Auto Stats")
+
+local AutoStats = false
+local SelectedStat = "Melee"
+
+StatsTab:AddToggle("AutoStats", {
+    Title = "Auto Add Stats",
+    Default = false,
+    Callback = function(v)
+        AutoStats = v
+    end
+})
+
+StatsTab:AddDropdown("SelectStat", {
+    Title = "Select Stat",
+    Values = {"Melee", "Defense", "Sword", "Gun", "Blox Fruit"},
+    Multi = false,
+    Default = 1,
+    Callback = function(v)
+        SelectedStat = v
+    end
+})
+
+task.spawn(function()
+    while task.wait(0.3) do
+        if AutoStats then
+            pcall(function()
+
+                local args = {
+                    [1] = "AddPoint",
+                    [2] = SelectedStat,
+                    [3] = 1 -- เพิ่มทีละ 1
+                }
+
+                game:GetService("ReplicatedStorage")
+                    :WaitForChild("Remotes")
+                    :WaitForChild("CommF_")
+                    :InvokeServer(unpack(args))
+
+            end)
+        end
+    end
+end)
+
+StatsTab:AddButton({
+    Title = "Add 10 Points",
+    Callback = function()
+        for i = 1,10 do
+            game:GetService("ReplicatedStorage")
+                :WaitForChild("Remotes")
+                :WaitForChild("CommF_")
+                :InvokeServer("AddPoint", SelectedStat, 1)
+        end
+    end
+})
+
 Window:SelectTab(1)
 
 -- ==============================
