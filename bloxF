@@ -1,30 +1,27 @@
-
--- [[ 1. ส่วนสมองแบบใหม่ (Safe Version - ไม่ทำจอบัค) ]]
+-- [[ 1. ส่วนสมองแบบเบาที่สุด (Safe Mode) - วางบนสุด ]]
 local AntiAFKEnabled = true
 local AntiKickEnabled = true
 
--- ระบบป้องกัน AFK (ตัวนี้ปลอดภัยอยู่แล้ว)
+-- ระบบกัน AFK (ใช้ VirtualUser แบบประหยัดทรัพยากร)
+local Players = game:GetService("Players")
 local VirtualUser = game:GetService("VirtualUser")
-game:GetService("Players").LocalPlayer.Idled:Connect(function()
+
+Players.LocalPlayer.Idled:Connect(function()
     if AntiAFKEnabled then
         VirtualUser:CaptureController()
         VirtualUser:ClickButton2(Vector2.new())
     end
 end)
 
--- ระบบป้องกันการโดนเตะแบบใหม่ (Hook เฉพาะฟังก์ชัน Kick ตรงๆ)
-local LocalPlayer = game:GetService("Players").LocalPlayer
+-- ระบบกัน Kick (ใช้วิธีเขียนทับฟังก์ชันตรงๆ ไม่ผ่าน Metatable - กันจอบัค)
+local lp = Players.LocalPlayer
 local oldKick
-oldKick = hookmetamethod(game, "__namecall", function(self, ...)
-    local method = getnamecallmethod()
-    local args = {...}
-
-    if AntiKickEnabled and (method == "Kick" or method == "kick") and self == LocalPlayer then
+oldKick = hookfunction(lp.Kick, function(self, ...)
+    if AntiKickEnabled and self == lp then
         warn("FELON AI: Blocked a kick attempt!")
         return nil
     end
-
-    return oldKick(self, unpack(args))
+    return oldKick(self, ...)
 end)
 
 local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
