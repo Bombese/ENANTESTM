@@ -54,7 +54,7 @@ local HitRemote = Net and Net:FindFirstChild("RE/RegisterHit")
 -- [[ WINDOW ]] --
 local Window = Fluent:CreateWindow({
     Title = "Felon HUB | Blox Fruits",
-    SubTitle = "test111 version ",
+    SubTitle = "test version ",
     TabWidth = 160,
     Size = UDim2.fromOffset(450, 350),
     Acrylic = true,
