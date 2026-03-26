@@ -1534,7 +1534,7 @@ task.spawn(function()
 end)
 
 -- ==============================
--- 🌍 TP TAB (REAL ISLANDS)
+-- 🌍 TP TAB (FIXED)
 -- ==============================
 local TPTab = Window:AddTab({ Title = "TP", Icon = "map" })
 
@@ -1542,7 +1542,7 @@ local SelectedWorld = "World 1"
 local SelectedIsland = nil
 
 -- ==============================
--- 📍 DATA เกาะ (ใส่เพิ่มได้)
+-- 📍 DATA เกาะ
 -- ==============================
 local IslandData = {
     ["World 1"] = {
@@ -1584,6 +1584,18 @@ local IslandData = {
 }
 
 -- ==============================
+-- 🔧 ดึงชื่อเกาะ
+-- ==============================
+local function getIslandNames(world)
+    local list = {}
+    for name, _ in pairs(IslandData[world]) do
+        table.insert(list, name)
+    end
+    table.sort(list)
+    return list
+end
+
+-- ==============================
 -- 🌍 เลือกโลก
 -- ==============================
 TPTab:AddDropdown("WorldSelect", {
@@ -1593,6 +1605,10 @@ TPTab:AddDropdown("WorldSelect", {
     Default = 1,
     Callback = function(v)
         SelectedWorld = v
+
+        -- 🔄 อัปเดตเกาะทันที
+        local newList = getIslandNames(v)
+        Fluent.Options["IslandSelect"]:SetValues(newList)
     end
 })
 
@@ -1601,23 +1617,10 @@ TPTab:AddDropdown("WorldSelect", {
 -- ==============================
 TPTab:AddDropdown("IslandSelect", {
     Title = "Select Island",
-    Values = IslandData["World 1"],
+    Values = getIslandNames("World 1"),
     Multi = false,
     Callback = function(v)
         SelectedIsland = v
-    end
-})
-
--- 🔄 อัปเดตเกาะตามโลก
-TPTab:AddButton({
-    Title = "Refresh Island List",
-    Callback = function()
-        local list = {}
-        for name, _ in pairs(IslandData[SelectedWorld]) do
-            table.insert(list, name)
-        end
-
-        Fluent.Options["IslandSelect"]:SetValues(list)
     end
 })
 
@@ -1631,7 +1634,8 @@ local function flyTo(cf)
 
     while (hrp.Position - cf.Position).Magnitude > 5 do
         local dir = (cf.Position - hrp.Position).Unit
-        hrp.CFrame = hrp.CFrame + dir * 250 * task.wait()
+        hrp.CFrame = hrp.CFrame + dir * 250
+        task.wait()
     end
 
     hrp.CFrame = cf
