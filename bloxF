@@ -1627,20 +1627,30 @@ TPTab:AddDropdown("IslandSelect", {
 -- ==============================
 -- 🚀 ฟังก์ชันบิน
 -- ==============================
-local SPEED = 300 -- ปรับได้ (60-120 กำลังดี)
+local SPEED = 300
 
 local function flyTo(cf)
     local player = game.Players.LocalPlayer
     local char = player.Character or player.CharacterAdded:Wait()
     local hrp = char:WaitForChild("HumanoidRootPart")
 
+    -- 🔥 สร้างแรงลอย
+    local bv = Instance.new("BodyVelocity")
+    bv.MaxForce = Vector3.new(1e9,1e9,1e9)
+    bv.Velocity = Vector3.new(0,0,0)
+    bv.Parent = hrp
+
     while (hrp.Position - cf.Position).Magnitude > 5 do
         local dir = (cf.Position - hrp.Position).Unit
-        hrp.CFrame = hrp.CFrame + dir * SPEED * 0.1
-        task.wait(0.1)
+        bv.Velocity = dir * SPEED
+        task.wait()
     end
 
+    -- 📍 วาปสุดท้าย
     hrp.CFrame = cf
+
+    -- ❌ ลบแรง
+    bv:Destroy()
 end
 
 -- ==============================
