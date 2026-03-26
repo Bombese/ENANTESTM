@@ -608,7 +608,6 @@ local function bringMob(name, pos)
             if v:FindFirstChild("Humanoid") and v.Humanoid.Health > 0 then
                 local root = v:FindFirstChild("HumanoidRootPart")
                 if root then
-                    root.CanCollide = false
                     root.CFrame = pos
                     root.Velocity = Vector3.new(0,-7,0)
                 end
