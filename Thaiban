@@ -1,3 +1,37 @@
+local player = game.Players.LocalPlayer
+local AutoFarm = false -- ตัวแปรเช็คสถานะเปิด/ปิดฟาร์ม
+
+-- ฟังก์ชันสำหรับวิ่งไปหา NPC และกดรับงาน
+local function StartBananaJob()
+    local char = player.Character
+    local root = char and char:FindFirstChild("HumanoidRootPart")
+    
+    if not root then return end
+
+    for _, v in pairs(workspace:GetDescendants()) do
+        if v:IsA("ProximityPrompt") and v.ActionText == "Interact" then
+            -- วาร์ปไปตำแหน่ง NPC (เหนือหัวเล็กน้อย)
+            root.CFrame = v.Parent.CFrame + Vector3.new(0, 3, 0)
+            task.wait(0.5)
+            
+            -- สั่งกดปุ่ม E (Interact) อัตโนมัติ
+            fireproximityprompt(v)
+            task.wait(1)
+            break
+        end
+    end
+end
+
+-- ระบบวนลูปทำงานเบื้องหลัง (Background Loop)
+task.spawn(function()
+    while true do
+        task.wait(1) -- เช็คทุกๆ 1 วินาที
+        if AutoFarm then
+            pcall(StartBananaJob)
+        end
+    end
+end)
+
 local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
 
 local Window = Fluent:CreateWindow({
@@ -8,4 +42,30 @@ local Window = Fluent:CreateWindow({
     Acrylic = true,
     Theme = "VSC Dark High Contrast",
     MinimizeKey = Enum.KeyCode.LeftControl
+})
+
+local FarmTab = Window:AddTab({ Title = "Farm Settings", Icon = "settings" })
+
+-- ปุ่มเปิด/ปิด (Toggle)
+local BananaToggle = FarmTab:AddToggle("BananaFarm_ID", {
+    Title = "Auto Cut Banana", 
+    Description = "ฟาร์มกล้วยและรับงานอัตโนมัติ",
+    Default = false,
+    Callback = function(Value)
+        AutoFarm = Value
+    end
+})
+
+-- ปุ่มวาร์ป (Button)
+FarmTab:AddButton({
+    Title = "Teleport To Banana Farm",
+    Description = "วาร์ปไปพิกัดสวนกล้วย",
+    Callback = function()
+        local char = player.Character
+        local root = char and char:FindFirstChild("HumanoidRootPart")
+        
+        if root then
+            root.CFrame = CFrame.new(166.50035, 9.57122, 241.507)
+        end
+    end
 })
