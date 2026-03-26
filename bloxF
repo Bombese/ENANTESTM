@@ -1627,7 +1627,7 @@ TPTab:AddDropdown("IslandSelect", {
 -- ==============================
 -- 🚀 ฟังก์ชันบิน
 -- ==============================
-local SPEED = 300
+local SPEED = 250
 local HEIGHT = 25
 
 local function flyTo(cf)
