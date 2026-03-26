@@ -599,10 +599,32 @@ RunService.Heartbeat:Connect(function()
     end
 end)
 
+-- ==============================
+-- 🧲 BRING
+-- ==============================
+local function bringMob(name, pos)
+    for _, v in pairs(workspace.Enemies:GetChildren()) do
+        if v.Name == name then
+            if v:FindFirstChild("Humanoid") and v.Humanoid.Health > 0 then
+                local root = v:FindFirstChild("HumanoidRootPart")
+                if root then
+                    root.CanCollide = false
+                    root.CFrame = pos
+                    root.Velocity = Vector3.new(0,-7,0)
+                end
+            end
+        end
+    end
+end
+
+-- ==============================
+-- 💀 LOOP หลัก (อัปเกรด)
+-- ==============================
 task.spawn(function()
-    while task.wait(0.3) do
+    while task.wait(0.1) do
         if AutoFarmValue then
             pcall(function()
+
                 local player = Players.LocalPlayer
                 local char = getChar()
                 local hrp = char:FindFirstChild("HumanoidRootPart")
@@ -610,17 +632,17 @@ task.spawn(function()
 
                 checkLevel()
 
-                -- กัน error UI
+                -- UI เควส
                 local QuestUI = player.PlayerGui:FindFirstChild("Main")
                 QuestUI = QuestUI and QuestUI:FindFirstChild("Quest")
 
-                -- รับเควส
+                -- 📜 รับเควส
                 if not (QuestUI and QuestUI.Visible) then
                     flyTo(PQ)
                     CommF:InvokeServer("StartQuest", NQ, Number)
                 end
 
-                -- หาเป้าหมาย
+                -- 🔍 หา target
                 local target
                 for _, v in pairs(workspace.Enemies:GetChildren()) do
                     if v.Name == NM and v:FindFirstChild("Humanoid") and v.Humanoid.Health > 0 then
@@ -632,32 +654,27 @@ task.spawn(function()
                 if target and target:FindFirstChild("HumanoidRootPart") then
                     local root = target.HumanoidRootPart
 
-                    -- บินไปมอน
-                    flyTo(root.CFrame * CFrame.new(0, HEIGHT, 0))
+                    -- 📍 จุดลอย
+                    local pos = root.CFrame * CFrame.new(0, HEIGHT, 0)
 
-                    repeat task.wait()
-                        if not AutoFarmValue then break end
-                        if not target or target.Humanoid.Health <= 0 then break end
+                    -- 🕊 ลอยแบบฟาร์ม
+                    hrp.CFrame = CFrame.new(hrp.Position.X, pos.Y, hrp.Position.Z)
+                    hrp.CFrame = hrp.CFrame:Lerp(pos, 0.3)
 
-                        char = getChar()
-                        hrp = char:FindFirstChild("HumanoidRootPart")
+                    -- 🧲 BRING มอนทั้งหมดชื่อเดียวกัน
+                    bringMob(NM, root.CFrame)
 
-                        if hrp then
-                            hrp.CFrame = root.CFrame * CFrame.new(0, HEIGHT, 0)
-                        end
-
-                        -- ⚔️ ตีจริง
-                        for i = 1, ATTACK_PER_FRAME do
-                            if AttackRemote then AttackRemote:FireServer() end
-                            if HitRemote then HitRemote:FireServer(root, HIT_KEY) end
-                        end
-
-                    until target.Humanoid.Health <= 0 or not AutoFarmValue
+                    -- ⚔️ ตีรัว
+                    for i = 1, ATTACK_PER_FRAME do
+                        if AttackRemote then AttackRemote:FireServer() end
+                        if HitRemote then HitRemote:FireServer(root, HIT_KEY) end
+                    end
 
                 else
-                    -- ไม่มีมอน → ไปจุดฟาร์ม
+                    -- ❌ ไม่มีมอน → ไปจุดเกิด
                     flyTo(MF)
                 end
+
             end)
         end
     end
