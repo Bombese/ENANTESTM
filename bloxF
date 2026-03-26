@@ -1534,51 +1534,90 @@ task.spawn(function()
 end)
 
 -- ==============================
--- 🌍 TP TAB
+-- 🌍 TP TAB (REAL ISLANDS)
 -- ==============================
 local TPTab = Window:AddTab({ Title = "TP", Icon = "map" })
 
+local SelectedWorld = "World 1"
 local SelectedIsland = nil
-local IslandList = {}
 
 -- ==============================
--- 🔍 SCAN MAP (หาเกาะ)
+-- 📍 DATA เกาะ (ใส่เพิ่มได้)
 -- ==============================
-local function scanIslands()
-    IslandList = {}
+local IslandData = {
+    ["World 1"] = {
+        ["Starter Island"] = CFrame.new(1059,16,1551),
+        ["Jungle"] = CFrame.new(-1600,36,150),
+        ["Pirate Village"] = CFrame.new(-1140,4,3825),
+        ["Desert"] = CFrame.new(900,6,4390),
+        ["Snow Island"] = CFrame.new(1389,87,-1298),
+        ["Marineford"] = CFrame.new(-5039,29,4324),
+        ["Sky Island"] = CFrame.new(-4842,718,-2623),
+        ["Prison"] = CFrame.new(5308,1,475),
+        ["Colosseum"] = CFrame.new(-1576,7,-2985),
+        ["Magma Village"] = CFrame.new(-5316,12,8517),
+        ["Fishman Island"] = CFrame.new(61123,18,1567),
+        ["Upper Sky"] = CFrame.new(-7862,5545,-380),
+        ["Fountain City"] = CFrame.new(5259,38,4050)
+    },
 
-    for _, v in pairs(workspace:GetChildren()) do
-        if v:IsA("Model") then
-            if v:FindFirstChild("SpawnLocation") or v:FindFirstChild("Island") then
-                table.insert(IslandList, v.Name)
-            end
-        end
-    end
+    ["World 2"] = {
+        ["Kingdom of Rose"] = CFrame.new(-429,72,1836),
+        ["Green Zone"] = CFrame.new(-1000,80,1400),
+        ["Graveyard"] = CFrame.new(-5494,48,-794),
+        ["Snow Mountain"] = CFrame.new(605,401,-5370),
+        ["Hot and Cold"] = CFrame.new(-6060,16,-4900),
+        ["Cursed Ship"] = CFrame.new(920,125,33000),
+        ["Ice Castle"] = CFrame.new(5668,28,-6484),
+        ["Forgotten Island"] = CFrame.new(-3054,237,-10147)
+    },
 
-    return IslandList
-end
+    ["World 3"] = {
+        ["Port Town"] = CFrame.new(-290,7,5343),
+        ["Hydra Island"] = CFrame.new(5220,603,345),
+        ["Great Tree"] = CFrame.new(2317,25,-6500),
+        ["Floating Turtle"] = CFrame.new(-12000,300,-8700),
+        ["Haunted Castle"] = CFrame.new(-9500,142,5500),
+        ["Sea of Treats"] = CFrame.new(-2100,20,-12000),
+        ["Cake Island"] = CFrame.new(-2100,20,-12000)
+    }
+}
 
 -- ==============================
--- 🔄 ปุ่มสแกน
+-- 🌍 เลือกโลก
 -- ==============================
-TPTab:AddButton({
-    Title = "Scan Islands",
-    Callback = function()
-        local list = scanIslands()
-        print("Islands:", list)
+TPTab:AddDropdown("WorldSelect", {
+    Title = "Select World",
+    Values = {"World 1","World 2","World 3"},
+    Multi = false,
+    Default = 1,
+    Callback = function(v)
+        SelectedWorld = v
     end
 })
 
 -- ==============================
--- 📜 Dropdown เลือกเกาะ
+-- 🏝 เลือกเกาะ
 -- ==============================
 TPTab:AddDropdown("IslandSelect", {
     Title = "Select Island",
-    Values = scanIslands(),
+    Values = IslandData["World 1"],
     Multi = false,
-    Default = 1,
     Callback = function(v)
         SelectedIsland = v
+    end
+})
+
+-- 🔄 อัปเดตเกาะตามโลก
+TPTab:AddButton({
+    Title = "Refresh Island List",
+    Callback = function()
+        local list = {}
+        for name, _ in pairs(IslandData[SelectedWorld]) do
+            table.insert(list, name)
+        end
+
+        Fluent.Options["IslandSelect"]:SetValues(list)
     end
 })
 
@@ -1592,32 +1631,29 @@ local function flyTo(cf)
 
     while (hrp.Position - cf.Position).Magnitude > 5 do
         local dir = (cf.Position - hrp.Position).Unit
-        hrp.CFrame = hrp.CFrame + dir * 200 * task.wait()
+        hrp.CFrame = hrp.CFrame + dir * 250 * task.wait()
     end
 
     hrp.CFrame = cf
 end
 
 -- ==============================
--- 🚀 ปุ่มบินไปเกาะ
+-- 🚀 ปุ่มบิน
 -- ==============================
 TPTab:AddButton({
     Title = "Fly To Island",
     Callback = function()
         if not SelectedIsland then return end
 
-        local island = workspace:FindFirstChild(SelectedIsland)
-        if island then
-            local part = island:FindFirstChildWhichIsA("BasePart")
-            if part then
-                flyTo(part.CFrame)
-            end
+        local cf = IslandData[SelectedWorld][SelectedIsland]
+        if cf then
+            flyTo(cf)
         end
     end
 })
 
 -- ==============================
--- 🌍 ปุ่มวาปโลก
+-- 🌍 วาปโลก
 -- ==============================
 TPTab:AddSection("World Teleport")
 
