@@ -2,59 +2,54 @@ local PathfindingService = game:GetService("PathfindingService")
 local player = game.Players.LocalPlayer
 local AutoFarm = false
 
--- ฟังก์ชัน AI เดินตามทางที่โล่ง
-local function AI_WalkTo(targetCFrame)
+-- ฟังก์ชัน AI เดิน (ปรับปรุงใหม่)
+local function AI_WalkTo(targetPosition)
     local char = player.Character
     local hum = char and char:FindFirstChild("Humanoid")
     local root = char and char:FindFirstChild("HumanoidRootPart")
     if not hum or not root then return end
 
-    -- สร้าง Path และคำนวณเส้นทาง
     local path = PathfindingService:CreatePath({
-        AgentRadius = 2,
-        AgentHeight = 5,
+        AgentRadius = 3,
         AgentCanJump = true,
-        AgentJumpHeight = 10,
+        WaypointSpacing = 4
     })
 
     local success, errorMessage = pcall(function()
-        path:ComputeAsync(root.Position, targetCFrame.Position)
+        path:ComputeAsync(root.Position, targetPosition)
     end)
 
     if success and path.Status == Enum.PathStatus.Success then
         local waypoints = path:GetWaypoints()
-
         for i, waypoint in ipairs(waypoints) do
-            if not AutoFarm then break end -- หยุดเดินถ้าปิด Toggle
+            if not AutoFarm then break end
             
-            -- ถ้าจุดนำทางบอกให้กระโดด
+            hum:MoveTo(waypoint.Position)
+            
             if waypoint.Action == Enum.PathWaypointAction.Jump then
                 hum.Jump = true
             end
 
-            -- สั่งให้เดินไปจุดย่อย
-            hum:MoveTo(waypoint.Position)
-            
-            -- รอจนกว่าจะถึงจุดย่อยนั้น (หรือ Timeout กันบัค)
-            local signal = hum.MoveToFinished:Wait(2) 
-            if not signal then -- ถ้าติดแหง็กเกิน 2 วิ ให้ลองคำนวณใหม่
-                break 
-            end
+            -- รอจนกว่าจะถึงจุดย่อย (Time out 1 วิ เพื่อความไว)
+            local arrived = hum.MoveToFinished:Wait(1)
         end
     else
-        -- ถ้าคำนวณทางไม่ได้ (เช่น ทางตัน) ให้เดินตรงๆ ไปเลยเป็นทางเลือกสุดท้าย
-        hum:MoveTo(targetCFrame.Position)
+        -- ถ้า AI คำนวณทางไม่ได้ ให้ใช้การเดินตรงๆ (Fallback)
+        hum:MoveTo(targetPosition)
     end
 end
 
--- ฟังก์ชันหลักสำหรับฟาร์ม
+-- ฟังก์ชันรันงาน
 local function StartBananaJob()
     for _, v in pairs(workspace:GetDescendants()) do
         if v:IsA("ProximityPrompt") and v.ActionText == "Interact" then
-            -- ใช้ AI เดินไปหา
-            AI_WalkTo(v.Parent.CFrame)
+            -- หาตำแหน่งที่แน่นอนของ Prompt
+            local targetPos = v.Parent:IsA("BasePart") and v.Parent.Position or v.Parent:GetModelCFrame().Position
             
-            task.wait(0.5)
+            print("AI กำลังเดินไปหาจุดฟาร์ม...")
+            AI_WalkTo(targetPos)
+            
+            task.wait(0.2)
             fireproximityprompt(v)
             task.wait(1)
             break
@@ -62,12 +57,13 @@ local function StartBananaJob()
     end
 end
 
--- Loop รันเบื้องหลัง
+-- ระบบ Loop
 task.spawn(function()
     while true do
         task.wait(1)
         if AutoFarm then
-            pcall(StartBananaJob)
+            local success, err = pcall(StartBananaJob)
+            if not success then warn("Farm Error: " .. err) end
         end
     end
 end)
