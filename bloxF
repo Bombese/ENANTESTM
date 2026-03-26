@@ -1264,7 +1264,7 @@ local function bringMobs(pos)
             local root = v:FindFirstChild("HumanoidRootPart")
             if root then
                 root.CFrame = pos
-                root.Velocity = Vector3.new(0,0,0)
+                root.Velocity = Vector3.new(0,-5,0)
             end
         end
     end
