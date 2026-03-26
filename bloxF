@@ -1189,6 +1189,73 @@ task.spawn(function()
 end)
 
 -- ==============================
+-- 🔥 KILL AURA
+-- ==============================
+local KillAura = false
+local AuraRange = 60
+local AuraDelay = 0.1
+
+-- UI (ใส่ใน Tab ที่ใช้ เช่น MainTab)
+MainTab:AddToggle("KillAura", {
+    Title = "Kill Aura",
+    Default = false,
+    Callback = function(v)
+        KillAura = v
+    end
+})
+
+MainTab:AddSlider("AuraRange", {
+    Title = "Aura Range",
+    Default = 60,
+    Min = 10,
+    Max = 150,
+    Rounding = 0,
+    Callback = function(v)
+        AuraRange = v
+    end
+})
+
+-- LOOP หลัก
+task.spawn(function()
+    while task.wait(AuraDelay) do
+        if KillAura then
+            pcall(function()
+
+                local player = game.Players.LocalPlayer
+                local char = player.Character
+                if not char then return end
+
+                local hrp = char:FindFirstChild("HumanoidRootPart")
+                if not hrp then return end
+
+                for _, v in pairs(workspace.Enemies:GetChildren()) do
+                    if v:FindFirstChild("Humanoid") and v.Humanoid.Health > 0 then
+                        if v:FindFirstChild("HumanoidRootPart") then
+
+                            local dist = (v.HumanoidRootPart.Position - hrp.Position).Magnitude
+
+                            if dist <= AuraRange then
+                                -- ⚔️ ยิงดาเมจใส่รัวๆ
+                                for i = 1, 3 do
+                                    if AttackRemote then
+                                        AttackRemote:FireServer(0.5)
+                                    end
+                                    if HitRemote then
+                                        HitRemote:FireServer(v.HumanoidRootPart, {}, nil, HIT_KEY)
+                                    end
+                                end
+                            end
+
+                        end
+                    end
+                end
+
+            end)
+        end
+    end
+end)
+
+-- ==============================
 -- 💠 CREATE TAB
 -- ==============================
 local SubTab = Window:AddTab({ Title = "SubTab", Icon = "layers" })
