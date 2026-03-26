@@ -1188,6 +1188,178 @@ task.spawn(function()
     end
 end)
 
+MainTab:AddSection("Auto Cake Prince (ออโต้คาตาคุริ)")
+
+-- ==============================
+-- 💀 AUTO CAKE PRINCE FULL
+-- ==============================
+
+local AutoCakeFlow = false
+local KillCount = 0
+local TargetKill = 500
+
+-- 📍 ปรับตำแหน่งเองได้
+local SUMMON_POS = CFrame.new(-2100, 20, -12000)
+local MIRROR_POS = CFrame.new(-2150, 20, -12500)
+
+local HEIGHT = 25
+
+-- UI
+MainTab:AddToggle("AutoCakeFlow", {
+    Title = "Auto Cake Prince (Full)",
+    Default = false,
+    Callback = function(v)
+        AutoCakeFlow = v
+    end
+})
+
+-- ==============================
+-- 🔍 หา Cake Mob
+-- ==============================
+local function isCakeMob(v)
+    return string.find(v.Name, "Cake") or string.find(v.Name, "Cookie")
+end
+
+-- ==============================
+-- 🔍 หา Boss
+-- ==============================
+local function getBoss()
+    for _, v in pairs(workspace.Enemies:GetChildren()) do
+        if v.Name == "Cake Prince" then
+            if v:FindFirstChild("Humanoid") and v.Humanoid.Health > 0 then
+                return v
+            end
+        end
+    end
+end
+
+-- ==============================
+-- 🔍 หาเป้าหมายใกล้สุด
+-- ==============================
+local function getNearestCake(hrp)
+    local target, dist = nil, math.huge
+
+    for _, v in pairs(workspace.Enemies:GetChildren()) do
+        if isCakeMob(v) and v:FindFirstChild("Humanoid") and v.Humanoid.Health > 0 then
+            local root = v:FindFirstChild("HumanoidRootPart")
+            if root then
+                local mag = (root.Position - hrp.Position).Magnitude
+                if mag < dist then
+                    dist = mag
+                    target = v
+                end
+            end
+        end
+    end
+
+    return target
+end
+
+-- ==============================
+-- 🧲 รวมมอน
+-- ==============================
+local function bringMobs(pos)
+    for _, v in pairs(workspace.Enemies:GetChildren()) do
+        if isCakeMob(v) then
+            local root = v:FindFirstChild("HumanoidRootPart")
+            if root then
+                root.CFrame = pos
+                root.Velocity = Vector3.new(0,0,0)
+            end
+        end
+    end
+end
+
+-- ==============================
+-- 🔥 LOOP หลัก
+-- ==============================
+task.spawn(function()
+    while task.wait(0.1) do
+        if AutoCakeFlow then
+            pcall(function()
+
+                local player = game.Players.LocalPlayer
+                local char = player.Character
+                if not char then return end
+
+                local hrp = char:FindFirstChild("HumanoidRootPart")
+                if not hrp then return end
+
+                -- =========================
+                -- 🔪 PHASE 1: ฟาร์ม 500
+                -- =========================
+                if KillCount < TargetKill then
+
+                    local target = getNearestCake(hrp)
+                    if not target then return end
+
+                    local root = target:FindFirstChild("HumanoidRootPart")
+                    if not root then return end
+
+                    local pos = root.CFrame * CFrame.new(0, HEIGHT, 0)
+
+                    -- 🕊 ลอยบนมอน
+                    hrp.CFrame = pos
+
+                    -- 🧲 รวมมอน
+                    bringMobs(pos)
+
+                    -- ⚔️ ตีรัว
+                    for i = 1, 3 do
+                        if AttackRemote then
+                            AttackRemote:FireServer(0.5)
+                        end
+                        if HitRemote then
+                            HitRemote:FireServer(root, {}, nil, HIT_KEY)
+                        end
+                    end
+
+                    -- 📊 นับ
+                    if target.Humanoid.Health <= 0 then
+                        KillCount += 1
+                        print("Kill:", KillCount)
+                    end
+
+                else
+                    -- =========================
+                    -- 🍰 PHASE 2: ไปเสก
+                    -- =========================
+                    hrp.CFrame = SUMMON_POS
+                    task.wait(1)
+
+                    -- =========================
+                    -- 🪞 PHASE 3: เข้ากระจก
+                    -- =========================
+                    hrp.CFrame = MIRROR_POS
+                    task.wait(1)
+
+                    -- =========================
+                    -- 💀 PHASE 4: ฆ่าบอส
+                    -- =========================
+                    local boss = getBoss()
+                    if boss and boss:FindFirstChild("HumanoidRootPart") then
+                        local broot = boss.HumanoidRootPart
+
+                        hrp.CFrame = broot.CFrame * CFrame.new(0, 25, 0)
+
+                        for i = 1, 5 do
+                            if AttackRemote then
+                                AttackRemote:FireServer(0.5)
+                            end
+                            if HitRemote then
+                                HitRemote:FireServer(broot, {}, nil, HIT_KEY)
+                            end
+                        end
+                    end
+                end
+
+            end)
+        end
+    end
+end)
+
+MainTab:AddSection("Kill Aura (ฆ่ามอนรอบๆ)")
+
 -- ==============================
 -- 🔥 KILL AURA
 -- ==============================
