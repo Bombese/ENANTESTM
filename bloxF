@@ -35,7 +35,7 @@ local RunService = game:GetService("RunService")
 -- [[ CONFIG ]] --
 local SPEED = 300
 local HEIGHT = 20
-local RANGE = 30
+local RANGE = 100
 local ATTACK_PER_FRAME = 2
 local HIT_KEY = "824d3559"
 
