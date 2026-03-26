@@ -1533,6 +1533,115 @@ task.spawn(function()
     end
 end)
 
+-- ==============================
+-- 🌍 TP TAB
+-- ==============================
+local TPTab = Window:AddTab({ Title = "TP", Icon = "map" })
+
+local SelectedIsland = nil
+local IslandList = {}
+
+-- ==============================
+-- 🔍 SCAN MAP (หาเกาะ)
+-- ==============================
+local function scanIslands()
+    IslandList = {}
+
+    for _, v in pairs(workspace:GetChildren()) do
+        if v:IsA("Model") then
+            if v:FindFirstChild("SpawnLocation") or v:FindFirstChild("Island") then
+                table.insert(IslandList, v.Name)
+            end
+        end
+    end
+
+    return IslandList
+end
+
+-- ==============================
+-- 🔄 ปุ่มสแกน
+-- ==============================
+TPTab:AddButton({
+    Title = "Scan Islands",
+    Callback = function()
+        local list = scanIslands()
+        print("Islands:", list)
+    end
+})
+
+-- ==============================
+-- 📜 Dropdown เลือกเกาะ
+-- ==============================
+TPTab:AddDropdown("IslandSelect", {
+    Title = "Select Island",
+    Values = scanIslands(),
+    Multi = false,
+    Default = 1,
+    Callback = function(v)
+        SelectedIsland = v
+    end
+})
+
+-- ==============================
+-- 🚀 ฟังก์ชันบิน
+-- ==============================
+local function flyTo(cf)
+    local player = game.Players.LocalPlayer
+    local char = player.Character or player.CharacterAdded:Wait()
+    local hrp = char:WaitForChild("HumanoidRootPart")
+
+    while (hrp.Position - cf.Position).Magnitude > 5 do
+        local dir = (cf.Position - hrp.Position).Unit
+        hrp.CFrame = hrp.CFrame + dir * 200 * task.wait()
+    end
+
+    hrp.CFrame = cf
+end
+
+-- ==============================
+-- 🚀 ปุ่มบินไปเกาะ
+-- ==============================
+TPTab:AddButton({
+    Title = "Fly To Island",
+    Callback = function()
+        if not SelectedIsland then return end
+
+        local island = workspace:FindFirstChild(SelectedIsland)
+        if island then
+            local part = island:FindFirstChildWhichIsA("BasePart")
+            if part then
+                flyTo(part.CFrame)
+            end
+        end
+    end
+})
+
+-- ==============================
+-- 🌍 ปุ่มวาปโลก
+-- ==============================
+TPTab:AddSection("World Teleport")
+
+TPTab:AddButton({
+    Title = "Go World 1",
+    Callback = function()
+        game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("TravelMain")
+    end
+})
+
+TPTab:AddButton({
+    Title = "Go World 2",
+    Callback = function()
+        game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("TravelDressrosa")
+    end
+})
+
+TPTab:AddButton({
+    Title = "Go World 3",
+    Callback = function()
+        game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("TravelZou")
+    end
+})
+
 Window:SelectTab(1)
 
 -- ==============================
