@@ -1,55 +1,39 @@
-local PathfindingService = game:GetService("PathfindingService")
+local TweenService = game:GetService("TweenService")
 local player = game.Players.LocalPlayer
 local AutoFarm = false
+local TweenSpeed = 15 -- ปรับความเร็วการลอย (ยิ่งน้อยยิ่งเร็ว)
 
--- ฟังก์ชัน AI เดิน (ปรับปรุงใหม่)
-local function AI_WalkTo(targetPosition)
+-- ฟังก์ชันสำหรับลอย (Tween) ไปหาจุดหมาย
+local function TweenTo(targetCFrame)
     local char = player.Character
-    local hum = char and char:FindFirstChild("Humanoid")
     local root = char and char:FindFirstChild("HumanoidRootPart")
-    if not hum or not root then return end
+    if not root then return end
 
-    local path = PathfindingService:CreatePath({
-        AgentRadius = 3,
-        AgentCanJump = true,
-        WaypointSpacing = 4
-    })
+    -- คำนวณระยะทางเพื่อให้ความเร็วคงที่
+    local distance = (root.Position - targetCFrame.Position).Magnitude
+    local tweenInfo = TweenInfo.new(distance / TweenSpeed, Enum.EasingStyle.Linear)
 
-    local success, errorMessage = pcall(function()
-        path:ComputeAsync(root.Position, targetPosition)
-    end)
+    local tween = TweenService:Create(root, tweenInfo, {CFrame = targetCFrame})
+    tween:Play()
+    
+    -- รอจนกว่าจะลอยถึง หรือถ้าปิด Toggle ให้หยุดลอยทันที
+    repeat 
+        task.wait() 
+    until tween.PlaybackState == Enum.PlaybackState.Completed or not AutoFarm
 
-    if success and path.Status == Enum.PathStatus.Success then
-        local waypoints = path:GetWaypoints()
-        for i, waypoint in ipairs(waypoints) do
-            if not AutoFarm then break end
-            
-            hum:MoveTo(waypoint.Position)
-            
-            if waypoint.Action == Enum.PathWaypointAction.Jump then
-                hum.Jump = true
-            end
-
-            -- รอจนกว่าจะถึงจุดย่อย (Time out 1 วิ เพื่อความไว)
-            local arrived = hum.MoveToFinished:Wait(1)
-        end
-    else
-        -- ถ้า AI คำนวณทางไม่ได้ ให้ใช้การเดินตรงๆ (Fallback)
-        hum:MoveTo(targetPosition)
-    end
+    if not AutoFarm then tween:Cancel() end
 end
 
--- ฟังก์ชันรันงาน
+-- ฟังก์ชันหลักสำหรับรันงาน
 local function StartBananaJob()
     for _, v in pairs(workspace:GetDescendants()) do
         if v:IsA("ProximityPrompt") and v.ActionText == "Interact" then
-            -- หาตำแหน่งที่แน่นอนของ Prompt
-            local targetPos = v.Parent:IsA("BasePart") and v.Parent.Position or v.Parent:GetModelCFrame().Position
+            -- ลอยไปหาตำแหน่ง NPC/จุดรับงาน (บวกความสูงนิดนึงกันจมพื้น)
+            local targetPos = v.Parent:IsA("BasePart") and v.Parent.CFrame or v.Parent:GetModelCFrame()
             
-            print("AI กำลังเดินไปหาจุดฟาร์ม...")
-            AI_WalkTo(targetPos)
+            TweenTo(targetPos * CFrame.new(0, 3, 0))
             
-            task.wait(0.2)
+            task.wait(0.3)
             fireproximityprompt(v)
             task.wait(1)
             break
@@ -57,13 +41,12 @@ local function StartBananaJob()
     end
 end
 
--- ระบบ Loop
+-- Loop ทำงานเบื้องหลัง
 task.spawn(function()
     while true do
         task.wait(1)
         if AutoFarm then
-            local success, err = pcall(StartBananaJob)
-            if not success then warn("Farm Error: " .. err) end
+            pcall(StartBananaJob)
         end
     end
 end)
@@ -82,24 +65,25 @@ local Window = Fluent:CreateWindow({
 
 local FarmTab = Window:AddTab({ Title = "Farm Settings", Icon = "settings" })
 
--- Toggle เปิด/ปิดระบบ AI Farm
-FarmTab:AddToggle("AI_BananaToggle", {
-    Title = "AI Auto Farm (Pathfinding)", 
-    Description = "ใช้ AI คำนวณทางเดินที่โล่งเพื่อไปฟาร์มกล้วย",
+-- Toggle เปิด/ปิดระบบลอยไปฟาร์ม
+FarmTab:AddToggle("TweenBananaToggle", {
+    Title = "Auto Tween Farm", 
+    Description = "ลอยไปรับงานและฟาร์มกล้วย (ปลอดภัยกว่าวาร์ป)",
     Default = false,
     Callback = function(Value)
         AutoFarm = Value
     end
 })
 
--- ปุ่มวาร์ป (สำรองไว้เผื่อฉุกเฉิน)
-FarmTab:AddButton({
-    Title = "Teleport To Farm",
-    Callback = function()
-        local char = player.Character
-        local root = char and char:FindFirstChild("HumanoidRootPart")
-        if root then
-            root.CFrame = CFrame.new(166.50035, 9.57122, 241.507)
-        end
+-- Slider ปรับความเร็วการลอย (แถมให้ครับ)
+FarmTab:AddSlider("TweenSpeedSlider", {
+    Title = "Tween Speed",
+    Description = "ปรับความเร็วการลอย (เลขน้อย = เร็ว)",
+    Default = 15,
+    Min = 5,
+    Max = 50,
+    Rounding = 1,
+    Callback = function(Value)
+        TweenSpeed = Value
     end
 })
