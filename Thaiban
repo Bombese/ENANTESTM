@@ -1,47 +1,48 @@
 local TweenService = game:GetService("TweenService")
 local player = game.Players.LocalPlayer
 local AutoFarm = false
-local TweenSpeed = 15 -- ปรับความเร็วการลอย (ยิ่งน้อยยิ่งเร็ว)
+local TweenSpeed = 15 
 
--- ฟังก์ชันสำหรับลอย (Tween) ไปหาจุดหมาย
+-- ฟังก์ชันสำหรับลอย (Tween)
 local function TweenTo(targetCFrame)
     local char = player.Character
     local root = char and char:FindFirstChild("HumanoidRootPart")
     if not root then return end
 
-    -- คำนวณระยะทางเพื่อให้ความเร็วคงที่
     local distance = (root.Position - targetCFrame.Position).Magnitude
     local tweenInfo = TweenInfo.new(distance / TweenSpeed, Enum.EasingStyle.Linear)
 
     local tween = TweenService:Create(root, tweenInfo, {CFrame = targetCFrame})
     tween:Play()
     
-    -- รอจนกว่าจะลอยถึง หรือถ้าปิด Toggle ให้หยุดลอยทันที
-    repeat 
-        task.wait() 
-    until tween.PlaybackState == Enum.PlaybackState.Completed or not AutoFarm
-
+    repeat task.wait() until tween.PlaybackState == Enum.PlaybackState.Completed or not AutoFarm
     if not AutoFarm then tween:Cancel() end
 end
 
--- ฟังก์ชันหลักสำหรับรันงาน
+-- ฟังก์ชันรันงาน (แบบเจาะจงเป้าหมาย)
 local function StartBananaJob()
     for _, v in pairs(workspace:GetDescendants()) do
+        -- เช็ค 3 อย่าง: เป็นปุ่มกด, ชื่อปุ่มคือ Interact, และ 'ชื่อโมเดล' ต้องมีคำว่า Banana
         if v:IsA("ProximityPrompt") and v.ActionText == "Interact" then
-            -- ลอยไปหาตำแหน่ง NPC/จุดรับงาน (บวกความสูงนิดนึงกันจมพื้น)
-            local targetPos = v.Parent:IsA("BasePart") and v.Parent.CFrame or v.Parent:GetModelCFrame()
             
-            TweenTo(targetPos * CFrame.new(0, 3, 0))
-            
-            task.wait(0.3)
-            fireproximityprompt(v)
-            task.wait(1)
-            break
+            -- >>> จุดแก้ไข: ใส่ชื่อ NPC หรือชื่อตึกที่ขายกล้วยลงไปตรงนี้ <<<
+            -- ตัวอย่าง: ถ้าโมเดลชื่อ "BananaNPC" ให้เช็คแบบนี้
+            if v.Parent.Name:find("Banana") or v.ObjectText:find("Banana") then
+                
+                local targetPos = v.Parent:IsA("BasePart") and v.Parent.CFrame or v.Parent:GetModelCFrame()
+                
+                TweenTo(targetPos * CFrame.new(0, 3, 0))
+                
+                task.wait(0.3)
+                fireproximityprompt(v)
+                task.wait(1)
+                break
+            end
         end
     end
 end
 
--- Loop ทำงานเบื้องหลัง
+-- Loop
 task.spawn(function()
     while true do
         task.wait(1)
